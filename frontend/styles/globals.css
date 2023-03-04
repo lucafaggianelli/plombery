@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.breadcrumbs a {
+    @apply underline underline-offset-2 decoration-slate-200 hover:decoration-slate-400 transition-colors duration-300;
+}
