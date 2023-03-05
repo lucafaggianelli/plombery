@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 
 class Trigger(BaseModel):
+    id: str
     name: str
     aps_trigger: BaseTrigger
     params: Union[dict, list, Callable] = None

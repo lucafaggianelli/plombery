@@ -1,6 +1,6 @@
 import { Pipeline, PipelineRun } from './types'
 
-const BASE_URL = 'http://localhost:8000'
+const BASE_URL = 'http://localhost:8000/api'
 
 export const getPipelines = async (): Promise<Pipeline[]> => {
   const response = await fetch(`${BASE_URL}/pipelines`)

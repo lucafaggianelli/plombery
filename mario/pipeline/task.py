@@ -10,8 +10,8 @@ class Task:
     def __init__(self):
         self.uuid = to_snake_case(self.__class__.__name__)
 
-    def run(*args, params: BaseModel = None, **kwargs):
+    def run(self, *args, params: BaseModel = None, **kwargs):
         pass
 
-    def tests(*args, params: BaseModel = None, **kwargs):
+    def tests(self, *args, params: BaseModel = None, **kwargs):
         pass

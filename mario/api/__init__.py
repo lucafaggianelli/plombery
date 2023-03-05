@@ -1,12 +1,10 @@
 import asyncio
 from datetime import datetime
 import json
-from pathlib import Path
 from time import sleep
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from apscheduler.events import (
     JobEvent,
     EVENT_JOB_EXECUTED,
@@ -24,13 +22,13 @@ from mario.database.repository import (
     get_pipeline_run,
 )
 from mario.websocket import manager
+from .middlewares import FRONTEND_FOLDER, SPAStaticFiles
+
 
 app = FastAPI()
-app.mount(
-    "/static",
-    StaticFiles(directory=Path(__file__).parent.parent / "static"),
-    name="static",
-)
+
+api = FastAPI()
+app.mount("/api", api)
 
 origins = [
     "http://localhost:3000",
@@ -43,14 +41,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    print(request.url.path)
-    response = await call_next(request)
-    # response.headers["X-Process-Time"] = str(process_time)
-    return response
 
 
 def _serialize_trigger(trigger: Trigger):
@@ -73,46 +63,47 @@ def _serialize_pipeline(pipeline: Pipeline):
     )
 
 
-@app.get("/pipelines")
+@api.get("/pipelines")
 def list_pipelines():
     return [
         _serialize_pipeline(pipeline) for pipeline in orchestrator.pipelines.values()
     ]
 
 
-@app.get("/pipelines/{pipeline_id}")
+@api.get("/pipelines/{pipeline_id}")
 def get_pipelines(pipeline_id: str):
     pipeline = orchestrator.get_pipeline(pipeline_id)
     return _serialize_pipeline(pipeline)
 
 
-@app.get("/pipelines/{pipeline_id}/input-schema")
+@api.get("/pipelines/{pipeline_id}/input-schema")
 def get_pipeline_input_schema(pipeline_id: str):
     pipeline = orchestrator.get_pipeline(pipeline_id)
-    return pipeline.params.schema()
+    print("------", pipeline_id, pipeline)
+    return pipeline.params.schema() if pipeline.params else dict()
 
 
-@app.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs")
+@api.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs")
 def get_runs(pipeline_id: str, trigger_id: str):
     return list_pipeline_runs(pipeline_id, trigger_id)
 
 
-@app.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs/{run_id}")
+@api.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs/{run_id}")
 def get_run(pipeline_id: str, trigger_id: str, run_id: int):
     return get_pipeline_run(run_id)
 
 
-@app.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs/{run_id}/logs")
+@api.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs/{run_id}/logs")
 def get_logs(pipeline_id: str, trigger_id: str, run_id: int):
     return get_pipeline_run_logs(PipelineRun(pipeline_id=pipeline_id, id=run_id))
 
 
-@app.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs/{run_id}/data/{task}")
+@api.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs/{run_id}/data/{task}")
 def get_data(pipeline_id: str, trigger_id: str, run_id: int, task: str):
     return get_pipeline_run_data(PipelineRun(pipeline_id=pipeline_id, id=run_id), task)
 
 
-@app.websocket("/ws")
+@api.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
 
@@ -177,3 +168,5 @@ orchestrator.scheduler.add_listener(
     _on_job_completed,
     EVENT_JOB_EXECUTED | EVENT_JOB_ERROR | EVENT_JOB_SUBMITTED,
 )
+
+app.mount("/", SPAStaticFiles(directory=FRONTEND_FOLDER, html=True))

@@ -13,6 +13,6 @@ class Pipeline:
     tasks: List[Task] = []
     triggers: List[Trigger] = []
 
-    def __init__(self, tasks: List[Task] = None) -> None:
+    def __init__(self) -> None:
         self.uuid = to_snake_case(self.__class__.__name__)
         self.logger = logging.getLogger(f"[P]{self.uuid}")
