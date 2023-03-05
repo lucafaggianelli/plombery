@@ -17,40 +17,41 @@ interface Props {
 }
 
 const RunsStatusChart: React.FC<Props> = ({ runs }) => {
-  if (!runs.length) {
-    return null
-  }
+  const successfulRuns = runs.filter((run) => run.status === 'success')
 
-  const successfulRuns = runs
-    .filter((run) => run.status === 'success')
+  const successPercentage = (successfulRuns.length / runs.length) * 100 || 0
 
-  const successPercentage = (successfulRuns.length / runs.length) * 100
-
-  const fromDate = successfulRuns[0].start_time
-  const toDate = successfulRuns[successfulRuns.length - 1].start_time
+  const fromDate = successfulRuns[0]?.start_time
+  const toDate = successfulRuns[successfulRuns.length - 1]?.start_time
 
   return (
     <Card>
       <Flex>
-        <Title>Trigger</Title>
+        <Title>Trigger health</Title>
       </Flex>
 
       <Flex marginTop="mt-4">
-        <Text>Status</Text>
+        <Text>Successful runs</Text>
         <Text>{successPercentage.toFixed(1)} %</Text>
       </Flex>
-      <Tracking marginTop="mt-2">
-        {runs.map((run) => (
-          <TrackingBlock
-            key={run.id}
-            color={STATUS_COLORS[run.status]}
-            tooltip={run.status}
-          />
-        ))}
-      </Tracking>
+      {runs.length ? (
+        <Tracking marginTop="mt-2">
+          {runs.map((run) => (
+            <TrackingBlock
+              key={run.id}
+              color={STATUS_COLORS[run.status]}
+              tooltip={run.status}
+            />
+          ))}
+        </Tracking>
+      ) : (
+        <Text textAlignment="text-center" marginTop="mt-8">
+          <em>This trigger has no runs yet</em>
+        </Text>
+      )}
       <Flex marginTop="mt-2">
-        <Text>{fromDate.toDateString()}</Text>
-        <Text>{toDate.toDateString()}</Text>
+        <Text>{fromDate && fromDate.toDateString()}</Text>
+        <Text>{toDate && toDate.toDateString()}</Text>
       </Flex>
     </Card>
   )

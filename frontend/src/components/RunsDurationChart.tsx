@@ -12,13 +12,12 @@ const RunsDurationChart: React.FC<Props> = ({ runs }) => {
   const successfulRuns = runs.filter((run) => run.status === 'success').reverse()
   const avgDuration =
     successfulRuns.reduce((total, current) => total + current.duration, 0) /
-    successfulRuns.length
+    successfulRuns.length || 0
 
   return (
     <Card>
       <Flex alignItems="items-start">
         <Text>Duration</Text>
-        <BadgeDelta deltaType="moderateDecrease" text="-1.2%" isIncreasePositive={false} />
       </Flex>
 
       <Flex

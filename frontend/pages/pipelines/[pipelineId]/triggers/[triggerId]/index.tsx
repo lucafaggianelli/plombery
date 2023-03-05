@@ -3,9 +3,20 @@ import RunsDurationChart from '@/src/components/RunsDurationChart'
 import RunsList from '@/src/components/RunsList'
 import RunsStatusChart from '@/src/components/RunsStatusChart'
 import { getPipeline, getRuns } from '@/src/repository'
+import { formatDateTime } from '@/src/utils'
 import { useQuery } from '@tanstack/react-query'
-import { Card, Text, Title, ColGrid, Block } from '@tremor/react'
-import Link from 'next/link'
+import {
+  Card,
+  Title,
+  ColGrid,
+  Block,
+  Subtitle,
+  Text,
+  Bold,
+  ListItem,
+  List,
+  Button,
+} from '@tremor/react'
 import { useRouter } from 'next/router'
 import React from 'react'
 
@@ -17,7 +28,7 @@ const TriggerView: React.FC = () => {
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],
     queryFn: () => getPipeline(pipelineId),
-    initialData: { id: '', name: '', tasks: [], triggers: [] },
+    initialData: { id: '', name: '', description: '', tasks: [], triggers: [] },
     enabled: !!pipelineId,
   })
 
@@ -56,8 +67,32 @@ const TriggerView: React.FC = () => {
         marginTop="mt-6"
       >
         <Card>
-          {/* Placeholder to set height */}
-          <div className="h-28" />
+          <div className="tr-flex tr-flex-col tr-h-full">
+            <Title>{trigger.name}</Title>
+            <Subtitle>{trigger.description}</Subtitle>
+
+            <div style={{ flexGrow: 1 }} />
+
+            <List marginTop="mt-2">
+              <ListItem>
+                <Text>Schedule</Text>
+                <Text>
+                  <Bold>{trigger.interval}</Bold>
+                </Text>
+              </ListItem>
+
+              <ListItem>
+                <Text>Next run</Text>
+                <Text>
+                  <Bold>{formatDateTime(trigger.next_fire_time)}</Bold>
+                </Text>
+              </ListItem>
+            </List>
+
+            <Button marginTop="mt-2" color="zinc" size="xs">
+              Run now
+            </Button>
+          </div>
         </Card>
 
         <RunsStatusChart runs={runsQuery.data} />

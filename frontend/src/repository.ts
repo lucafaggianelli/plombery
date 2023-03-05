@@ -6,7 +6,9 @@ export const getPipelines = async (): Promise<Pipeline[]> => {
   const response = await fetch(`${BASE_URL}/pipelines`)
   const pipelines: any[] = await response.json()
   pipelines.forEach(pipeline => {
-    pipeline.next_fire_time = new Date(pipeline.next_fire_time)
+    pipeline.triggers.forEach((trigger: any) => {
+      trigger.next_fire_time = new Date(trigger.next_fire_time)
+    })
   })
 
   return pipelines as Pipeline[]
@@ -14,7 +16,12 @@ export const getPipelines = async (): Promise<Pipeline[]> => {
 
 export const getPipeline = async (pipelineId: string): Promise<Pipeline> => {
   const response = await fetch(`${BASE_URL}/pipelines/${pipelineId}`)
-  return (await response.json()) as Pipeline
+  const pipeline = await response.json()
+  pipeline.triggers.forEach((trigger: any) => {
+    trigger.next_fire_time = new Date(trigger.next_fire_time)
+  })
+
+  return pipeline as Pipeline
 }
 
 export const getPipelineInputSchema = async (pipelineId: string) => {
