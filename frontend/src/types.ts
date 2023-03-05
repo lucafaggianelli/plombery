@@ -1,5 +1,6 @@
 export interface Trigger {
     name: string
+    description: string
     interval: string
     next_fire_time: Date
     paused: boolean
@@ -8,6 +9,7 @@ export interface Trigger {
 export interface Pipeline {
     id: string
     name: string
+    description: string
     tasks: string[]
     triggers: Trigger[]
 }

@@ -13,7 +13,7 @@ from apscheduler.events import (
 )
 
 from mario.orchestrator import orchestrator
-from mario.pipeline.pipeline import Pipeline, Trigger
+from mario.pipeline.pipeline import Pipeline, Trigger, Task
 from mario.orchestrator.executor import get_pipeline_run_logs, get_pipeline_run_data
 from mario.database.models import PipelineRun
 from mario.database.repository import (
@@ -46,6 +46,7 @@ app.add_middleware(
 def _serialize_trigger(trigger: Trigger):
     return dict(
         name=trigger.name,
+        description=trigger.description,
         interval=str(trigger.aps_trigger),
         next_fire_time=trigger.aps_trigger.get_next_fire_time(
             datetime.now(), datetime.now()
@@ -54,11 +55,21 @@ def _serialize_trigger(trigger: Trigger):
     )
 
 
+def _serialize_task(task: Task):
+    print(task.uuid, task.description)
+    return {
+        "id": task.uuid,
+        "name": task.uuid,
+        "description": task.description,
+    }
+
+
 def _serialize_pipeline(pipeline: Pipeline):
     return dict(
         id=pipeline.uuid,
         name=pipeline.uuid,
-        tasks=[task.uuid for task in pipeline.tasks],
+        description=pipeline.description,
+        tasks=[_serialize_task(task) for task in pipeline.tasks],
         triggers=[_serialize_trigger(trigger) for trigger in pipeline.triggers],
     )
 
@@ -79,7 +90,6 @@ def get_pipelines(pipeline_id: str):
 @api.get("/pipelines/{pipeline_id}/input-schema")
 def get_pipeline_input_schema(pipeline_id: str):
     pipeline = orchestrator.get_pipeline(pipeline_id)
-    print("------", pipeline_id, pipeline)
     return pipeline.params.schema() if pipeline.params else dict()
 
 
@@ -121,25 +131,6 @@ def _on_job_completed(event: JobEvent):
 
     sleep(0.5)
 
-    status = None
-
-    if event.code == EVENT_JOB_EXECUTED:
-        status = "success"
-    elif event.code == EVENT_JOB_ERROR:
-        status = "fail"
-    elif event.code == EVENT_JOB_SUBMITTED:
-        status = "new"
-    else:
-        print("Unhandled job event", event)
-
-    # if status == "new":
-    #     run = dict(
-    #         id=0,
-    #         status=status,
-    #         start_time=datetime.now().isoformat(),
-    #         duration=0,
-    #     )
-    # else:
     run = get_latest_pipeline_run(pipeline.uuid, trigger.name)
     run = dict(
         id=run.id,

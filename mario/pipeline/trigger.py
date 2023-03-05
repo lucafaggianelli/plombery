@@ -8,6 +8,7 @@ class Trigger(BaseModel):
     id: str
     name: str
     aps_trigger: BaseTrigger
+    description: str = __doc__
     params: Union[dict, list, Callable] = None
     paused: bool = False
 
