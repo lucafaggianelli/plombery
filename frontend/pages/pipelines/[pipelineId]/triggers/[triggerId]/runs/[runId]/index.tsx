@@ -27,7 +27,7 @@ const LogsPage = () => {
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],
     queryFn: () => getPipeline(pipelineId),
-    initialData: { id: '', name: '', tasks: [], triggers: [] },
+    initialData: { id: '', name: '', description: '', tasks: [], triggers: [] },
     enabled: !!pipelineId,
   })
 
@@ -46,7 +46,7 @@ const LogsPage = () => {
 
   const pipeline = pipelineQuery.data
   const trigger = pipeline.triggers.find(
-    (trigger) => trigger.name === triggerId
+    (trigger) => trigger.id === triggerId
   )
   const run = runQuery.data
   const logs = query.data

@@ -34,7 +34,7 @@ const Breadcrumbs: React.FC<Props> = ({ pipeline, trigger, run }) => {
             <Text>
               {run ? (
                 <Link
-                  href={`/pipelines/${pipeline.id}/triggers/${trigger.name}`}
+                  href={`/pipelines/${pipeline.id}/triggers/${trigger.id}`}
                 >
                   {trigger.name}
                 </Link>

@@ -21,8 +21,8 @@ const RunsStatusChart: React.FC<Props> = ({ runs }) => {
 
   const successPercentage = (successfulRuns.length / runs.length) * 100 || 0
 
-  const fromDate = successfulRuns[0]?.start_time
-  const toDate = successfulRuns[successfulRuns.length - 1]?.start_time
+  const fromDate = runs[0]?.start_time
+  const toDate = runs[runs.length - 1]?.start_time
 
   return (
     <Card>
@@ -40,7 +40,7 @@ const RunsStatusChart: React.FC<Props> = ({ runs }) => {
             <TrackingBlock
               key={run.id}
               color={STATUS_COLORS[run.status]}
-              tooltip={run.status}
+              tooltip={`#${run.id} ${run.status}`}
             />
           ))}
         </Tracking>

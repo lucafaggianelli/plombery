@@ -38,9 +38,9 @@ const TriggersList: React.FC<TriggersListProps> = ({ pipeline }) => (
       </TableHead>
       <TableBody>
         {pipeline.triggers.map((trigger) => (
-          <TableRow key={trigger.name}>
+          <TableRow key={trigger.id}>
             <TableCell>
-              <Link href={`/pipelines/${pipeline.id}/triggers/${trigger.name}`}>
+              <Link href={`/pipelines/${pipeline.id}/triggers/${trigger.id}`}>
                 {trigger.name}
               </Link>
             </TableCell>

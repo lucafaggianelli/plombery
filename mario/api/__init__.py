@@ -1,24 +1,21 @@
-import asyncio
 from datetime import datetime
-import json
-from time import sleep
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from apscheduler.job import Job
+from apscheduler.executors.asyncio import AsyncIOExecutor
+from apscheduler.triggers.date import DateTrigger
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from apscheduler.events import (
-    JobEvent,
-    EVENT_JOB_EXECUTED,
-    EVENT_JOB_ERROR,
-    EVENT_JOB_SUBMITTED,
-)
 
 from mario.orchestrator import orchestrator
 from mario.pipeline.pipeline import Pipeline, Trigger, Task
-from mario.orchestrator.executor import get_pipeline_run_logs, get_pipeline_run_data
+from mario.orchestrator.executor import (
+    get_pipeline_run_logs,
+    get_pipeline_run_data,
+    run,
+)
 from mario.database.models import PipelineRun
 from mario.database.repository import (
     list_pipeline_runs,
-    get_latest_pipeline_run,
     get_pipeline_run,
 )
 from mario.websocket import manager
@@ -45,6 +42,7 @@ app.add_middleware(
 
 def _serialize_trigger(trigger: Trigger):
     return dict(
+        id=trigger.id,
         name=trigger.name,
         description=trigger.description,
         interval=str(trigger.aps_trigger),
@@ -113,6 +111,33 @@ def get_data(pipeline_id: str, trigger_id: str, run_id: int, task: str):
     return get_pipeline_run_data(PipelineRun(pipeline_id=pipeline_id, id=run_id), task)
 
 
+@api.post("/pipelines/{pipeline_id}/triggers/{trigger_id}/run")
+async def run_trigger(pipeline_id: str, trigger_id: str):
+    pipeline = orchestrator.get_pipeline(pipeline_id)
+
+    triggers = [trigger for trigger in pipeline.triggers if trigger.id == trigger_id]
+
+    if len(triggers) == 0:
+        raise HTTPException(status_code=404, detail=f"Trigger {trigger_id} not found")
+
+    trigger = triggers[0]
+
+    executor: AsyncIOExecutor = orchestrator.scheduler._lookup_executor("default")
+    executor.submit_job(
+        Job(
+            orchestrator.scheduler,
+            id=f"{pipeline.uuid}: {trigger.id}",
+            func=run,
+            args=[],
+            kwargs={"pipeline": pipeline, "trigger": trigger},
+            max_instances=1,
+            misfire_grace_time=None,
+            trigger=DateTrigger(),
+        ),
+        [datetime.now()],
+    )
+
+
 @api.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
@@ -124,40 +149,5 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
-
-def _on_job_completed(event: JobEvent):
-    pipeline = orchestrator.get_pipeline_from_job_id(event.job_id)
-    trigger = orchestrator.get_trigger_from_job_id(event.job_id)
-
-    sleep(0.5)
-
-    run = get_latest_pipeline_run(pipeline.uuid, trigger.name)
-    run = dict(
-        id=run.id,
-        status=run.status,
-        start_time=run.start_time.isoformat(),
-        duration=run.duration,
-    )
-
-    awaitable = manager.broadcast(
-        json.dumps(
-            dict(
-                type="run-update",
-                data=dict(
-                    run=run,
-                    pipeline=pipeline.uuid,
-                    trigger=trigger.name,
-                ),
-            )
-        )
-    )
-
-    asyncio.ensure_future(awaitable)
-
-
-orchestrator.scheduler.add_listener(
-    _on_job_completed,
-    EVENT_JOB_EXECUTED | EVENT_JOB_ERROR | EVENT_JOB_SUBMITTED,
-)
 
 app.mount("/", SPAStaticFiles(directory=FRONTEND_FOLDER, html=True))

@@ -6,7 +6,7 @@ interface Props {
   runs: PipelineRun[]
 }
 
-const dataFormatter = (number: number) => (number / 1000).toFixed(1)
+const dataFormatter = (number: number) => (number / 1000).toFixed(1) + ' s'
 
 const RunsDurationChart: React.FC<Props> = ({ runs }) => {
   const successfulRuns = runs.filter((run) => run.status === 'success').reverse()
@@ -26,7 +26,7 @@ const RunsDurationChart: React.FC<Props> = ({ runs }) => {
         spaceX="space-x-3"
         truncate={true}
       >
-        <Metric>{dataFormatter(avgDuration)} s</Metric>
+        <Metric>{dataFormatter(avgDuration)}</Metric>
       </Flex>
 
       <LineChart

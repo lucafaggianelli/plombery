@@ -1,4 +1,5 @@
 export interface Trigger {
+    id: string
     name: string
     description: string
     interval: string

@@ -2,9 +2,9 @@ import Breadcrumbs from '@/src/components/Breadcrumbs'
 import RunsDurationChart from '@/src/components/RunsDurationChart'
 import RunsList from '@/src/components/RunsList'
 import RunsStatusChart from '@/src/components/RunsStatusChart'
-import { getPipeline, getRuns } from '@/src/repository'
+import { getPipeline, getRuns, runPipelineTrigger } from '@/src/repository'
 import { formatDateTime } from '@/src/utils'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import {
   Card,
   Title,
@@ -39,6 +39,10 @@ const TriggerView: React.FC = () => {
     enabled: !!triggerId,
   })
 
+  const runPipelineMutation = useMutation({
+    mutationFn: () => runPipelineTrigger(pipelineId, triggerId),
+  })
+
   if (runsQuery.isLoading || pipelineQuery.isLoading)
     return <div>Loading...</div>
 
@@ -47,7 +51,7 @@ const TriggerView: React.FC = () => {
 
   const pipeline = pipelineQuery.data
   const trigger = pipeline.triggers.find(
-    (trigger) => trigger.name === triggerId
+    (trigger) => trigger.id === triggerId
   )
 
   if (!trigger) {
@@ -89,13 +93,20 @@ const TriggerView: React.FC = () => {
               </ListItem>
             </List>
 
-            <Button marginTop="mt-2" color="zinc" size="xs">
+            <Button
+              marginTop="mt-2"
+              size="xs"
+              color="cyan"
+              onClick={() => {
+                runPipelineMutation.mutateAsync()
+              }}
+            >
               Run now
             </Button>
           </div>
         </Card>
 
-        <RunsStatusChart runs={runsQuery.data} />
+        <RunsStatusChart runs={[...runsQuery.data].reverse()} />
 
         <RunsDurationChart runs={runsQuery.data} />
       </ColGrid>

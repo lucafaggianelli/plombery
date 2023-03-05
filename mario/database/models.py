@@ -20,9 +20,7 @@ Base.metadata.create_all(bind=engine)
 def _mark_cancelled_runs():
     db = SessionLocal()
 
-    db.query(PipelineRun).filter(
-        PipelineRun.status == "running"
-    ).update(
+    db.query(PipelineRun).filter(PipelineRun.status == "running").update(
         dict(
             status="cancel",
         )

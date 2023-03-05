@@ -1,5 +1,5 @@
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from .base import SessionLocal
 from .schemas import PipelineRunCreate
@@ -18,23 +18,11 @@ def create_pipeline_run(data: PipelineRunCreate):
 
 
 def update_pipeline_run(
-    pipeline_id: str, trigger_id: str, end_time: datetime, status: str
+    pipeline_run: models.PipelineRun, end_time: datetime, status: str
 ):
     db = SessionLocal()
 
-    pipeline_run: models.PipelineRun = (
-        db.query(models.PipelineRun)
-        .filter(
-            models.PipelineRun.pipeline_id == pipeline_id,
-            models.PipelineRun.trigger_id == trigger_id,
-        )
-        .order_by(models.PipelineRun.id.desc())
-        .first()
-    )
-
-    duration: timedelta = end_time - pipeline_run.start_time
-
-    pipeline_run.duration = duration.total_seconds() * 1000
+    pipeline_run.duration = (end_time - pipeline_run.start_time).total_seconds() * 1000
     pipeline_run.status = status
 
     db.query(models.PipelineRun).filter(
@@ -42,13 +30,11 @@ def update_pipeline_run(
     ).update(
         dict(
             duration=pipeline_run.duration,
-            status=status,
+            status=pipeline_run.status,
         )
     )
 
     db.commit()
-
-    return pipeline_run
 
 
 def list_pipeline_runs(pipeline_id: str, trigger_id: str):
@@ -72,10 +58,7 @@ def list_pipeline_runs(pipeline_id: str, trigger_id: str):
 def get_pipeline_run(pipeline_run_id: int):
     db = SessionLocal()
 
-    pipeline_run: models.PipelineRun = (
-        db.query(models.PipelineRun)
-        .get(pipeline_run_id)
-    )
+    pipeline_run: models.PipelineRun = db.query(models.PipelineRun).get(pipeline_run_id)
 
     return pipeline_run
 

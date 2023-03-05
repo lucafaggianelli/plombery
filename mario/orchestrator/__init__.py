@@ -1,10 +1,7 @@
 from typing import Dict, Tuple
-from datetime import datetime
 
-from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR, JobEvent
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from mario.database.repository import update_pipeline_run
 from mario.orchestrator.executor import Pipeline, run, Trigger
 
 
@@ -26,7 +23,7 @@ class _Orchestrator:
             if trigger.paused:
                 continue
 
-            job_id = f"{pipeline.uuid}: {trigger.name}"
+            job_id = f"{pipeline.uuid}: {trigger.id}"
             self._all_triggers[job_id] = (pipeline, trigger)
 
             if self.scheduler.get_job(job_id):
@@ -55,27 +52,10 @@ class _Orchestrator:
         return self._all_triggers[job_id][1]
 
     def start(self):
-        self.scheduler.add_listener(
-            on_job_completed, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR
-        )
         self.scheduler.start()
 
 
 orchestrator = _Orchestrator()
-
-
-def on_job_completed(event: JobEvent):
-    pipeline = orchestrator.get_pipeline_from_job_id(event.job_id)
-    trigger = orchestrator.get_trigger_from_job_id(event.job_id)
-
-    status = None
-
-    if event.code == EVENT_JOB_EXECUTED:
-        status = "success"
-    elif event.code == EVENT_JOB_ERROR:
-        status = "fail"
-
-    update_pipeline_run(pipeline.uuid, trigger.name, datetime.now(), status)
 
 
 orchestrator.start()

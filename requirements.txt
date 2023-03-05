@@ -3,3 +3,4 @@ fastapi==0.92.0
 pandas==1.5.3
 pydantic==1.10.5
 SQLAlchemy==2.0.4
+websockets==10.4
