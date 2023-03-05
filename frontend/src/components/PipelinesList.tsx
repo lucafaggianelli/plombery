@@ -86,7 +86,14 @@ const PipelinesList: React.FC = () => {
       {pipelines.map((pipeline) => (
         <React.Fragment key={pipeline.id}>
           <Flex>
-            <Title>{pipeline.name}</Title>
+            <Flex justifyContent="justify-start" spaceX="space-x-2">
+              <Title>{pipeline.name}</Title>
+              <Text>
+                <span className="tr-block tr-truncate tr-max-w-lg">
+                  {pipeline.description}
+                </span>
+              </Text>
+            </Flex>
 
             <ManualRunDialog pipeline={pipeline} />
           </Flex>

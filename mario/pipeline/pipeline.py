@@ -12,8 +12,9 @@ class Pipeline:
     params: BaseModel = None
     tasks: List[Task] = []
     triggers: List[Trigger] = []
-    description: str = __doc__
+    description: str = None
 
     def __init__(self) -> None:
         self.uuid = to_snake_case(self.__class__.__name__)
         self.logger = logging.getLogger(f"[P]{self.uuid}")
+        self.description = self.__class__.__doc__
