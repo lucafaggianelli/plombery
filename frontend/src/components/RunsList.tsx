@@ -1,5 +1,5 @@
 import { PipelineRun } from '@/src/types'
-import { STATUS_COLORS } from '@/src/utils'
+import { formatDateTime, STATUS_COLORS } from '@/src/utils'
 import {
   Card,
   Table,
@@ -39,7 +39,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs, triggerId }) => (
               <Badge text={run.status} color={STATUS_COLORS[run.status]} />
             </TableCell>
             <TableCell>
-              <Text>{run.start_time.toString()}</Text>
+              <Text>{formatDateTime(run.start_time)}</Text>
             </TableCell>
             <TableCell textAlignment="text-right">
               {(run.duration / 1000).toFixed(2)} s

@@ -18,6 +18,7 @@ import React from 'react'
 import { getPipelines } from '../repository'
 
 import { Pipeline } from '../types'
+import { formatDateTime } from '../utils'
 import ManualRunDialog from './ManualRunDialog'
 
 interface TriggersListProps {
@@ -55,7 +56,7 @@ const TriggersList: React.FC<TriggersListProps> = ({ pipeline }) => (
                   size="xs"
                 />
               ) : (
-                trigger.next_fire_time.toString()
+                formatDateTime(trigger.next_fire_time)
               )}
             </TableCell>
             <TableCell>
