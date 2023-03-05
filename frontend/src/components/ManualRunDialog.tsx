@@ -19,6 +19,10 @@ import { Pipeline } from '../types'
 const schemaToForm = (schema: any) => {
   const properties: Record<string, any> = schema.properties
 
+  if (!properties) {
+    return <Text marginTop='mt-4'>This pipeline has no input</Text>
+  }
+
   const inputFields = Object.entries(properties).map(([key, _value]) => {
     let value = _value
     let defaultValue
