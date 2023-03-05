@@ -1,4 +1,4 @@
-import { BadgeDelta, Card, Flex, LineChart, Metric, Text, Title } from '@tremor/react'
+import { AreaChart, Card, Flex, Metric, Text } from '@tremor/react'
 
 import { PipelineRun } from '../types'
 
@@ -29,11 +29,11 @@ const RunsDurationChart: React.FC<Props> = ({ runs }) => {
         <Metric>{dataFormatter(avgDuration)}</Metric>
       </Flex>
 
-      <LineChart
+      <AreaChart
         data={successfulRuns}
         dataKey="id"
         categories={['duration']}
-        colors={['blue']}
+        colors={['indigo']}
         valueFormatter={dataFormatter}
         marginTop="mt-6"
         yAxisWidth="w-10"

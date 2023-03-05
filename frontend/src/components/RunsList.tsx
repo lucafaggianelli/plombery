@@ -1,5 +1,6 @@
 import { PipelineRun } from '@/src/types'
 import { formatDateTime, STATUS_COLORS } from '@/src/utils'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Card,
   Table,
@@ -20,16 +21,36 @@ interface Props {
   triggerId: string
 }
 
-const ws = typeof(window) !== 'undefined' ? new WebSocket('ws://localhost:8000/api/ws') : undefined
+const Timer: React.FC<{ startTime: Date }> = ({ startTime }) => {
+  const [time, setTime] = useState(Date.now() - startTime.getTime())
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTime(Date.now() - startTime.getTime())
+    }, 500)
+
+    return () => {
+      clearInterval(interval)
+    }
+  })
+
+  return <span>{(time / 1000).toFixed(2)}</span>
+}
+
+const ws =
+  typeof window !== 'undefined'
+    ? new WebSocket('ws://localhost:8000/api/ws')
+    : undefined
 
 const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
   const [runs, setRuns] = useState(_runs)
+  const queryClient = useQueryClient()
 
   const onWsMessage = useCallback(
     (event: MessageEvent) => {
       const { data } = JSON.parse(event.data)
 
-      console.log(data)
+      data.run.start_time = new Date(data.run.start_time)
 
       if (data.run.status === 'running') {
         setRuns([data.run, ...runs])
@@ -44,9 +65,13 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
         }
 
         setRuns(oldRuns)
+
+        queryClient.invalidateQueries({
+          queryKey: ['runs', triggerId, pipelineId],
+        })
       }
     },
-    [runs]
+    [pipelineId, queryClient, runs, triggerId]
   )
 
   useEffect(() => {
@@ -88,7 +113,12 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
                 <Text>{formatDateTime(run.start_time)}</Text>
               </TableCell>
               <TableCell textAlignment="text-right">
-                {(run.duration / 1000).toFixed(2)} s
+                {run.status !== 'running' ? (
+                  (run.duration / 1000).toFixed(2)
+                ) : (
+                  <Timer startTime={run.start_time} />
+                )}{' '}
+                s
               </TableCell>
               <TableCell>
                 <Link
