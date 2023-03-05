@@ -96,7 +96,7 @@ const TriggerView: React.FC = () => {
             <Button
               marginTop="mt-2"
               size="xs"
-              color="cyan"
+              color="indigo"
               onClick={() => {
                 runPipelineMutation.mutateAsync()
               }}

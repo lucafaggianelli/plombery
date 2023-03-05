@@ -5,14 +5,11 @@ import {
   Card,
   Divider,
   Flex,
-  SelectBox,
-  SelectBoxItem,
-  Subtitle,
   Text,
   TextInput,
   Title,
 } from '@tremor/react'
-import { createRef, MouseEventHandler, useEffect } from 'react'
+import { createRef, MouseEventHandler } from 'react'
 import { getPipelineInputSchema } from '../repository'
 import { Pipeline } from '../types'
 
@@ -149,7 +146,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
   return (
     <>
       <Button
-        color="zinc"
+        color="indigo"
         variant="secondary"
         size="xs"
         onClick={() => dialog.current?.showModal()}
@@ -183,7 +180,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
             <Flex justifyContent="justify-end" spaceX="space-x-6">
               <Button
                 variant="secondary"
-                color="zinc"
+                color="indigo"
                 onClick={() => {
                   dialog.current?.close()
                 }}
@@ -191,7 +188,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
                 Close
               </Button>
 
-              <Button color="zinc" type="submit">
+              <Button color="indigo" type="submit">
                 Run
               </Button>
             </Flex>
