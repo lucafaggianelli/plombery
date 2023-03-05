@@ -84,18 +84,21 @@ async def run(pipeline: Pipeline, trigger: Trigger):
                 task, flowing_data, log_out, input_params, params
             )
         except Exception as e:
+            # A task failed so the entire pipeline failed
             _on_pipeline_completed(pipeline_run, "fail")
             log_out.writelines([str(e)])
-            return
+            break
 
-        # Store task output
+        # Store task output if the task succeeds
         if type(flowing_data) is pandas.DataFrame:
             flowing_data: pandas.DataFrame = flowing_data
             data_path = get_data_path(pipeline_run)
 
             flowing_data.to_json(data_path / f"{task.uuid}.json", orient="records")
 
-    _on_pipeline_completed(pipeline_run.id, pipeline_run.start_time, "success")
+    else:
+        # All task succeeded so the entire pipeline succeeded
+        _on_pipeline_completed(pipeline_run, "success")
 
     # Store logs
     store_data("task_run.log", log_out.getvalue(), pipeline_run)
