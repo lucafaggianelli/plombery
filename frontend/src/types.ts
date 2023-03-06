@@ -1,3 +1,5 @@
+export type PipelineRunStatus = 'running' | 'completed' | 'failed' | 'cancelled'
+
 export interface Trigger {
     id: string
     name: string
@@ -17,7 +19,7 @@ export interface Pipeline {
 
 export interface PipelineRun {
     id: number
-    status: string
+    status: PipelineRunStatus
     start_time: Date
     duration: number
 }

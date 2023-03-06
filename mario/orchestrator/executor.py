@@ -12,7 +12,7 @@ from mario.database.models import PipelineRun
 from mario.database.repository import create_pipeline_run, update_pipeline_run
 from mario.database.schemas import PipelineRunCreate
 from mario.orchestrator.data_storage import get_data_path, store_data, read_data
-from mario.pipeline.pipeline import Pipeline, Trigger, Task
+from mario.pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger, Task
 
 
 def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger):
@@ -30,7 +30,7 @@ def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger):
     return pipeline_run
 
 
-def _on_pipeline_completed(pipeline_run: PipelineRun, status: str):
+def _on_pipeline_executed(pipeline_run: PipelineRun, status: PipelineRunStatus):
     update_pipeline_run(
         pipeline_run, datetime.now(), status
     )
@@ -85,7 +85,7 @@ async def run(pipeline: Pipeline, trigger: Trigger):
             )
         except Exception as e:
             # A task failed so the entire pipeline failed
-            _on_pipeline_completed(pipeline_run, "fail")
+            _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
             log_out.writelines([str(e)])
             break
 
@@ -98,7 +98,7 @@ async def run(pipeline: Pipeline, trigger: Trigger):
 
     else:
         # All task succeeded so the entire pipeline succeeded
-        _on_pipeline_completed(pipeline_run, "success")
+        _on_pipeline_executed(pipeline_run, PipelineRunStatus.COMPLETED)
 
     # Store logs
     store_data("task_run.log", log_out.getvalue(), pipeline_run)

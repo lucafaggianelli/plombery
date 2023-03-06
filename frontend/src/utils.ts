@@ -1,11 +1,13 @@
 import { Color } from '@tremor/react'
 import dayjs from 'dayjs'
 
-export const STATUS_COLORS: { [key: string]: Color } = {
-  success: 'emerald',
-  fail: 'rose',
-  cancel: 'gray',
-  warning: 'orange',
+import { PipelineRunStatus } from './types'
+
+export const STATUS_COLORS: Record<PipelineRunStatus, Color> = {
+  completed: 'emerald',
+  failed: 'rose',
+  cancelled: 'gray',
+  running: 'blue',
 }
 
 export const formatDateTime = (date: Date) =>

@@ -1,13 +1,10 @@
 import {
   Card,
-  Icon,
   Title,
   Text,
   Flex,
   Tracking,
   TrackingBlock,
-  Color,
-  ColGrid,
 } from '@tremor/react'
 import { PipelineRun } from '../types'
 import { STATUS_COLORS } from '../utils'
@@ -17,7 +14,7 @@ interface Props {
 }
 
 const RunsStatusChart: React.FC<Props> = ({ runs }) => {
-  const successfulRuns = runs.filter((run) => run.status === 'success')
+  const successfulRuns = runs.filter((run) => run.status === 'completed')
 
   const successPercentage = (successfulRuns.length / runs.length) * 100 || 0
 

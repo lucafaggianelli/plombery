@@ -1,4 +1,5 @@
 from typing import List
+from enum import Enum
 import logging
 
 from pydantic import BaseModel
@@ -6,6 +7,13 @@ from pydantic import BaseModel
 from .task import Task
 from .trigger import Trigger
 from ._utils import to_snake_case
+
+
+class PipelineRunStatus(str, Enum):
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 class Pipeline:

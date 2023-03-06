@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 
 from mario.database.base import Base, engine, SessionLocal
+from mario.pipeline.pipeline import PipelineRunStatus
 
 
 class PipelineRun(Base):
@@ -20,9 +21,9 @@ Base.metadata.create_all(bind=engine)
 def _mark_cancelled_runs():
     db = SessionLocal()
 
-    db.query(PipelineRun).filter(PipelineRun.status == "running").update(
+    db.query(PipelineRun).filter(PipelineRun.status == PipelineRunStatus.RUNNING.value).update(
         dict(
-            status="cancel",
+            status=PipelineRunStatus.CANCELLED.value,
         )
     )
 

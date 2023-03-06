@@ -1,6 +1,8 @@
 from typing import List
 from datetime import datetime
 
+from mario.pipeline.pipeline import PipelineRunStatus
+
 from .base import SessionLocal
 from .schemas import PipelineRunCreate
 from . import models
@@ -18,12 +20,12 @@ def create_pipeline_run(data: PipelineRunCreate):
 
 
 def update_pipeline_run(
-    pipeline_run: models.PipelineRun, end_time: datetime, status: str
+    pipeline_run: models.PipelineRun, end_time: datetime, status: PipelineRunStatus
 ):
     db = SessionLocal()
 
     pipeline_run.duration = (end_time - pipeline_run.start_time).total_seconds() * 1000
-    pipeline_run.status = status
+    pipeline_run.status = status.value
 
     db.query(models.PipelineRun).filter(
         models.PipelineRun.id == pipeline_run.id

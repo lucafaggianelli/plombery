@@ -9,7 +9,7 @@ interface Props {
 const dataFormatter = (number: number) => (number / 1000).toFixed(1) + ' s'
 
 const RunsDurationChart: React.FC<Props> = ({ runs }) => {
-  const successfulRuns = runs.filter((run) => run.status === 'success').reverse()
+  const successfulRuns = runs.filter((run) => run.status === 'completed').reverse()
   const avgDuration =
     successfulRuns.reduce((total, current) => total + current.duration, 0) /
     successfulRuns.length || 0
