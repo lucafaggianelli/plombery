@@ -1,17 +1,17 @@
 from asyncio import iscoroutinefunction
 import asyncio
-from contextlib import redirect_stdout
 from datetime import datetime
-from io import StringIO
+from logging import Logger
 
 import pandas
 from pydantic import BaseModel
 
+from mario.logger import get_logger
 from mario.websocket import manager
 from mario.database.models import PipelineRun
 from mario.database.repository import create_pipeline_run, update_pipeline_run
 from mario.database.schemas import PipelineRunCreate
-from mario.orchestrator.data_storage import get_data_path, store_data, read_data
+from mario.orchestrator.data_storage import get_data_path, read_data
 from mario.pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger, Task
 
 
@@ -31,9 +31,7 @@ def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger):
 
 
 def _on_pipeline_executed(pipeline_run: PipelineRun, status: PipelineRunStatus):
-    update_pipeline_run(
-        pipeline_run, datetime.now(), status
-    )
+    update_pipeline_run(pipeline_run, datetime.now(), status)
 
     _send_pipeline_event(pipeline_run)
 
@@ -61,11 +59,11 @@ def _send_pipeline_event(pipeline_run: PipelineRun):
 
 
 async def run(pipeline: Pipeline, trigger: Trigger):
-    log_out = StringIO()
-
     print(f"Executing pipeline `{pipeline.uuid}` via trigger `{trigger.id}`")
 
     pipeline_run = _on_pipeline_start(pipeline, trigger)
+
+    log_filename = get_data_path(pipeline_run) / "task_run.log"
 
     input_params = trigger.params
     params = {}
@@ -78,15 +76,16 @@ async def run(pipeline: Pipeline, trigger: Trigger):
     flowing_data = None
 
     for task in pipeline.tasks:
-        print("Executing task", task.uuid)
+        logger = get_logger(log_filename, task.uuid)
+        logger.info("Executing task", task.uuid)
         try:
             flowing_data = await _execute_task(
-                task, flowing_data, log_out, input_params, params
+                task, flowing_data, logger, input_params, params
             )
         except Exception as e:
             # A task failed so the entire pipeline failed
             _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
-            log_out.writelines([str(e)])
+            logger.error(str(e))
             break
 
         # Store task output if the task succeeds
@@ -100,15 +99,11 @@ async def run(pipeline: Pipeline, trigger: Trigger):
         # All task succeeded so the entire pipeline succeeded
         _on_pipeline_executed(pipeline_run, PipelineRunStatus.COMPLETED)
 
-    # Store logs
-    store_data("task_run.log", log_out.getvalue(), pipeline_run)
-    log_out.close()
-
 
 async def _execute_task(
     task: Task,
     flowing_data,
-    log_out: StringIO,
+    logger: Logger,
     input_params: dict = None,
     pipeline_params: BaseModel = None,
 ):
@@ -117,17 +112,17 @@ async def _execute_task(
     if not pipeline_params and task.params:
         params = task.params(**(input_params or {}))
 
-    with redirect_stdout(log_out):
-        if iscoroutinefunction(task.run):
-            result = await task.run(flowing_data, params=params)
-        else:
-            result = task.run(flowing_data, params=params)
+    task.logger = logger
+    if iscoroutinefunction(task.run):
+        result = await task.run(flowing_data, params=params)
+    else:
+        result = task.run(flowing_data, params=params)
 
     return result
 
 
 def get_pipeline_run_logs(pipeline_run: PipelineRun):
-    return read_data("task_run.log", pipeline_run)
+    return read_data("task_run.log", pipeline_run).rstrip()
 
 
 def get_pipeline_run_data(pipeline_run: PipelineRun, task: str):

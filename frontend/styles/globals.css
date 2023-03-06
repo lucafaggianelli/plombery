@@ -5,3 +5,11 @@
 .breadcrumbs a {
     @apply underline underline-offset-2 decoration-slate-200 hover:decoration-slate-400 transition-colors duration-300;
 }
+
+th.tr-sticky {
+    background-color: white;
+}
+
+.logs-table table td:last-child {
+    width: 100%;
+}

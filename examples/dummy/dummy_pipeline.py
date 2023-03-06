@@ -10,12 +10,16 @@ from mario.pipeline.pipeline import Pipeline, Task, Trigger
 class GetData(Task):
     """Fetch raw data"""
 
-    async def run(self, params):
+    async def run(self, data, params):
         for i in range(10):
             await sleep(1 + random() / 2)
+            self.logger.debug("Iteration %d", i)
+
+        self.logger.warning("Nothing serious but you should fix this")
 
         if random() > 0.75:
-            raise ValueError("I decided to fail")
+            self.logger.error("")
+            raise ValueError("I decided to fail :P")
 
 
 class DummyPipeline(Pipeline):

@@ -3,7 +3,7 @@ from datetime import datetime
 from apscheduler.job import Job
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.triggers.date import DateTrigger
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from mario.orchestrator import orchestrator
@@ -102,7 +102,8 @@ def get_run(pipeline_id: str, trigger_id: str, run_id: int):
 
 @api.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs/{run_id}/logs")
 def get_logs(pipeline_id: str, trigger_id: str, run_id: int):
-    return get_pipeline_run_logs(PipelineRun(pipeline_id=pipeline_id, id=run_id))
+    logs = get_pipeline_run_logs(PipelineRun(pipeline_id=pipeline_id, id=run_id))
+    return Response(content=logs, media_type="application/jsonl")
 
 
 @api.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs/{run_id}/data/{task}")

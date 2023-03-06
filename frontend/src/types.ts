@@ -1,5 +1,13 @@
 export type PipelineRunStatus = 'running' | 'completed' | 'failed' | 'cancelled'
 
+export interface LogEntry {
+    id: number
+    task: string
+    level: string
+    message: string
+    timestamp: Date
+}
+
 export interface Trigger {
     id: string
     name: string
@@ -9,11 +17,17 @@ export interface Trigger {
     paused: boolean
 }
 
+export interface Task {
+    id: string
+    name: string
+    description: string
+}
+
 export interface Pipeline {
     id: string
     name: string
     description: string
-    tasks: string[]
+    tasks: Task[]
     triggers: Trigger[]
 }
 
