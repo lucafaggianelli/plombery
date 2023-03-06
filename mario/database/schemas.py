@@ -2,11 +2,13 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from mario.pipeline.pipeline import PipelineRunStatus
+
 
 class PipelineRunBase(BaseModel):
     pipeline_id: str
     trigger_id: str
-    status: str
+    status: PipelineRunStatus
     start_time: datetime
 
     class Config:

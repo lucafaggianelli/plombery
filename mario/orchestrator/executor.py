@@ -6,6 +6,7 @@ from logging import Logger
 import pandas
 from pydantic import BaseModel
 
+from mario.notifications import notification_manager
 from mario.logger import get_logger
 from mario.websocket import manager
 from mario.database.models import PipelineRun
@@ -39,6 +40,10 @@ def _on_pipeline_executed(pipeline_run: PipelineRun, status: PipelineRunStatus):
 
 
 def _send_pipeline_event(pipeline_run: PipelineRun):
+    asyncio.ensure_future(
+        notification_manager.notify(pipeline_run)
+    )
+
     run = dict(
         id=pipeline_run.id,
         status=pipeline_run.status,
@@ -77,7 +82,7 @@ async def run(pipeline: Pipeline, trigger: Trigger):
 
     for task in pipeline.tasks:
         logger = get_logger(log_filename, task.uuid)
-        logger.info("Executing task", task.uuid)
+        logger.info("Executing task %s", task.uuid)
         try:
             flowing_data = await _execute_task(
                 task, flowing_data, logger, input_params, params
