@@ -16,6 +16,7 @@ import {
   ListItem,
   List,
   Button,
+  Flex,
 } from '@tremor/react'
 import { useRouter } from 'next/router'
 import React from 'react'
@@ -50,9 +51,7 @@ const TriggerView: React.FC = () => {
     return <div>An error has occurred</div>
 
   const pipeline = pipelineQuery.data
-  const trigger = pipeline.triggers.find(
-    (trigger) => trigger.id === triggerId
-  )
+  const trigger = pipeline.triggers.find((trigger) => trigger.id === triggerId)
 
   if (!trigger) {
     return <div>Trigger not found</div>
@@ -60,8 +59,22 @@ const TriggerView: React.FC = () => {
 
   return (
     <main className="bg-slate-50 p-6 sm:p-10 min-h-screen">
-      <Title>Trigger {trigger.name}</Title>
-      <Breadcrumbs pipeline={pipeline} trigger={trigger} />
+      <Flex alignItems="items-start">
+        <Block>
+          <Title>Trigger {trigger.name}</Title>
+          <Breadcrumbs pipeline={pipeline} trigger={trigger} />
+        </Block>
+
+        <Button
+          size="xs"
+          color="indigo"
+          onClick={() => {
+            runPipelineMutation.mutateAsync()
+          }}
+        >
+          Run now
+        </Button>
+      </Flex>
 
       <ColGrid
         numColsMd={2}
@@ -92,17 +105,6 @@ const TriggerView: React.FC = () => {
                 </Text>
               </ListItem>
             </List>
-
-            <Button
-              marginTop="mt-2"
-              size="xs"
-              color="indigo"
-              onClick={() => {
-                runPipelineMutation.mutateAsync()
-              }}
-            >
-              Run now
-            </Button>
           </div>
         </Card>
 
