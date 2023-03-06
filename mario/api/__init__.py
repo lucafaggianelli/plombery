@@ -54,7 +54,6 @@ def _serialize_trigger(trigger: Trigger):
 
 
 def _serialize_task(task: Task):
-    print(task.uuid, task.description)
     return {
         "id": task.uuid,
         "name": task.uuid,

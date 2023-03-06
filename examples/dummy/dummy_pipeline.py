@@ -1,4 +1,6 @@
 from asyncio import sleep
+from datetime import datetime
+from dateutil import tz
 from random import random
 
 from apscheduler.triggers.interval import IntervalTrigger
@@ -19,13 +21,13 @@ class GetData(Task):
 class DummyPipeline(Pipeline):
     """This is a very useless pipeline"""
 
-    tasks = [GetData]
+    tasks = [GetData()]
 
     triggers = [
         Trigger(
             id="daily",
             name="Daily",
             description="Run the pipeline every day",
-            aps_trigger=IntervalTrigger(days=1),
+            aps_trigger=IntervalTrigger(days=1, start_date=datetime(2023, 1, 1, 22, 30, tzinfo=tz.gettz('Europe/Brussels'))),
         )
     ]
