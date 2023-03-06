@@ -1,7 +1,8 @@
-from mario.api import app
-from mario.orchestrator import orchestrator
+from mario import Mario
 
 from .dummy_pipeline import DummyPipeline
 
 
-orchestrator.register_pipeline(DummyPipeline())
+app = Mario()
+
+app.register_pipeline(DummyPipeline())
