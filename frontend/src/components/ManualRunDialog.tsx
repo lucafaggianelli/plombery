@@ -14,10 +14,15 @@ import { getPipelineInputSchema } from '../repository'
 import { Pipeline } from '../types'
 
 const schemaToForm = (schema: any) => {
+  const resolveDefinition = (ref: string) => {
+    const refName = ref.split('/').pop()!
+    return schema['definitions'][refName]
+  }
+
   const properties: Record<string, any> = schema.properties
 
   if (!properties) {
-    return <Text marginTop='mt-4'>This pipeline has no input</Text>
+    return <Text marginTop="mt-4">This pipeline has no input</Text>
   }
 
   const inputFields = Object.entries(properties).map(([key, _value]) => {
@@ -29,9 +34,10 @@ const schemaToForm = (schema: any) => {
       defaultValue = _value.default
 
       if (multi_values.$ref) {
-        const ref = multi_values['$ref'].split('/').pop()
-        value = schema['definitions'][ref]
+        value = resolveDefinition(multi_values.$ref)
       }
+    } else if (_value.$ref) {
+      value = resolveDefinition(_value.$ref)
     } else {
       defaultValue = value.default
     }
@@ -80,9 +86,12 @@ const schemaToForm = (schema: any) => {
           <Text>{label}</Text>
           <select
             name={key}
-            defaultValue={defaultValue}
+            defaultValue={defaultValue || ''}
             className="tr-border-gray-300 tr-rounded-md tr-border tr-shadow-sm tr-pl-4 tr-pr-4 tr-pt-2 tr-pb-2 tr-text-sm tr-font-medium tr-w-full"
           >
+            <option disabled value="">
+              Select...
+            </option>
             {value.enum.map((item: string) => (
               <option key={item} value={item}>
                 {item}
