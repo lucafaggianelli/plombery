@@ -9,41 +9,63 @@ import {
   TextInput,
   Title,
 } from '@tremor/react'
+import { JSONSchema7 } from 'json-schema'
 import { createRef, MouseEventHandler } from 'react'
+
 import { getPipelineInputSchema } from '../repository'
 import { Pipeline } from '../types'
 
-const schemaToForm = (schema: any) => {
+const schemaToForm = (schema: JSONSchema7) => {
   const resolveDefinition = (ref: string) => {
+    if (!schema.definitions) {
+      return
+    }
+
     const refName = ref.split('/').pop()!
-    return schema['definitions'][refName]
+    return schema.definitions[refName] as JSONSchema7
   }
 
-  const properties: Record<string, any> = schema.properties
+  const properties = schema.properties
 
   if (!properties) {
     return <Text marginTop="mt-4">This pipeline has no input</Text>
   }
 
   const inputFields = Object.entries(properties).map(([key, _value]) => {
+    if (typeof _value === 'boolean') {
+      return
+    }
+
     let value = _value
-    let defaultValue
+    let defaultValue: string | undefined
 
     if (_value.allOf) {
-      const multi_values = _value.allOf[0]
-      defaultValue = _value.default
+      const multi_values = _value.allOf[0] as JSONSchema7
+      defaultValue = _value.default?.toString()
 
       if (multi_values.$ref) {
-        value = resolveDefinition(multi_values.$ref)
+        const def = resolveDefinition(multi_values.$ref)
+        if (def) {
+          value = def
+        }
       }
     } else if (_value.$ref) {
-      value = resolveDefinition(_value.$ref)
+      const def = resolveDefinition(_value.$ref)
+      if (def) {
+        value = def
+      }
     } else {
-      defaultValue = value.default
+      defaultValue = value.default?.toString()
     }
 
     const label = value.title || key
-    const value_type = value.enum ? 'enum' : value.type
+    const value_type =
+      (value.enum
+        ? 'enum'
+        : Array.isArray(value.type)
+        ? value.type[0]
+        : value.type) || 'string'
+    const required = schema.required?.includes(key)
 
     if (['number', 'float', 'integer'].includes(value_type)) {
       const minimum = value.minimum || value.exclusiveMinimum
@@ -61,6 +83,7 @@ const schemaToForm = (schema: any) => {
               max={maximum}
               step={step}
               defaultValue={defaultValue}
+              required={required}
             />
           </Block>
         )
@@ -76,6 +99,7 @@ const schemaToForm = (schema: any) => {
               defaultValue={defaultValue}
               className="tr-border-gray-300 tr-rounded-md tr-border tr-shadow-sm tr-pl-4 tr-pr-4 tr-pt-2 tr-pb-2 tr-text-sm tr-font-medium"
               style={{ textAlign: 'end', width: '100%' }}
+              required={required}
             />
           </Block>
         )
@@ -88,13 +112,14 @@ const schemaToForm = (schema: any) => {
             name={key}
             defaultValue={defaultValue || ''}
             className="tr-border-gray-300 tr-rounded-md tr-border tr-shadow-sm tr-pl-4 tr-pr-4 tr-pt-2 tr-pb-2 tr-text-sm tr-font-medium tr-w-full"
+            required={required}
           >
             <option disabled value="">
               Select...
             </option>
-            {value.enum.map((item: string) => (
-              <option key={item} value={item}>
-                {item}
+            {value.enum!.map((item) => (
+              <option key={item?.toString()} value={item?.toString()}>
+                {item?.toString()}
               </option>
             ))}
           </select>
@@ -103,7 +128,9 @@ const schemaToForm = (schema: any) => {
     } else {
       return (
         <div key={key}>
-          <Text>{label}</Text>
+          <Text>
+            {label} {required && '*'}
+          </Text>
           <TextInput
             name={key}
             placeholder={label}
