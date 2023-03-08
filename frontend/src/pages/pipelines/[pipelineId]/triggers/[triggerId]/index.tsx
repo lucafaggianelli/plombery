@@ -1,9 +1,9 @@
-import Breadcrumbs from '@/src/components/Breadcrumbs'
-import RunsDurationChart from '@/src/components/RunsDurationChart'
-import RunsList from '@/src/components/RunsList'
-import RunsStatusChart from '@/src/components/RunsStatusChart'
-import { getPipeline, getRuns, runPipelineTrigger } from '@/src/repository'
-import { formatDateTime } from '@/src/utils'
+import Breadcrumbs from '@/components/Breadcrumbs'
+import RunsDurationChart from '@/components/RunsDurationChart'
+import RunsList from '@/components/RunsList'
+import RunsStatusChart from '@/components/RunsStatusChart'
+import { getPipeline, getRuns, runPipelineTrigger } from '@/repository'
+import { formatDateTime } from '@/utils'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import {
   Card,
@@ -18,13 +18,13 @@ import {
   Button,
   Flex,
 } from '@tremor/react'
-import { useRouter } from 'next/router'
+import { useParams } from 'react-router-dom'
 import React from 'react'
 
 const TriggerView: React.FC = () => {
-  const router = useRouter()
-  const pipelineId = router.query.pipelineId as string
-  const triggerId = router.query.triggerId as string
+  const urlParams = useParams()
+  const pipelineId = urlParams.pipelineId as string
+  const triggerId = urlParams.triggerId as string
 
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],

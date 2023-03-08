@@ -12,7 +12,7 @@ import {
   Badge,
   Flex,
 } from '@tremor/react'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import React from 'react'
 import { getPipelines } from '../repository'
 
@@ -39,7 +39,7 @@ const TriggersList: React.FC<TriggersListProps> = ({ pipeline }) => (
         {pipeline.triggers.map((trigger) => (
           <TableRow key={trigger.id}>
             <TableCell>
-              <Link href={`/pipelines/${pipeline.id}/triggers/${trigger.id}`}>
+              <Link to={`/pipelines/${pipeline.id}/triggers/${trigger.id}`}>
                 {trigger.name}
               </Link>
             </TableCell>

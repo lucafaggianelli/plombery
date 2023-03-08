@@ -1,5 +1,5 @@
 import { Flex, Text } from '@tremor/react'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import React from 'react'
 
 import { Pipeline, PipelineRun, Trigger } from '../types'
@@ -21,7 +21,7 @@ const Breadcrumbs: React.FC<Props> = ({ pipeline, trigger, run }) => {
     <div className="breadcrumbs">
       <Flex spaceX="space-x-2" justifyContent="justify-start">
         <Text>
-          <Link href="/">Pipelines</Link>
+          <Link to="/">Pipelines</Link>
         </Text>
         <Separator />
         <Text>{pipeline.name}</Text>
@@ -34,7 +34,7 @@ const Breadcrumbs: React.FC<Props> = ({ pipeline, trigger, run }) => {
             <Text>
               {run ? (
                 <Link
-                  href={`/pipelines/${pipeline.id}/triggers/${trigger.id}`}
+                  to={`/pipelines/${pipeline.id}/triggers/${trigger.id}`}
                 >
                   {trigger.name}
                 </Link>

@@ -1,7 +1,7 @@
-import Breadcrumbs from '@/src/components/Breadcrumbs'
-import LogViewer from '@/src/components/LogViewer'
-import { getPipeline, getRun } from '@/src/repository'
-import { STATUS_COLORS } from '@/src/utils'
+import Breadcrumbs from '@/components/Breadcrumbs'
+import LogViewer from '@/components/LogViewer'
+import { getPipeline, getRun } from '@/repository'
+import { STATUS_COLORS } from '@/utils'
 import { useQuery } from '@tanstack/react-query'
 import {
   Badge,
@@ -13,15 +13,13 @@ import {
   Text,
   Title,
 } from '@tremor/react'
-import { useRouter } from 'next/router'
-
-const LOG_LEVELS = ['debug', 'info', 'warning', 'error']
+import { useParams } from 'react-router-dom'
 
 const LogsPage = () => {
-  const router = useRouter()
-  const pipelineId = router.query.pipelineId as string
-  const triggerId = router.query.triggerId as string
-  const runId = parseInt(router.query.runId as string)
+  const urlParams = useParams()
+  const pipelineId = urlParams.pipelineId as string
+  const triggerId = urlParams.triggerId as string
+  const runId = parseInt(urlParams.runId as string)
 
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],

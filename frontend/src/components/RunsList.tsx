@@ -1,5 +1,5 @@
-import { PipelineRun } from '@/src/types'
-import { formatDateTime, STATUS_COLORS } from '@/src/utils'
+import { PipelineRun } from '@/types'
+import { formatDateTime, STATUS_COLORS } from '@/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   Card,
@@ -12,8 +12,8 @@ import {
   Text,
   Badge,
 } from '@tremor/react'
-import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 interface Props {
   pipelineId: string
@@ -122,7 +122,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
               </TableCell>
               <TableCell>
                 <Link
-                  href={`/pipelines/${pipelineId}/triggers/${triggerId}/runs/${run.id}`}
+                  to={`/pipelines/${pipelineId}/triggers/${triggerId}/runs/${run.id}`}
                 >
                   Logs
                 </Link>

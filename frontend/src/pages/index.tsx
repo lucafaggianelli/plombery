@@ -1,4 +1,4 @@
-import PipelinesList from '@/src/components/PipelinesList'
+import PipelinesList from '@/components/PipelinesList'
 import { Block, Card, ColGrid, Text, Title } from '@tremor/react'
 
 export default function HomePage() {
