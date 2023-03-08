@@ -162,3 +162,4 @@ cython_debug/
 .mario_data
 node_modules
 *.db
+mario/static/
