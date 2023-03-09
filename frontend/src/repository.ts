@@ -83,13 +83,15 @@ export const getLogs = async (
   })
 }
 
+export const getTriggerRunUrl = (pipelineId: string, triggerId: string) =>
+  `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/run`
+
 export const runPipelineTrigger = async (
   pipelineId: string,
   triggerId: string
 ) => {
-  const response = await fetch(
-    `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/run`,
-    { method: 'POST' }
-  )
+  const response = await fetch(getTriggerRunUrl(pipelineId, triggerId), {
+    method: 'POST',
+  })
   return await response.json()
 }

@@ -2,7 +2,12 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import RunsDurationChart from '@/components/RunsDurationChart'
 import RunsList from '@/components/RunsList'
 import RunsStatusChart from '@/components/RunsStatusChart'
-import { getPipeline, getRuns, runPipelineTrigger } from '@/repository'
+import {
+  getPipeline,
+  getRuns,
+  getTriggerRunUrl,
+  runPipelineTrigger,
+} from '@/repository'
 import { formatDateTime } from '@/utils'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import {
@@ -107,8 +112,38 @@ const TriggerView: React.FC = () => {
 
             <ListItem>
               <Text>Params</Text>
-              {trigger.params ?
-                <TriggerParamsDialog trigger={trigger} /> : <Text><em>No params</em></Text>}
+              {trigger.params ? (
+                <TriggerParamsDialog trigger={trigger} />
+              ) : (
+                <Text>
+                  <em>No params</em>
+                </Text>
+              )}
+            </ListItem>
+
+            <ListItem>
+              <Text>URL</Text>
+              <Flex justifyContent="justify-end">
+                <div
+                  className="bg-slate-100 tr-border-slate-300 rounded tr-border text-slate-500 text-sm truncate px-1 mr-2"
+                  style={{ maxWidth: 200 }}
+                  title={getTriggerRunUrl(pipelineId, triggerId)}
+                >
+                  {getTriggerRunUrl(pipelineId, triggerId)}
+                </div>
+
+                <Button
+                  variant="light"
+                  size="xs"
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      getTriggerRunUrl(pipelineId, triggerId)
+                    )
+                  }}
+                >
+                  Copy
+                </Button>
+              </Flex>
             </ListItem>
           </div>
         </Card>
