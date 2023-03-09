@@ -1,5 +1,3 @@
-from typing import Union, Callable
-
 from apscheduler.triggers.base import BaseTrigger
 from pydantic import BaseModel
 
@@ -9,7 +7,7 @@ class Trigger(BaseModel):
     name: str
     aps_trigger: BaseTrigger
     description: str = __doc__
-    params: Union[dict, list, Callable] = None
+    params: dict = None
     paused: bool = False
 
     class Config:
