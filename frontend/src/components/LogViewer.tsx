@@ -16,9 +16,10 @@ import {
 } from '@tremor/react'
 import { useCallback, useState } from 'react'
 
-import { getLogs } from '../repository'
-import { Pipeline, Trigger } from '../types'
-import { formatTimestamp } from '../utils'
+import { getLogs } from '@/repository'
+import { LogLevel, Pipeline, Trigger } from '@/types'
+import { formatTimestamp } from '@/utils'
+import TracebackInfoDialog from './TracebackInfoDialog'
 
 interface Props {
   pipeline: Pipeline
@@ -26,7 +27,7 @@ interface Props {
   runId: number
 }
 
-const LOG_LEVELS_COLORS: Record<string, Color> = {
+const LOG_LEVELS_COLORS: Record<LogLevel, Color> = {
   DEBUG: 'slate',
   INFO: 'sky',
   WARNING: 'amber',
@@ -142,7 +143,9 @@ const LogViewer: React.FC<Props> = ({ pipeline, trigger, runId }) => {
                   </TableCell>
                   <TableCell>{log.task}</TableCell>
                   <TableCell>
-                    <p>{log.message}</p>
+                    <Text>{log.message}</Text>
+
+                    {log.exc_info && <TracebackInfoDialog logEntry={log} />}
                   </TableCell>
                 </TableRow>
               )

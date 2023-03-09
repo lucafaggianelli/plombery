@@ -88,9 +88,10 @@ async def run(pipeline: Pipeline, trigger: Trigger):
                 task, flowing_data, logger, input_params, params
             )
         except Exception as e:
+            logger.error(str(e), exc_info=e)
+
             # A task failed so the entire pipeline failed
             _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
-            logger.error(str(e))
             break
 
         # Store task output if the task succeeds

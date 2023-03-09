@@ -1,11 +1,14 @@
 export type PipelineRunStatus = 'running' | 'completed' | 'failed' | 'cancelled'
+export type LogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR'
 
 export interface LogEntry {
     id: number
     task: string
-    level: string
+    level: LogLevel
     message: string
     timestamp: Date
+    exc_info?: string
+    loggerName: string
 }
 
 export interface Trigger {
