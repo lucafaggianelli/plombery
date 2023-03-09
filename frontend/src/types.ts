@@ -15,6 +15,7 @@ export interface Trigger {
     interval: string
     next_fire_time: Date
     paused: boolean
+    params: any
 }
 
 export interface Task {

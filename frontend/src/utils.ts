@@ -6,7 +6,7 @@ import { PipelineRunStatus } from './types'
 export const STATUS_COLORS: Record<PipelineRunStatus, Color> = {
   completed: 'emerald',
   failed: 'rose',
-  cancelled: 'gray',
+  cancelled: 'slate',
   running: 'blue',
 }
 

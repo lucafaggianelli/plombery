@@ -53,6 +53,7 @@ def _serialize_trigger(trigger: Trigger):
             datetime.now(), datetime.now()
         ),
         paused=trigger.paused,
+        params=trigger.params,
     )
 
 

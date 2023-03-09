@@ -20,6 +20,7 @@ import {
 } from '@tremor/react'
 import { useParams } from 'react-router-dom'
 import React from 'react'
+import TriggerParamsDialog from '@/components/TriggerParamsDialog'
 
 const TriggerView: React.FC = () => {
   const urlParams = useParams()
@@ -90,21 +91,25 @@ const TriggerView: React.FC = () => {
 
             <div style={{ flexGrow: 1 }} />
 
-            <List marginTop="mt-2">
-              <ListItem>
-                <Text>Schedule</Text>
-                <Text>
-                  <Bold>{trigger.interval}</Bold>
-                </Text>
-              </ListItem>
+            <ListItem>
+              <Text>Schedule</Text>
+              <Text>
+                <Bold>{trigger.interval}</Bold>
+              </Text>
+            </ListItem>
 
-              <ListItem>
-                <Text>Next run</Text>
-                <Text>
-                  <Bold>{formatDateTime(trigger.next_fire_time)}</Bold>
-                </Text>
-              </ListItem>
-            </List>
+            <ListItem>
+              <Text>Next run</Text>
+              <Text>
+                <Bold>{formatDateTime(trigger.next_fire_time)}</Bold>
+              </Text>
+            </ListItem>
+
+            <ListItem>
+              <Text>Params</Text>
+              {trigger.params ?
+                <TriggerParamsDialog trigger={trigger} /> : <Text><em>No params</em></Text>}
+            </ListItem>
           </div>
         </Card>
 

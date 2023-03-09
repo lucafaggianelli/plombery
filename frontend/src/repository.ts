@@ -3,7 +3,6 @@ import { LogEntry, Pipeline, PipelineRun } from './types'
 const DEFAULT_BASE_URL = import.meta.env.DEV
   ? 'http://localhost:8000/api'
   : '/api'
-console.log("def url", DEFAULT_BASE_URL)
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 
 export const getPipelines = async (): Promise<Pipeline[]> => {

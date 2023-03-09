@@ -27,7 +27,7 @@ interface Props {
 }
 
 const LOG_LEVELS_COLORS: Record<string, Color> = {
-  DEBUG: 'zinc',
+  DEBUG: 'slate',
   INFO: 'sky',
   WARNING: 'amber',
   ERROR: 'rose',
