@@ -40,40 +40,28 @@ const TriggerParamsDialog: React.FC<Props> = ({ trigger }) => {
         style={{ padding: 0, background: 'transparent', overflow: 'visible' }}
         onClick={closeDialogOnBackdropClick}
       >
-        <form
-          method="dialog"
-          onSubmit={(event) => {
-            console.log(
-              'submitted',
-              Object.fromEntries(
-                new FormData(event.target as HTMLFormElement).entries()
-              )
-            )
-          }}
-        >
-          <Card>
-            <Title>Trigger params</Title>
-            <Subtitle>{trigger.name}</Subtitle>
+        <Card>
+          <Title>Trigger params</Title>
+          <Subtitle>{trigger.name}</Subtitle>
 
-            <div style={{ minWidth: 350, maxWidth: '600px', overflow: 'auto' }}>
-              <pre className="p-3 my-3 tr-bg-slate-100">
-                {JSON.stringify(trigger.params, null, 2)}
-              </pre>
-            </div>
+          <div style={{ minWidth: 350, maxWidth: '600px', overflow: 'auto' }}>
+            <pre className="p-3 my-3 tr-bg-slate-100">
+              {JSON.stringify(trigger.params, null, 2)}
+            </pre>
+          </div>
 
-            <Flex justifyContent="justify-end" spaceX="space-x-6">
-              <Button
-                variant="primary"
-                color="indigo"
-                onClick={() => {
-                  dialog.current?.close()
-                }}
-              >
-                Close
-              </Button>
-            </Flex>
-          </Card>
-        </form>
+          <Flex justifyContent="justify-end" spaceX="space-x-6">
+            <Button
+              variant="primary"
+              color="indigo"
+              onClick={() => {
+                dialog.current?.close()
+              }}
+            >
+              Close
+            </Button>
+          </Flex>
+        </Card>
       </dialog>
     </>
   )
