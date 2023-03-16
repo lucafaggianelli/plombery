@@ -1,4 +1,5 @@
 import Breadcrumbs from '@/components/Breadcrumbs'
+import DataViewer from '@/components/DataViewer'
 import LogViewer from '@/components/LogViewer'
 import { getPipeline, getRun } from '@/repository'
 import { STATUS_COLORS } from '@/utils'
@@ -6,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   Badge,
   Block,
+  Button,
   Card,
   ColGrid,
   Flex,
@@ -13,6 +15,7 @@ import {
   Text,
   Title,
 } from '@tremor/react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 const LogsPage = () => {
@@ -20,6 +23,8 @@ const LogsPage = () => {
   const pipelineId = urlParams.pipelineId as string
   const triggerId = urlParams.triggerId as string
   const runId = parseInt(urlParams.runId as string)
+
+  const [viewDataDialog, setViewDataDialog] = useState<string | undefined>()
 
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],
@@ -66,22 +71,35 @@ const LogsPage = () => {
           >
             <Metric>{(run.duration / 1000).toFixed(1)}s</Metric>
           </Flex>
+        </Card>
 
-          <a
-            href={`http://localhost:8000/pipelines/${pipelineId}/triggers/${triggerId}/runs/${runId}/data/${pipeline.tasks[0]}`}
-          >
-            Download data
-          </a>
+        <Card>
+          {pipeline.tasks.map((task) => (
+            <Button
+              key={task.id}
+              variant="secondary"
+              color="indigo"
+              size="xs"
+              onClick={() => setViewDataDialog(task.id)}
+            >
+              View {task.id} data
+            </Button>
+          ))}
         </Card>
       </ColGrid>
 
+      <DataViewer
+        pipelineId={pipelineId}
+        triggerId={triggerId}
+        runId={runId}
+        taskId={viewDataDialog || ''}
+        open={!!viewDataDialog}
+        onClose={() => setViewDataDialog(undefined)}
+      />
+
       <Block marginTop="mt-6">
         <Card>
-          <LogViewer
-            pipeline={pipeline}
-            trigger={trigger}
-            runId={runId}
-          />
+          <LogViewer pipeline={pipeline} trigger={trigger} runId={runId} />
         </Card>
       </Block>
     </main>

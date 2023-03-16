@@ -12,7 +12,7 @@ from mario.websocket import manager
 from mario.database.models import PipelineRun
 from mario.database.repository import create_pipeline_run, update_pipeline_run
 from mario.database.schemas import PipelineRunCreate
-from mario.orchestrator.data_storage import get_data_path, read_data
+from mario.orchestrator.data_storage import get_data_path, read_logs_file, read_task_run_data
 from mario.pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger, Task
 
 
@@ -128,8 +128,8 @@ async def _execute_task(
 
 
 def get_pipeline_run_logs(pipeline_run: PipelineRun):
-    return read_data("task_run.log", pipeline_run).rstrip()
+    return read_logs_file(pipeline_run)
 
 
-def get_pipeline_run_data(pipeline_run: PipelineRun, task: str):
-    return read_data(f"{task}.json", pipeline_run)
+def get_pipeline_run_data(pipeline_run: PipelineRun, task_id: str):
+    return read_task_run_data(pipeline_run, task_id)

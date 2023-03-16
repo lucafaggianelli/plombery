@@ -83,6 +83,19 @@ export const getLogs = async (
   })
 }
 
+export const getRunData = async (
+  pipelineId: string,
+  triggerId: string,
+  runId: number,
+  taskId: string,
+) => {
+  const response = await fetch(
+    `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/runs/${runId}/data/${taskId}`
+  )
+
+  return await response.json()
+}
+
 export const getTriggerRunUrl = (pipelineId: string, triggerId: string) =>
   `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/run`
 

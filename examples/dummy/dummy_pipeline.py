@@ -1,10 +1,11 @@
 from asyncio import sleep
 from datetime import datetime
 from dateutil import tz
-from random import random
 
 from apscheduler.triggers.interval import IntervalTrigger
 from mario.pipeline.pipeline import Pipeline, Task, Trigger
+import numpy as np
+import pandas as pd
 
 
 class GetData(Task):
@@ -12,14 +13,23 @@ class GetData(Task):
 
     async def run(self, data, params):
         for i in range(10):
-            await sleep(1 + random() / 2)
+            await sleep(1 + np.random.random() / 2)
             self.logger.debug("Iteration %d", i)
 
         self.logger.warning("Nothing serious but you should fix this")
 
-        if random() > 0.75:
+        data = pd.DataFrame({
+            "price": np.random.randint(1, 1000, 50),
+            "store_id": np.random.randint(1, 10, 50),
+            "date": datetime.today(),
+            "sku": np.random.randint(1, 50, 50)
+        })
+
+        if np.random.random() > 0.75:
             self.logger.error("")
             raise ValueError("I decided to fail :P")
+
+        return data
 
 
 class DummyPipeline(Pipeline):
