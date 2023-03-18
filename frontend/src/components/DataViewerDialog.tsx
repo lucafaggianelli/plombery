@@ -24,7 +24,7 @@ registerAllCellTypes()
 registerAllRenderers()
 registerAllPlugins()
 
-const DataViewer: React.FC<Props> = ({
+const DataViewerDialog: React.FC<Props> = ({
   pipelineId,
   triggerId,
   runId,
@@ -67,4 +67,4 @@ const DataViewer: React.FC<Props> = ({
   )
 }
 
-export default DataViewer
+export default DataViewerDialog

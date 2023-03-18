@@ -1,5 +1,5 @@
 import Breadcrumbs from '@/components/Breadcrumbs'
-import DataViewer from '@/components/DataViewer'
+import DataViewerDialog from '@/components/DataViewerDialog'
 import LogViewer from '@/components/LogViewer'
 import { getPipeline, getRun } from '@/repository'
 import { STATUS_COLORS } from '@/utils'
@@ -88,7 +88,7 @@ const LogsPage = () => {
         </Card>
       </ColGrid>
 
-      <DataViewer
+      <DataViewerDialog
         pipelineId={pipelineId}
         triggerId={triggerId}
         runId={runId}

@@ -1,19 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  Block,
-  Button,
-  Card,
-  Divider,
-  Flex,
-  Text,
-  TextInput,
-  Title,
-} from '@tremor/react'
+import { Block, Button, Flex, Text, TextInput } from '@tremor/react'
 import { JSONSchema7 } from 'json-schema'
-import { createRef, MouseEventHandler } from 'react'
+import { useState } from 'react'
 
 import { getPipelineInputSchema } from '../repository'
 import { Pipeline } from '../types'
+import Dialog from './Dialog'
 
 const schemaToForm = (schema: JSONSchema7) => {
   const resolveDefinition = (ref: string) => {
@@ -141,11 +133,7 @@ const schemaToForm = (schema: JSONSchema7) => {
     }
   })
 
-  return (
-    <Block marginTop="mt-8" spaceY="space-y-4">
-      {inputFields}
-    </Block>
-  )
+  return <Block spaceY="space-y-4">{inputFields}</Block>
 }
 
 interface Props {
@@ -153,31 +141,13 @@ interface Props {
 }
 
 const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
-  const dialog = createRef<HTMLDialogElement>()
+  const [open, setOpen] = useState(false)
 
   const query = useQuery({
     queryKey: ['pipeline-input', pipeline.id],
     queryFn: () => getPipelineInputSchema(pipeline.id),
+    enabled: open,
   })
-
-  if (query.isLoading) {
-    return <div>Loading...</div>
-  }
-
-  const closeDialogOnBackdropClick: MouseEventHandler<HTMLDialogElement> = (
-    event
-  ) => {
-    var rect = dialog.current!.getBoundingClientRect()
-    var isInDialog =
-      rect.top <= event.clientY &&
-      event.clientY <= rect.top + rect.height &&
-      rect.left <= event.clientX &&
-      event.clientX <= rect.left + rect.width
-
-    if (!isInDialog) {
-      dialog.current?.close()
-    }
-  }
 
   return (
     <>
@@ -185,15 +155,15 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
         color="indigo"
         variant="secondary"
         size="xs"
-        onClick={() => dialog.current?.showModal()}
+        onClick={() => setOpen(true)}
       >
         Run manually
       </Button>
 
-      <dialog
-        ref={dialog}
-        style={{ padding: 0, background: 'transparent', overflow: 'visible' }}
-        onClick={closeDialogOnBackdropClick}
+      <Dialog
+        isOpen={open}
+        title={`Run ${pipeline.name} manually`}
+        onClose={() => setOpen(false)}
       >
         <form
           method="dialog"
@@ -206,31 +176,33 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
             )
           }}
         >
-          <Card>
-            <Title>Run {pipeline.name} manually</Title>
-
+          {query.isLoading ? (
+            'Loading...'
+          ) : (
             <div style={{ width: 350 }}>{schemaToForm(query.data)}</div>
+          )}
 
-            <Divider />
+          <Flex
+            justifyContent="justify-end"
+            spaceX="space-x-6"
+            marginTop="mt-6"
+          >
+            <Button
+              variant="secondary"
+              color="indigo"
+              onClick={() => {
+                setOpen(false)
+              }}
+            >
+              Close
+            </Button>
 
-            <Flex justifyContent="justify-end" spaceX="space-x-6">
-              <Button
-                variant="secondary"
-                color="indigo"
-                onClick={() => {
-                  dialog.current?.close()
-                }}
-              >
-                Close
-              </Button>
-
-              <Button color="indigo" type="submit">
-                Run
-              </Button>
-            </Flex>
-          </Card>
+            <Button color="indigo" type="submit">
+              Run
+            </Button>
+          </Flex>
         </form>
-      </dialog>
+      </Dialog>
     </>
   )
 }

@@ -9,16 +9,18 @@ import {
 
 interface Props extends PropsWithChildren {
   footer?: ReactNode
-  isOpen?: boolean
+  isOpen: boolean
+  maxWidth?: React.CSSProperties['maxWidth']
   subtitle?: string
   title?: string
-  onClose?: () => any
+  onClose: () => any
 }
 
 const Dialog: React.FC<Props> = ({
   children,
   footer,
   isOpen: open,
+  maxWidth = '600px',
   subtitle,
   title,
   onClose,
@@ -55,7 +57,12 @@ const Dialog: React.FC<Props> = ({
   return (
     <dialog
       ref={dialog}
-      style={{ padding: 0, background: 'transparent', overflow: 'visible' }}
+      style={{
+        padding: 0,
+        background: 'transparent',
+        overflow: 'visible',
+        maxWidth,
+      }}
       onClick={closeDialogOnBackdropClick}
     >
       <Card>
@@ -64,7 +71,7 @@ const Dialog: React.FC<Props> = ({
 
         <div
           className={(title || subtitle) && 'mt-6'}
-          style={{ minWidth: 350, maxWidth: 600, overflow: 'auto' }}
+          style={{ minWidth: 350 }}
         >
           {children}
         </div>
