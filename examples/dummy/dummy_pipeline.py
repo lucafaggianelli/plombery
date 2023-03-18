@@ -3,9 +3,14 @@ from datetime import datetime
 from dateutil import tz
 
 from apscheduler.triggers.interval import IntervalTrigger
+from pydantic import BaseModel
 from mario.pipeline.pipeline import Pipeline, Task, Trigger
 import numpy as np
 import pandas as pd
+
+
+class InputParams(BaseModel):
+    some_value: int
 
 
 class GetData(Task):
@@ -35,6 +40,8 @@ class GetData(Task):
 class DummyPipeline(Pipeline):
     """This is a very useless pipeline"""
 
+    params = InputParams
+
     tasks = [GetData()]
 
     triggers = [
@@ -42,6 +49,7 @@ class DummyPipeline(Pipeline):
             id="daily",
             name="Daily",
             description="Run the pipeline every day",
+            params=InputParams(some_value=2),
             aps_trigger=IntervalTrigger(days=1, start_date=datetime(2023, 1, 1, 22, 30, tzinfo=tz.gettz('Europe/Brussels'))),
         )
     ]
