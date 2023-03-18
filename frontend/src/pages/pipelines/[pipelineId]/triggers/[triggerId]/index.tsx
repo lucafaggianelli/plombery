@@ -134,6 +134,7 @@ const TriggerView: React.FC = () => {
 
                 <Button
                   variant="light"
+                  color="indigo"
                   size="xs"
                   onClick={() => {
                     navigator.clipboard.writeText(
