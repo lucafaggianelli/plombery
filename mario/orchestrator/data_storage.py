@@ -4,7 +4,7 @@ from pathlib import Path
 from mario.database.models import PipelineRun
 
 
-BASE_DATA_PATH = Path.cwd() / ".mario_data"
+BASE_DATA_PATH = Path.cwd() / ".data"
 
 
 def get_data_path(pipeline_run: PipelineRun):
