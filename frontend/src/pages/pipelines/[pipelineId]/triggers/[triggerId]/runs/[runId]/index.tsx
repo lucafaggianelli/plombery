@@ -35,7 +35,7 @@ const LogsPage = () => {
 
   const runQuery = useQuery({
     queryKey: ['run', pipelineId, triggerId, runId],
-    queryFn: () => getRun(pipelineId, triggerId, runId),
+    queryFn: () => getRun(runId),
     enabled: !!(pipelineId && triggerId && runId),
   })
 

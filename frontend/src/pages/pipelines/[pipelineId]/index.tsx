@@ -4,6 +4,7 @@ import RunsList from '@/components/RunsList'
 import RunsStatusChart from '@/components/RunsStatusChart'
 import {
   getPipeline,
+  getPipelineRunUrl,
   listRuns,
   getTriggerRunUrl,
   runPipelineTrigger,
@@ -19,7 +20,6 @@ import {
   Text,
   Bold,
   ListItem,
-  List,
   Button,
   Flex,
 } from '@tremor/react'
@@ -27,10 +27,9 @@ import { useParams } from 'react-router-dom'
 import React from 'react'
 import TriggerParamsDialog from '@/components/TriggerParamsDialog'
 
-const TriggerView: React.FC = () => {
+const PipelineView: React.FC = () => {
   const urlParams = useParams()
   const pipelineId = urlParams.pipelineId as string
-  const triggerId = urlParams.triggerId as string
 
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],
@@ -40,14 +39,10 @@ const TriggerView: React.FC = () => {
   })
 
   const runsQuery = useQuery({
-    queryKey: ['runs', triggerId, pipelineId],
-    queryFn: () => listRuns(pipelineId, triggerId),
+    queryKey: ['runs', pipelineId, undefined],
+    queryFn: () => listRuns(pipelineId),
     initialData: [],
-    enabled: !!triggerId,
-  })
-
-  const runPipelineMutation = useMutation({
-    mutationFn: () => runPipelineTrigger(pipelineId, triggerId),
+    // enabled: !!triggerId,
   })
 
   if (runsQuery.isLoading || pipelineQuery.isLoading)
@@ -57,26 +52,19 @@ const TriggerView: React.FC = () => {
     return <div>An error has occurred</div>
 
   const pipeline = pipelineQuery.data
-  const trigger = pipeline.triggers.find((trigger) => trigger.id === triggerId)
-
-  if (!trigger) {
-    return <div>Trigger not found</div>
-  }
 
   return (
     <main className="bg-slate-50 p-6 sm:p-10 min-h-screen">
       <Flex alignItems="items-start">
         <Block>
-          <Title>Trigger {trigger.name}</Title>
-          <Breadcrumbs pipeline={pipeline} trigger={trigger} />
+          <Title>Pipeline {pipeline.name}</Title>
+          <Breadcrumbs pipeline={pipeline} />
         </Block>
 
         <Button
           size="xs"
           color="indigo"
-          onClick={() => {
-            runPipelineMutation.mutateAsync()
-          }}
+          disabled
         >
           Run now
         </Button>
@@ -91,12 +79,12 @@ const TriggerView: React.FC = () => {
       >
         <Card>
           <div className="tr-flex tr-flex-col tr-h-full">
-            <Title>{trigger.name}</Title>
-            <Subtitle>{trigger.description}</Subtitle>
+            <Title>{pipeline.name}</Title>
+            <Subtitle>{pipeline.description}</Subtitle>
 
             <div style={{ flexGrow: 1 }} />
 
-            <ListItem>
+            {/* <ListItem>
               <Text>Schedule</Text>
               <Text>
                 <Bold>{trigger.interval}</Bold>
@@ -119,7 +107,7 @@ const TriggerView: React.FC = () => {
                   <em>No params</em>
                 </Text>
               )}
-            </ListItem>
+            </ListItem> */}
 
             <ListItem>
               <Text>URL</Text>
@@ -127,9 +115,9 @@ const TriggerView: React.FC = () => {
                 <div
                   className="bg-slate-100 tr-border-slate-300 rounded tr-border text-slate-500 text-sm truncate px-1 mr-2"
                   style={{ maxWidth: 200 }}
-                  title={getTriggerRunUrl(pipelineId, triggerId)}
+                  title={getPipelineRunUrl(pipelineId)}
                 >
-                  {getTriggerRunUrl(pipelineId, triggerId)}
+                  {getPipelineRunUrl(pipelineId)}
                 </div>
 
                 <Button
@@ -138,7 +126,7 @@ const TriggerView: React.FC = () => {
                   size="xs"
                   onClick={() => {
                     navigator.clipboard.writeText(
-                      getTriggerRunUrl(pipelineId, triggerId)
+                      getPipelineRunUrl(pipelineId)
                     )
                   }}
                 >
@@ -158,11 +146,10 @@ const TriggerView: React.FC = () => {
         <RunsList
           runs={runsQuery.data}
           pipelineId={pipelineId}
-          triggerId={triggerId}
         />
       </Block>
     </main>
   )
 }
 
-export default TriggerView
+export default PipelineView

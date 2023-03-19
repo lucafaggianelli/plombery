@@ -18,7 +18,7 @@ import { Link } from 'react-router-dom'
 interface Props {
   pipelineId: string
   runs: PipelineRun[]
-  triggerId: string
+  triggerId?: string
 }
 
 const Timer: React.FC<{ startTime: Date }> = ({ startTime }) => {
@@ -67,7 +67,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
         setRuns(oldRuns)
 
         queryClient.invalidateQueries({
-          queryKey: ['runs', triggerId, pipelineId],
+          queryKey: ['runs', pipelineId, triggerId],
         })
       }
     },
@@ -95,6 +95,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
           <TableRow>
             <TableHeaderCell textAlignment="text-right">#</TableHeaderCell>
             <TableHeaderCell>Status</TableHeaderCell>
+            {!triggerId && <TableHeaderCell>Trigger</TableHeaderCell>}
             <TableHeaderCell>Started at</TableHeaderCell>
             <TableHeaderCell textAlignment="text-right">
               Duration
@@ -109,6 +110,16 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
               <TableCell>
                 <Badge text={run.status} color={STATUS_COLORS[run.status]} />
               </TableCell>
+              {!triggerId && (
+                <TableCell>
+                  <Link
+                    to={`/pipelines/${pipelineId}/triggers/${run.trigger_id}`}
+                    className="hover:text-indigo-500 hover:border-b-indigo-500 border-b border-b-transparent transition-colors"
+                  >
+                    {run.trigger_id}
+                  </Link>
+                </TableCell>
+              )}
               <TableCell>
                 <Text>{formatDateTime(run.start_time)}</Text>
               </TableCell>
@@ -122,7 +133,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
               </TableCell>
               <TableCell>
                 <Link
-                  to={`/pipelines/${pipelineId}/triggers/${triggerId}/runs/${run.id}`}
+                  to={`/pipelines/${pipelineId}/triggers/${run.trigger_id}/runs/${run.id}`}
                 >
                   Logs
                 </Link>
