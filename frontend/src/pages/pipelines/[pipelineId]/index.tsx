@@ -4,12 +4,13 @@ import {
   Title,
   ColGrid,
   Block,
-  Subtitle,
   Text,
   ListItem,
   Button,
   Flex,
   Icon,
+  List,
+  Bold,
 } from '@tremor/react'
 import { useParams } from 'react-router-dom'
 import React from 'react'
@@ -37,7 +38,6 @@ const PipelineView: React.FC = () => {
     queryKey: ['runs', pipelineId, undefined],
     queryFn: () => listRuns(pipelineId),
     initialData: [],
-    // enabled: !!triggerId,
   })
 
   if (runsQuery.isLoading || pipelineQuery.isLoading)
@@ -52,7 +52,10 @@ const PipelineView: React.FC = () => {
     <main className="bg-slate-50 p-6 sm:p-10 min-h-screen">
       <Flex alignItems="items-start">
         <Block>
-          <Title>Pipeline {pipeline.name}</Title>
+          <Flex justifyContent="justify-start" spaceX="space-x-2">
+            <Title>Pipeline {pipeline.name}</Title>
+            <Text truncate>&middot; {pipeline.description}</Text>
+          </Flex>
           <Breadcrumbs pipeline={pipeline} />
         </Block>
 
@@ -70,16 +73,20 @@ const PipelineView: React.FC = () => {
       >
         <Card>
           <div className="tr-flex tr-flex-col tr-h-full">
-            <Title>{pipeline.name}</Title>
-            <Text>{pipeline.description}</Text>
+            <Title>Tasks</Title>
 
-            <Flex>
-              <Subtitle>Tasks</Subtitle>
-            </Flex>
-
-            {pipeline.tasks.map((task) => (
-              <ListItem key={task.id}>{task.name}</ListItem>
-            ))}
+            <List>
+              {pipeline.tasks.map((task) => (
+                <ListItem key={task.id}>
+                  <Block>
+                    <Text>
+                      <Bold>{task.name}</Bold>
+                    </Text>
+                    {task.description && <Text>{task.description}</Text>}
+                  </Block>
+                </ListItem>
+              ))}
+            </List>
 
             <div style={{ flexGrow: 1 }} />
 
