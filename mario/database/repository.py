@@ -39,16 +39,20 @@ def update_pipeline_run(
     db.commit()
 
 
-def list_pipeline_runs(pipeline_id: str, trigger_id: str):
+def list_pipeline_runs(pipeline_id: str = None, trigger_id: str = None):
     db = SessionLocal()
     db.expire_on_commit = False
 
+    filters = []
+
+    if pipeline_id:
+        filters.append(models.PipelineRun.pipeline_id == pipeline_id)
+    if trigger_id:
+        filters.append(models.PipelineRun.trigger_id == trigger_id)
+
     pipeline_runs: List[models.PipelineRun] = (
         db.query(models.PipelineRun)
-        .filter(
-            models.PipelineRun.pipeline_id == pipeline_id,
-            models.PipelineRun.trigger_id == trigger_id,
-        )
+        .filter(*filters)
         .order_by(models.PipelineRun.id.desc())
         .limit(30)
         .all()

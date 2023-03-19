@@ -94,13 +94,13 @@ def get_pipeline_input_schema(pipeline_id: str):
     return pipeline.params.schema() if pipeline.params else dict()
 
 
-@api.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs")
-def get_runs(pipeline_id: str, trigger_id: str):
-    return list_pipeline_runs(pipeline_id, trigger_id)
+@api.get("/runs")
+def list_runs(pipeline_id: str = None, trigger_id: str = None):
+    return list_pipeline_runs(pipeline_id=pipeline_id, trigger_id=trigger_id)
 
 
-@api.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs/{run_id}")
-def get_run(pipeline_id: str, trigger_id: str, run_id: int):
+@api.get("/runs/{run_id}")
+def get_run(run_id: int):
     return get_pipeline_run(run_id)
 
 

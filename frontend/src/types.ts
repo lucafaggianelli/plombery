@@ -38,6 +38,7 @@ export interface Pipeline {
 export interface PipelineRun {
     id: number
     status: PipelineRunStatus
+    trigger_id: string
     start_time: Date
     duration: number
 }

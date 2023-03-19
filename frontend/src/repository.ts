@@ -1,9 +1,12 @@
+import { SuperFetch } from './http-client'
 import { LogEntry, Pipeline, PipelineRun } from './types'
 
 const DEFAULT_BASE_URL = import.meta.env.DEV
   ? 'http://localhost:8000/api'
   : '/api'
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
+
+const client = new SuperFetch({ baseUrl: BASE_URL })
 
 export const getPipelines = async (): Promise<Pipeline[]> => {
   const response = await fetch(`${BASE_URL}/pipelines`)
@@ -35,13 +38,19 @@ export const getPipelineInputSchema = async (pipelineId: string) => {
 }
 
 export const getRuns = async (
-  pipelineId: string,
-  triggerId: string
+  pipelineId?: string,
+  triggerId?: string
 ): Promise<PipelineRun[]> => {
-  const response = await fetch(
-    `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/runs`
-  )
-  const runs: any[] = await response.json()
+  const params = {
+    pipeline_id: pipelineId,
+    trigger_id: triggerId,
+  }
+
+  const runs = await client.fetch<any[]>({
+    url: '/runs',
+    params,
+  })
+
   runs.forEach((run) => {
     run.start_time = new Date(run.start_time)
   })
@@ -49,14 +58,8 @@ export const getRuns = async (
   return runs as PipelineRun[]
 }
 
-export const getRun = async (
-  pipelineId: string,
-  triggerId: string,
-  runId: number
-): Promise<PipelineRun> => {
-  const response = await fetch(
-    `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/runs/${runId}`
-  )
+export const getRun = async (runId: number): Promise<PipelineRun> => {
+  const response = await fetch(`${BASE_URL}/runs/${runId}`)
   const run = await response.json()
   run.start_time = new Date(run.start_time)
 
@@ -87,7 +90,7 @@ export const getRunData = async (
   pipelineId: string,
   triggerId: string,
   runId: number,
-  taskId: string,
+  taskId: string
 ) => {
   const response = await fetch(
     `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/runs/${runId}/data/${taskId}`
@@ -95,6 +98,9 @@ export const getRunData = async (
 
   return await response.json()
 }
+
+export const getPipelineRunUrl = (pipelineId: string) =>
+  `${BASE_URL}/pipelines/${pipelineId}/run`
 
 export const getTriggerRunUrl = (pipelineId: string, triggerId: string) =>
   `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/run`
