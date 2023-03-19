@@ -9,8 +9,8 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 const client = new SuperFetch({ baseUrl: BASE_URL })
 
 export const getPipelines = async (): Promise<Pipeline[]> => {
-  const response = await fetch(`${BASE_URL}/pipelines`)
-  const pipelines: any[] = await response.json()
+  const pipelines = await client.get<any[]>('/pipelines')
+
   pipelines.forEach((pipeline) => {
     pipeline.triggers.forEach((trigger: any) => {
       trigger.next_fire_time = new Date(trigger.next_fire_time)
@@ -21,8 +21,8 @@ export const getPipelines = async (): Promise<Pipeline[]> => {
 }
 
 export const getPipeline = async (pipelineId: string): Promise<Pipeline> => {
-  const response = await fetch(`${BASE_URL}/pipelines/${pipelineId}`)
-  const pipeline = await response.json()
+  const pipeline = await client.get(`/pipelines/${pipelineId}`)
+
   pipeline.triggers.forEach((trigger: any) => {
     trigger.next_fire_time = new Date(trigger.next_fire_time)
   })
@@ -31,13 +31,11 @@ export const getPipeline = async (pipelineId: string): Promise<Pipeline> => {
 }
 
 export const getPipelineInputSchema = async (pipelineId: string) => {
-  const response = await fetch(
-    `${BASE_URL}/pipelines/${pipelineId}/input-schema`
-  )
+  const response = await client.get(`/pipelines/${pipelineId}/input-schema`)
   return await response.json()
 }
 
-export const getRuns = async (
+export const listRuns = async (
   pipelineId?: string,
   triggerId?: string
 ): Promise<PipelineRun[]> => {
@@ -46,7 +44,7 @@ export const getRuns = async (
     trigger_id: triggerId,
   }
 
-  const runs = await client.fetch<any[]>({
+  const runs = await client.get<any[]>({
     url: '/runs',
     params,
   })
@@ -59,8 +57,7 @@ export const getRuns = async (
 }
 
 export const getRun = async (runId: number): Promise<PipelineRun> => {
-  const response = await fetch(`${BASE_URL}/runs/${runId}`)
-  const run = await response.json()
+  const run = await client.get(`/runs/${runId}`)
   run.start_time = new Date(run.start_time)
 
   return run as PipelineRun
@@ -71,12 +68,11 @@ export const getLogs = async (
   triggerId: string,
   runId: number
 ): Promise<LogEntry[]> => {
-  const response = await fetch(
-    `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/runs/${runId}/logs`
+  const rawLogs = await client.get<string>(
+    `/pipelines/${pipelineId}/triggers/${triggerId}/runs/${runId}/logs`
   )
-  // Logs data is in JSONL format (1 JSON object per line)
-  const rawLogs: string = await response.text()
 
+  // Logs data is in JSONL format (1 JSON object per line)
   return rawLogs.split('\n').map((line, i) => {
     const parsed = JSON.parse(line)
     // Add a unique id to be used as key for React
@@ -92,25 +88,28 @@ export const getRunData = async (
   runId: number,
   taskId: string
 ) => {
-  const response = await fetch(
-    `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/runs/${runId}/data/${taskId}`
+  return await client.get(
+    `/pipelines/${pipelineId}/triggers/${triggerId}/runs/${runId}/data/${taskId}`
   )
-
-  return await response.json()
 }
 
-export const getPipelineRunUrl = (pipelineId: string) =>
-  `${BASE_URL}/pipelines/${pipelineId}/run`
+export const getPipelineRunUrl = (
+  pipelineId: string,
+  absolute: boolean = true
+) => `${absolute ? BASE_URL : ''}/pipelines/${pipelineId}/run`
 
-export const getTriggerRunUrl = (pipelineId: string, triggerId: string) =>
-  `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/run`
+export const getTriggerRunUrl = (
+  pipelineId: string,
+  triggerId: string,
+  absolute: boolean = true
+) =>
+  `${
+    absolute ? BASE_URL : ''
+  }/pipelines/${pipelineId}/triggers/${triggerId}/run`
 
 export const runPipelineTrigger = async (
   pipelineId: string,
   triggerId: string
 ) => {
-  const response = await fetch(getTriggerRunUrl(pipelineId, triggerId), {
-    method: 'POST',
-  })
-  return await response.json()
+  return await client.post(getTriggerRunUrl(pipelineId, triggerId, false))
 }
