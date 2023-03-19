@@ -1,5 +1,5 @@
 import { PipelineRun } from '@/types'
-import { formatDateTime, STATUS_COLORS } from '@/utils'
+import { formatDateTime } from '@/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   Card,
@@ -10,10 +10,10 @@ import {
   TableBody,
   TableCell,
   Text,
-  Badge,
 } from '@tremor/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import StatusBadge from './StatusBadge'
 
 interface Props {
   pipelineId: string
@@ -100,21 +100,28 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
             <TableHeaderCell textAlignment="text-right">
               Duration
             </TableHeaderCell>
-            <TableHeaderCell> </TableHeaderCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {runs.map((run) => (
             <TableRow key={run.id}>
-              <TableCell textAlignment="text-right">{run.id}</TableCell>
+              <TableCell textAlignment="text-right">
+                <Link
+                  to={`/pipelines/${pipelineId}/triggers/${run.trigger_id}/runs/${run.id}`}
+                  className="hover:text-indigo-500 hover:border-b-indigo-500 border-b border-b-transparent transition-colors"
+                >
+                  {run.id}
+                </Link>
+              </TableCell>
               <TableCell>
-                <Badge text={run.status} color={STATUS_COLORS[run.status]} />
+                <StatusBadge status={run.status} />
               </TableCell>
               {!triggerId && (
                 <TableCell>
                   <Link
                     to={`/pipelines/${pipelineId}/triggers/${run.trigger_id}`}
                     className="hover:text-indigo-500 hover:border-b-indigo-500 border-b border-b-transparent transition-colors"
+                    title="View trigger details"
                   >
                     {run.trigger_id}
                   </Link>
@@ -130,13 +137,6 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
                   <Timer startTime={run.start_time} />
                 )}{' '}
                 s
-              </TableCell>
-              <TableCell>
-                <Link
-                  to={`/pipelines/${pipelineId}/triggers/${run.trigger_id}/runs/${run.id}`}
-                >
-                  Logs
-                </Link>
               </TableCell>
             </TableRow>
           ))}

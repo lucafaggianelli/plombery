@@ -59,7 +59,7 @@ const TriggersList: React.FC<TriggersListProps> = ({ pipeline }) => (
               )}
             </TableCell>
             <TableCell>
-              <Badge text="Success" color="emerald" size="xs" />
+              -
             </TableCell>
           </TableRow>
         ))}

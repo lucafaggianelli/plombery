@@ -1,16 +1,4 @@
-import Breadcrumbs from '@/components/Breadcrumbs'
-import RunsDurationChart from '@/components/RunsDurationChart'
-import RunsList from '@/components/RunsList'
-import RunsStatusChart from '@/components/RunsStatusChart'
-import {
-  getPipeline,
-  getPipelineRunUrl,
-  listRuns,
-  getTriggerRunUrl,
-  runPipelineTrigger,
-} from '@/repository'
-import { formatDateTime } from '@/utils'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import {
   Card,
   Title,
@@ -18,14 +6,21 @@ import {
   Block,
   Subtitle,
   Text,
-  Bold,
   ListItem,
   Button,
   Flex,
+  Icon,
 } from '@tremor/react'
 import { useParams } from 'react-router-dom'
 import React from 'react'
-import TriggerParamsDialog from '@/components/TriggerParamsDialog'
+import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
+
+import CopyButton from '@/components/CopyButton'
+import Breadcrumbs from '@/components/Breadcrumbs'
+import RunsDurationChart from '@/components/RunsDurationChart'
+import RunsList from '@/components/RunsList'
+import RunsStatusChart from '@/components/RunsStatusChart'
+import { getPipeline, getPipelineRunUrl, listRuns } from '@/repository'
 
 const PipelineView: React.FC = () => {
   const urlParams = useParams()
@@ -80,7 +75,6 @@ const PipelineView: React.FC = () => {
 
             <Flex>
               <Subtitle>Tasks</Subtitle>
-              <div className="border-b border-b-zinc-200 flex-grow h-1" />
             </Flex>
 
             {pipeline.tasks.map((task) => (
@@ -90,7 +84,17 @@ const PipelineView: React.FC = () => {
             <div style={{ flexGrow: 1 }} />
 
             <ListItem>
-              <Text>URL</Text>
+              <Flex justifyContent="justify-start">
+                <Text>Run URL</Text>
+
+                <Icon
+                  size="sm"
+                  color="slate"
+                  icon={QuestionMarkCircleIcon}
+                  tooltip="URL to run the pipeline programmatically via an HTTP POST request"
+                />
+              </Flex>
+
               <Flex justifyContent="justify-end">
                 <div
                   className="bg-slate-100 tr-border-slate-300 rounded tr-border text-slate-500 text-xs truncate px-1 mr-2"
@@ -100,16 +104,7 @@ const PipelineView: React.FC = () => {
                   {getPipelineRunUrl(pipelineId)}
                 </div>
 
-                <Button
-                  variant="light"
-                  color="indigo"
-                  size="xs"
-                  onClick={() => {
-                    navigator.clipboard.writeText(getPipelineRunUrl(pipelineId))
-                  }}
-                >
-                  Copy
-                </Button>
+                <CopyButton content={getPipelineRunUrl(pipelineId)} />
               </Flex>
             </ListItem>
           </div>

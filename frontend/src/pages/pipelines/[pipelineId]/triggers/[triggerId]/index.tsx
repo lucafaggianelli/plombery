@@ -1,3 +1,22 @@
+import { useQuery, useMutation } from '@tanstack/react-query'
+import {
+  Card,
+  Title,
+  ColGrid,
+  Block,
+  Subtitle,
+  Text,
+  Bold,
+  ListItem,
+  Button,
+  Flex,
+  Icon,
+} from '@tremor/react'
+import { useParams } from 'react-router-dom'
+import React from 'react'
+
+import TriggerParamsDialog from '@/components/TriggerParamsDialog'
+import CopyButton from '@/components/CopyButton'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import RunsDurationChart from '@/components/RunsDurationChart'
 import RunsList from '@/components/RunsList'
@@ -9,23 +28,7 @@ import {
   runPipelineTrigger,
 } from '@/repository'
 import { formatDateTime } from '@/utils'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import {
-  Card,
-  Title,
-  ColGrid,
-  Block,
-  Subtitle,
-  Text,
-  Bold,
-  ListItem,
-  List,
-  Button,
-  Flex,
-} from '@tremor/react'
-import { useParams } from 'react-router-dom'
-import React from 'react'
-import TriggerParamsDialog from '@/components/TriggerParamsDialog'
+import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 
 const TriggerView: React.FC = () => {
   const urlParams = useParams()
@@ -122,7 +125,17 @@ const TriggerView: React.FC = () => {
             </ListItem>
 
             <ListItem>
-              <Text>URL</Text>
+              <Flex justifyContent="justify-start">
+                <Text>Run URL</Text>
+
+                <Icon
+                  size="sm"
+                  color="slate"
+                  icon={QuestionMarkCircleIcon}
+                  tooltip="URL to run the trigger programmatically via an HTTP POST request"
+                />
+              </Flex>
+
               <Flex justifyContent="justify-end">
                 <div
                   className="bg-slate-100 tr-border-slate-300 rounded tr-border text-slate-500 text-sm truncate px-1 mr-2"
@@ -132,18 +145,7 @@ const TriggerView: React.FC = () => {
                   {getTriggerRunUrl(pipelineId, triggerId)}
                 </div>
 
-                <Button
-                  variant="light"
-                  color="indigo"
-                  size="xs"
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      getTriggerRunUrl(pipelineId, triggerId)
-                    )
-                  }}
-                >
-                  Copy
-                </Button>
+                <CopyButton content={getTriggerRunUrl(pipelineId, triggerId)} />
               </Flex>
             </ListItem>
           </div>

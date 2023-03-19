@@ -1,12 +1,5 @@
-import Breadcrumbs from '@/components/Breadcrumbs'
-import DataViewerDialog from '@/components/DataViewerDialog'
-import LogViewer from '@/components/LogViewer'
-import RunsTasksList from '@/components/Tasks'
-import { getPipeline, getRun } from '@/repository'
-import { STATUS_COLORS } from '@/utils'
 import { useQuery } from '@tanstack/react-query'
 import {
-  Badge,
   Block,
   Card,
   ColGrid,
@@ -15,8 +8,13 @@ import {
   Text,
   Title,
 } from '@tremor/react'
-import { useState } from 'react'
 import { useParams } from 'react-router-dom'
+
+import Breadcrumbs from '@/components/Breadcrumbs'
+import LogViewer from '@/components/LogViewer'
+import StatusBadge from '@/components/StatusBadge'
+import RunsTasksList from '@/components/Tasks'
+import { getPipeline, getRun } from '@/repository'
 
 const RunViewPage = () => {
   const urlParams = useParams()
@@ -59,7 +57,7 @@ const RunViewPage = () => {
         <Card>
           <Flex alignItems="items-start">
             <Text>Duration</Text>
-            <Badge text={run.status} color={STATUS_COLORS[run.status]} />
+            <StatusBadge status={run.status} />
           </Flex>
           <Flex
             justifyContent="justify-start"

@@ -1,6 +1,8 @@
-import { Trigger } from '@/types'
-import { Button, Card, Flex, Subtitle, Title } from '@tremor/react'
+import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
+import { Button } from '@tremor/react'
 import { useState } from 'react'
+
+import { Trigger } from '@/types'
 import Dialog from './Dialog'
 
 interface Props {
@@ -15,7 +17,8 @@ const TriggerParamsDialog: React.FC<Props> = ({ trigger }) => {
       <Button
         color="indigo"
         variant="light"
-        size="xs"
+        size="sm"
+        icon={WrenchScrewdriverIcon}
         onClick={() => setOpen(true)}
       >
         Show params
