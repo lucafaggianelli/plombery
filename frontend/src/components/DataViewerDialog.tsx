@@ -13,8 +13,6 @@ import Dialog from './Dialog'
 import { HTTPError } from '@/http-client'
 
 interface Props {
-  pipelineId: string
-  triggerId: string
   runId: number
   taskId: string
   open: boolean
@@ -26,16 +24,14 @@ registerAllRenderers()
 registerAllPlugins()
 
 const DataViewerDialog: React.FC<Props> = ({
-  pipelineId,
-  triggerId,
   runId,
   taskId,
   open,
   onClose,
 }) => {
   const query = useQuery<any, HTTPError>({
-    queryKey: ['getRunData', { pipelineId, triggerId, runId, taskId }],
-    queryFn: () => getRunData(pipelineId, triggerId, runId, taskId),
+    queryKey: ['getRunData', { runId, taskId }],
+    queryFn: () => getRunData(runId, taskId),
     enabled: open,
   })
 

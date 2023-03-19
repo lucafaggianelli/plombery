@@ -83,13 +83,11 @@ export const getLogs = async (
 }
 
 export const getRunData = async (
-  pipelineId: string,
-  triggerId: string,
   runId: number,
   taskId: string
 ) => {
   return await client.get(
-    `/pipelines/${pipelineId}/triggers/${triggerId}/runs/${runId}/data/${taskId}`
+    `/runs/${runId}/data/${taskId}`
   )
 }
 

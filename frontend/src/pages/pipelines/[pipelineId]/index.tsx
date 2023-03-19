@@ -61,11 +61,7 @@ const PipelineView: React.FC = () => {
           <Breadcrumbs pipeline={pipeline} />
         </Block>
 
-        <Button
-          size="xs"
-          color="indigo"
-          disabled
-        >
+        <Button size="xs" color="indigo" disabled>
           Run now
         </Button>
       </Flex>
@@ -80,40 +76,24 @@ const PipelineView: React.FC = () => {
         <Card>
           <div className="tr-flex tr-flex-col tr-h-full">
             <Title>{pipeline.name}</Title>
-            <Subtitle>{pipeline.description}</Subtitle>
+            <Text>{pipeline.description}</Text>
+
+            <Flex>
+              <Subtitle>Tasks</Subtitle>
+              <div className="border-b border-b-zinc-200 flex-grow h-1" />
+            </Flex>
+
+            {pipeline.tasks.map((task) => (
+              <ListItem key={task.id}>{task.name}</ListItem>
+            ))}
 
             <div style={{ flexGrow: 1 }} />
-
-            {/* <ListItem>
-              <Text>Schedule</Text>
-              <Text>
-                <Bold>{trigger.interval}</Bold>
-              </Text>
-            </ListItem>
-
-            <ListItem>
-              <Text>Next run</Text>
-              <Text>
-                <Bold>{formatDateTime(trigger.next_fire_time)}</Bold>
-              </Text>
-            </ListItem>
-
-            <ListItem>
-              <Text>Params</Text>
-              {trigger.params ? (
-                <TriggerParamsDialog trigger={trigger} />
-              ) : (
-                <Text>
-                  <em>No params</em>
-                </Text>
-              )}
-            </ListItem> */}
 
             <ListItem>
               <Text>URL</Text>
               <Flex justifyContent="justify-end">
                 <div
-                  className="bg-slate-100 tr-border-slate-300 rounded tr-border text-slate-500 text-sm truncate px-1 mr-2"
+                  className="bg-slate-100 tr-border-slate-300 rounded tr-border text-slate-500 text-xs truncate px-1 mr-2"
                   style={{ maxWidth: 200 }}
                   title={getPipelineRunUrl(pipelineId)}
                 >
@@ -125,9 +105,7 @@ const PipelineView: React.FC = () => {
                   color="indigo"
                   size="xs"
                   onClick={() => {
-                    navigator.clipboard.writeText(
-                      getPipelineRunUrl(pipelineId)
-                    )
+                    navigator.clipboard.writeText(getPipelineRunUrl(pipelineId))
                   }}
                 >
                   Copy
@@ -143,10 +121,7 @@ const PipelineView: React.FC = () => {
       </ColGrid>
 
       <Block marginTop="mt-6">
-        <RunsList
-          runs={runsQuery.data}
-          pipelineId={pipelineId}
-        />
+        <RunsList runs={runsQuery.data} pipelineId={pipelineId} />
       </Block>
     </main>
   )

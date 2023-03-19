@@ -1,13 +1,34 @@
+import {
+  ArrowPathIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  NoSymbolIcon,
+  StopCircleIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline'
 import { Color } from '@tremor/react'
 import dayjs from 'dayjs'
 
 import { PipelineRunStatus } from './types'
 
-export const STATUS_COLORS: Record<PipelineRunStatus, Color> = {
+type ExtendedStatus = PipelineRunStatus | 'warning' | 'notrun'
+
+export const STATUS_COLORS: Record<ExtendedStatus, Color> = {
   completed: 'emerald',
   failed: 'rose',
   cancelled: 'slate',
   running: 'blue',
+  notrun: 'slate',
+  warning: 'amber',
+}
+
+export const STATUS_ICONS: Record<ExtendedStatus, React.ElementType<any>> = {
+  completed: CheckCircleIcon,
+  failed: XCircleIcon,
+  cancelled: StopCircleIcon,
+  running: ArrowPathIcon,
+  notrun: NoSymbolIcon,
+  warning: ExclamationTriangleIcon,
 }
 
 export const formatDateTime = (date: Date) =>

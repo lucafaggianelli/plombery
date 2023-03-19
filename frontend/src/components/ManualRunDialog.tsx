@@ -197,7 +197,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
               Close
             </Button>
 
-            <Button color="indigo" type="submit">
+            <Button color="indigo" type="submit" disabled>
               Run
             </Button>
           </Flex>

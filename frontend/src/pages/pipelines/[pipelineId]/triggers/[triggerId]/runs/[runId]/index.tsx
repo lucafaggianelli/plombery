@@ -1,13 +1,13 @@
 import Breadcrumbs from '@/components/Breadcrumbs'
 import DataViewerDialog from '@/components/DataViewerDialog'
 import LogViewer from '@/components/LogViewer'
+import RunsTasksList from '@/components/Tasks'
 import { getPipeline, getRun } from '@/repository'
 import { STATUS_COLORS } from '@/utils'
 import { useQuery } from '@tanstack/react-query'
 import {
   Badge,
   Block,
-  Button,
   Card,
   ColGrid,
   Flex,
@@ -18,13 +18,11 @@ import {
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 
-const LogsPage = () => {
+const RunViewPage = () => {
   const urlParams = useParams()
   const pipelineId = urlParams.pipelineId as string
   const triggerId = urlParams.triggerId as string
   const runId = parseInt(urlParams.runId as string)
-
-  const [viewDataDialog, setViewDataDialog] = useState<string | undefined>()
 
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],
@@ -73,29 +71,11 @@ const LogsPage = () => {
           </Flex>
         </Card>
 
-        <Card>
-          {pipeline.tasks.map((task) => (
-            <Button
-              key={task.id}
-              variant="secondary"
-              color="indigo"
-              size="xs"
-              onClick={() => setViewDataDialog(task.id)}
-            >
-              View {task.id} data
-            </Button>
-          ))}
-        </Card>
+        <RunsTasksList
+          pipeline={pipeline}
+          run={run}
+        />
       </ColGrid>
-
-      <DataViewerDialog
-        pipelineId={pipelineId}
-        triggerId={triggerId}
-        runId={runId}
-        taskId={viewDataDialog || ''}
-        open={!!viewDataDialog}
-        onClose={() => setViewDataDialog(undefined)}
-      />
 
       <Block marginTop="mt-6">
         <Card>
@@ -106,4 +86,4 @@ const LogsPage = () => {
   )
 }
 
-export default LogsPage
+export default RunViewPage
