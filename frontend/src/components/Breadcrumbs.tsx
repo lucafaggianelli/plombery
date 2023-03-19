@@ -25,7 +25,11 @@ const Breadcrumbs: React.FC<Props> = ({ pipeline, trigger, run }) => {
         </Text>
         <Separator />
         <Text>
-          <Link to={`/pipelines/${pipeline.id}`}>{pipeline.name}</Link>
+          {trigger ? (
+            <Link to={`/pipelines/${pipeline.id}`}>{pipeline.name}</Link>
+          ) : (
+            pipeline.name
+          )}
         </Text>
 
         {trigger && (
