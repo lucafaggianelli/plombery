@@ -112,7 +112,12 @@ def get_logs(pipeline_id: str, trigger_id: str, run_id: int):
 
 @api.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs/{run_id}/data/{task}")
 def get_data(pipeline_id: str, trigger_id: str, run_id: int, task: str):
-    return get_pipeline_run_data(PipelineRun(pipeline_id=pipeline_id, id=run_id), task)
+    data = get_pipeline_run_data(PipelineRun(pipeline_id=pipeline_id, id=run_id), task)
+
+    if not data:
+        raise HTTPException(status_code=404, detail="Task has no data")
+
+    return data
 
 
 @api.post("/pipelines/{pipeline_id}/triggers/{trigger_id}/run")

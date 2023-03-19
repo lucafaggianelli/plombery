@@ -5,11 +5,12 @@ import {
   registerAllPlugins,
 } from 'handsontable/registry'
 import 'handsontable/dist/handsontable.full.min.css'
-import { Button } from '@tremor/react'
+import { Button, Text } from '@tremor/react'
 import { useQuery } from '@tanstack/react-query'
 
 import { getRunData } from '@/repository'
 import Dialog from './Dialog'
+import { HTTPError } from '@/http-client'
 
 interface Props {
   pipelineId: string
@@ -32,7 +33,7 @@ const DataViewerDialog: React.FC<Props> = ({
   open,
   onClose,
 }) => {
-  const query = useQuery({
+  const query = useQuery<any, HTTPError>({
     queryKey: ['getRunData', { pipelineId, triggerId, runId, taskId }],
     queryFn: () => getRunData(pipelineId, triggerId, runId, taskId),
     enabled: open,
@@ -45,23 +46,30 @@ const DataViewerDialog: React.FC<Props> = ({
         subtitle="View data"
         isOpen={open}
         footer={
-          <Button
-            variant="secondary"
-            color="indigo"
-            onClick={() => onClose()}
-          >
+          <Button variant="secondary" color="indigo" onClick={() => onClose()}>
             Close
           </Button>
         }
         onClose={onClose}
       >
-        {!query.isLoading && <HotTable
-          data={query.data}
-          rowHeaders={true}
-          colHeaders={Object.keys(query.data[0])}
-          height="70vh"
-          licenseKey="non-commercial-and-evaluation"
-        />}
+        {!query.isLoading && !query.isError && (
+          <HotTable
+            data={query.data}
+            rowHeaders={true}
+            colHeaders={Object.keys(query.data[0])}
+            height="70vh"
+            licenseKey="non-commercial-and-evaluation"
+          />
+        )}
+
+        {query.isError &&
+          (query.error.response.status === 404 ? (
+            <Text>The task has no data</Text>
+          ) : (
+            <Text color="rose">
+              Error fetching task data: {query.error.message}
+            </Text>
+          ))}
       </Dialog>
     </>
   )
