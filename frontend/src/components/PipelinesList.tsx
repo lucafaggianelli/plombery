@@ -14,7 +14,7 @@ import {
 } from '@tremor/react'
 import { Link } from 'react-router-dom'
 import React from 'react'
-import { getPipelines } from '../repository'
+import { listPipelines } from '../repository'
 
 import { Pipeline } from '../types'
 import { formatDateTime } from '../utils'
@@ -71,7 +71,7 @@ const TriggersList: React.FC<TriggersListProps> = ({ pipeline }) => (
 const PipelinesList: React.FC = () => {
   const query = useQuery({
     queryKey: ['pipelines'],
-    queryFn: getPipelines,
+    queryFn: listPipelines,
     initialData: [],
   })
 

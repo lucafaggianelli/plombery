@@ -8,7 +8,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 
 const client = new SuperFetch({ baseUrl: BASE_URL })
 
-export const getPipelines = async (): Promise<Pipeline[]> => {
+export const listPipelines = async (): Promise<Pipeline[]> => {
   const pipelines = await client.get<any[]>('/pipelines')
 
   pipelines.forEach((pipeline) => {
