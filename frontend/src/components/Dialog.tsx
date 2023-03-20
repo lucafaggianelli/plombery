@@ -10,6 +10,7 @@ import {
 interface Props extends PropsWithChildren {
   footer?: ReactNode
   isOpen: boolean
+  maxHeight?: React.CSSProperties['maxHeight']
   maxWidth?: React.CSSProperties['maxWidth']
   minWidth?: React.CSSProperties['minWidth']
   subtitle?: string
@@ -21,6 +22,7 @@ const Dialog: React.FC<Props> = ({
   children,
   footer,
   isOpen: open,
+  maxHeight,
   maxWidth = '600px',
   minWidth = '350px',
   subtitle,
@@ -63,6 +65,7 @@ const Dialog: React.FC<Props> = ({
         padding: 0,
         background: 'transparent',
         overflow: 'visible',
+        maxHeight,
         maxWidth,
         minWidth,
       }}

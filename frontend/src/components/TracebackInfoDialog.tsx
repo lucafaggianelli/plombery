@@ -1,6 +1,7 @@
+import { Button, Flex } from '@tremor/react'
+import { useState } from 'react'
+
 import { LogEntry } from '@/types'
-import { Button, Card, Flex, Title } from '@tremor/react'
-import { createRef, MouseEventHandler, useState } from 'react'
 import Dialog from './Dialog'
 
 interface Props {
@@ -38,13 +39,14 @@ const TracebackInfoDialog: React.FC<Props> = ({ logEntry }) => {
         maxWidth="80%"
         onClose={() => setOpen(false)}
       >
-        <div className="flex flex-col" style={{ maxHeight: '90vh' }}>
+        <div className="flex flex-col">
           <div
             style={{
               minWidth: 350,
               maxWidth: '100%',
               overflow: 'auto',
               flexGrow: 1,
+              maxHeight: '70vh',
             }}
             className="p-3 my-3 tr-bg-slate-100 rounded-md whitespace-pre font-mono"
           >
