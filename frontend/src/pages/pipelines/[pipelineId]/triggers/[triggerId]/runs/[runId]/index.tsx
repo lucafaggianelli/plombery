@@ -1,13 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  Block,
-  Card,
-  ColGrid,
-  Flex,
-  Metric,
-  Text,
-  Title,
-} from '@tremor/react'
+import { Block, Card, ColGrid, Flex, Metric, Text, Title } from '@tremor/react'
 import { useParams } from 'react-router-dom'
 
 import Breadcrumbs from '@/components/Breadcrumbs'
@@ -54,6 +46,8 @@ const RunViewPage = () => {
       <Breadcrumbs pipeline={pipeline} trigger={trigger} run={run} />
 
       <ColGrid numColsMd={3} gapX="gap-x-6" gapY="gap-y-6" marginTop="mt-6">
+        <RunsTasksList pipeline={pipeline} run={run} />
+
         <Card>
           <Flex alignItems="items-start">
             <Text>Duration</Text>
@@ -68,11 +62,6 @@ const RunViewPage = () => {
             <Metric>{(run.duration / 1000).toFixed(1)}s</Metric>
           </Flex>
         </Card>
-
-        <RunsTasksList
-          pipeline={pipeline}
-          run={run}
-        />
       </ColGrid>
 
       <Block marginTop="mt-6">
