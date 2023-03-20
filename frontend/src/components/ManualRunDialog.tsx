@@ -1,9 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
-import { Block, Button, Flex, Text, TextInput } from '@tremor/react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { Block, Bold, Button, Flex, Text, TextInput } from '@tremor/react'
 import { JSONSchema7 } from 'json-schema'
-import { useState } from 'react'
+import { createRef, useState } from 'react'
 
-import { getPipelineInputSchema } from '../repository'
+import { getPipelineInputSchema, runPipeline } from '../repository'
 import { Pipeline } from '../types'
 import Dialog from './Dialog'
 
@@ -59,15 +59,18 @@ const schemaToForm = (schema: JSONSchema7) => {
         : value.type) || 'string'
     const required = schema.required?.includes(key)
 
-    if (['number', 'float', 'integer'].includes(value_type)) {
+    if (['number', 'integer'].includes(value_type)) {
       const minimum = value.minimum || value.exclusiveMinimum
       const maximum = value.maximum || value.exclusiveMaximum
 
       if (minimum !== undefined && maximum !== undefined) {
-        const step = (maximum - minimum) / 10
+        const output = createRef<HTMLOutputElement>()
+        const step = value_type === 'number' ? (maximum - minimum) / 10 : 1
 
         return (
           <Block key={key}>
+            <Text>{label}</Text>
+
             <input
               name={key}
               type="range"
@@ -76,7 +79,37 @@ const schemaToForm = (schema: JSONSchema7) => {
               step={step}
               defaultValue={defaultValue}
               required={required}
+              onInput={(event) =>
+                output.current &&
+                (output.current.value = (
+                  event.target as HTMLInputElement
+                ).value)
+              }
+              className="w-full mt-2 cursor-ew-resize appearance-none h-2 bg-slate-200 border border-slate-400 rounded"
             />
+
+            <Flex alignItems="items-baseline" spaceX="space-x-4">
+              <div className="ml-1">
+                <div className="tr-border-r border-slate-400 h-2 w-1" />
+                <Text>{minimum}</Text>
+              </div>
+
+              <Text>
+                <Bold>
+                  <output
+                    ref={output}
+                    className="px-2 py-1 rounded bg-slate-200 block truncate text-center"
+                  >
+                    {defaultValue}
+                  </output>
+                </Bold>
+              </Text>
+
+              <div className="mr-1">
+                <div className="tr-border-r border-slate-400 h-2 w-1" />
+                <Text>{maximum}</Text>
+              </div>
+            </Flex>
           </Block>
         )
       } else {
@@ -89,7 +122,7 @@ const schemaToForm = (schema: JSONSchema7) => {
               min={minimum}
               max={maximum}
               defaultValue={defaultValue}
-              className="tr-border-gray-300 tr-rounded-md tr-border tr-shadow-sm tr-pl-4 tr-pr-4 tr-pt-2 tr-pb-2 tr-text-sm tr-font-medium"
+              className="tr-border-gray-300 tr-rounded-md tr-border tr-shadow-sm tr-pl-4 tr-pr-4 tr-pt-2 tr-pb-2 tr-text-sm tr-font-medium invalid:border-rose-500 mt-2"
               style={{ textAlign: 'end', width: '100%' }}
               required={required}
             />
@@ -103,7 +136,7 @@ const schemaToForm = (schema: JSONSchema7) => {
           <select
             name={key}
             defaultValue={defaultValue || ''}
-            className="tr-border-gray-300 tr-rounded-md tr-border tr-shadow-sm tr-pl-4 tr-pr-4 tr-pt-2 tr-pb-2 tr-text-sm tr-font-medium tr-w-full"
+            className="tr-border-gray-300 tr-rounded-md tr-border tr-shadow-sm tr-pl-4 tr-pr-4 tr-pt-2 tr-pb-2 tr-text-sm tr-font-medium tr-w-full invalid:border-rose-500 mt-2"
             required={required}
           >
             <option disabled value="">
@@ -127,6 +160,7 @@ const schemaToForm = (schema: JSONSchema7) => {
             name={key}
             placeholder={label}
             defaultValue={defaultValue}
+            marginTop="mt-2"
           />
         </div>
       )
@@ -149,6 +183,8 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
     enabled: open,
   })
 
+  const runPipelineMutation = useMutation(runPipeline(pipeline.id))
+
   return (
     <>
       <Button
@@ -168,12 +204,10 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
         <form
           method="dialog"
           onSubmit={(event) => {
-            console.log(
-              'submitted',
-              Object.fromEntries(
-                new FormData(event.target as HTMLFormElement).entries()
-              )
+            const params = Object.fromEntries(
+              new FormData(event.target as HTMLFormElement).entries()
             )
+            runPipelineMutation.mutateAsync(params)
           }}
         >
           {query.isLoading ? (
@@ -197,7 +231,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
               Close
             </Button>
 
-            <Button color="indigo" type="submit" disabled>
+            <Button color="indigo" type="submit">
               Run
             </Button>
           </Flex>
