@@ -1,11 +1,20 @@
 from datetime import datetime
+from typing import Optional
 
 from apscheduler.job import Job
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.triggers.date import DateTrigger
-from fastapi import FastAPI, HTTPException, Response, WebSocket, WebSocketDisconnect
+from fastapi import (
+    Body,
+    FastAPI,
+    HTTPException,
+    Response,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.middleware.cors import CORSMiddleware
 
+from mario.constants import MANUAL_TRIGGER_ID
 from mario.orchestrator import orchestrator
 from mario.pipeline.pipeline import Pipeline, Trigger, Task
 from mario.orchestrator.executor import (
@@ -119,6 +128,26 @@ def get_data(run_id: int, task: str):
         raise HTTPException(status_code=404, detail="Task has no data")
 
     return data
+
+
+@api.post("/pipelines/{pipeline_id}/run")
+async def run_pipeline(pipeline_id: str, params: Optional[dict] = Body()):
+    pipeline = orchestrator.get_pipeline(pipeline_id)
+
+    executor: AsyncIOExecutor = orchestrator.scheduler._lookup_executor("default")
+    executor.submit_job(
+        Job(
+            orchestrator.scheduler,
+            id=f"{pipeline.uuid}: {MANUAL_TRIGGER_ID}",
+            func=run,
+            args=[],
+            kwargs={"pipeline": pipeline, "params": params},
+            max_instances=1,
+            misfire_grace_time=None,
+            trigger=DateTrigger(),
+        ),
+        [datetime.now()],
+    )
 
 
 @api.post("/pipelines/{pipeline_id}/triggers/{trigger_id}/run")

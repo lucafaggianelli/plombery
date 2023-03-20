@@ -6,6 +6,7 @@ from logging import Logger
 import pandas
 from pydantic import BaseModel
 
+from mario.constants import MANUAL_TRIGGER_ID
 from mario.notifications import notification_manager
 from mario.logger import get_logger
 from mario.websocket import manager
@@ -16,12 +17,12 @@ from mario.orchestrator.data_storage import get_data_path, read_logs_file, read_
 from mario.pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger, Task
 
 
-def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger):
+def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger = None):
     pipeline_run = create_pipeline_run(
         PipelineRunCreate(
             start_time=datetime.now(),
             pipeline_id=pipeline.uuid,
-            trigger_id=trigger.id,
+            trigger_id=trigger.id if trigger else MANUAL_TRIGGER_ID,
             status="running",
         )
     )
@@ -63,14 +64,14 @@ def _send_pipeline_event(pipeline_run: PipelineRun):
     asyncio.ensure_future(awaitable)
 
 
-async def run(pipeline: Pipeline, trigger: Trigger):
-    print(f"Executing pipeline `{pipeline.uuid}` via trigger `{trigger.id}`")
+async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
+    print(f"Executing pipeline `{pipeline.uuid}` via trigger `{trigger.id if trigger else '_manual'}`")
 
     pipeline_run = _on_pipeline_start(pipeline, trigger)
 
     log_filename = get_data_path(pipeline_run) / "task_run.log"
 
-    input_params = trigger.params
+    input_params = trigger.params if trigger else params
     params = {}
 
     if pipeline.params:

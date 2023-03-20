@@ -4,6 +4,7 @@ interface FetchRequest {
   url: string
   method?: MethodType
   params?: Record<string, string | undefined>
+  json?: any
 }
 
 export class HTTPError extends Error {
@@ -60,9 +61,16 @@ export class SuperFetch {
     if (typeof request === 'string') {
       url = request
     } else {
-      const { url: _url, params, ...rest } = request
+      const { url: _url, params, json, ...rest } = request
       url = _url
       otherRequestParams = rest
+
+      if (json) {
+        otherRequestParams.body = JSON.stringify(json)
+        otherRequestParams.headers = {
+          'Content-Type': 'application/json'
+        }
+      }
 
       if (params) {
         const urlParams = buildSearchParams(params)

@@ -1,3 +1,4 @@
+import { PlayIcon } from '@heroicons/react/24/outline'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Block, Bold, Button, Flex, Text, TextInput } from '@tremor/react'
 import { JSONSchema7 } from 'json-schema'
@@ -191,9 +192,10 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
         color="indigo"
         variant="secondary"
         size="xs"
+        icon={PlayIcon}
         onClick={() => setOpen(true)}
       >
-        Run manually
+        Run pipeline
       </Button>
 
       <Dialog

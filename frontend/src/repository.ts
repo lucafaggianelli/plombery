@@ -1,4 +1,6 @@
-import { SuperFetch } from './http-client'
+import { UseMutationOptions } from '@tanstack/react-query'
+
+import { HTTPError, SuperFetch } from './http-client'
 import { LogEntry, Pipeline, PipelineRun } from './types'
 
 const DEFAULT_BASE_URL = import.meta.env.DEV
@@ -81,19 +83,20 @@ export const getLogs = async (
   })
 }
 
-export const getRunData = async (
-  runId: number,
-  taskId: string
-) => {
-  return await client.get(
-    `/runs/${runId}/data/${taskId}`
-  )
+export const getRunData = async (runId: number, taskId: string) => {
+  return await client.get(`/runs/${runId}/data/${taskId}`)
 }
 
-export const getPipelineRunUrl = (
-  pipelineId: string,
-  absolute: boolean = true
-) => `${absolute ? BASE_URL : ''}/pipelines/${pipelineId}/run`
+export const getPipelineRunUrl = (pipelineId: string) =>
+  `${BASE_URL}/pipelines/${pipelineId}/run`
+
+export const runPipeline = (
+  pipelineId: string
+): UseMutationOptions<void, HTTPError, any> => ({
+  async mutationFn(params) {
+    client.post({ url: `/pipelines/${pipelineId}/run`, json: params })
+  },
+})
 
 export const getTriggerRunUrl = (
   pipelineId: string,

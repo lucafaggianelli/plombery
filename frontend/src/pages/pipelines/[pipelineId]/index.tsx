@@ -6,7 +6,6 @@ import {
   Block,
   Text,
   ListItem,
-  Button,
   Flex,
   Icon,
   List,
@@ -22,6 +21,7 @@ import RunsDurationChart from '@/components/RunsDurationChart'
 import RunsList from '@/components/RunsList'
 import RunsStatusChart from '@/components/RunsStatusChart'
 import { getPipeline, getPipelineRunUrl, listRuns } from '@/repository'
+import ManualRunDialog from '@/components/ManualRunDialog'
 
 const PipelineView: React.FC = () => {
   const urlParams = useParams()
@@ -61,9 +61,7 @@ const PipelineView: React.FC = () => {
           <Breadcrumbs pipeline={pipeline} />
         </Block>
 
-        <Button size="xs" color="indigo" disabled>
-          Run now
-        </Button>
+        <ManualRunDialog pipeline={pipeline} />
       </Flex>
 
       <ColGrid
