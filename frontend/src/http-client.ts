@@ -55,15 +55,18 @@ export class SuperFetch {
     request: FetchRequest | string
   ): Promise<ResponseType> {
     let url: string
+    let otherRequestParams: RequestInit | undefined
 
     if (typeof request === 'string') {
       url = request
     } else {
-      url = request.url
+      const { url: _url, params, ...rest } = request
+      url = _url
+      otherRequestParams = rest
 
-      if (request.params) {
-        const params = buildSearchParams(request.params)
-        url += `?${params}`
+      if (params) {
+        const urlParams = buildSearchParams(params)
+        url += `?${urlParams}`
       }
     }
 
@@ -71,11 +74,11 @@ export class SuperFetch {
       url = this.config.baseUrl + url
     }
 
-    const fetchR = new Request(url)
-    const response = await fetch(fetchR)
+    const fetchRequest = new Request(url, otherRequestParams)
+    const response = await fetch(fetchRequest)
 
     if (!response.ok) {
-      throw new HTTPError(response, fetchR)
+      throw new HTTPError(response, fetchRequest)
     }
 
     if (response.headers.get('Content-Type') === 'application/json') {

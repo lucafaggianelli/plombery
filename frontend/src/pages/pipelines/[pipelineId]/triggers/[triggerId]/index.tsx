@@ -28,7 +28,7 @@ import {
   runPipelineTrigger,
 } from '@/repository'
 import { formatDateTime } from '@/utils'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
+import { PlayIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 
 const TriggerView: React.FC = () => {
   const urlParams = useParams()
@@ -77,11 +77,12 @@ const TriggerView: React.FC = () => {
         <Button
           size="xs"
           color="indigo"
+          icon={PlayIcon}
           onClick={() => {
             runPipelineMutation.mutateAsync()
           }}
         >
-          Run now
+          Run trigger
         </Button>
       </Flex>
 
