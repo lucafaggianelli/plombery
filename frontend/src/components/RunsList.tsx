@@ -10,6 +10,7 @@ import {
   TableBody,
   TableCell,
   Text,
+  Title,
 } from '@tremor/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -90,6 +91,8 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
 
   return (
     <Card marginTop="mt-5">
+      <Title>Runs</Title>
+
       <Table>
         <TableHead>
           <TableRow>

@@ -1,72 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  Card,
-  Table,
-  TableHead,
-  TableRow,
-  TableHeaderCell,
-  TableBody,
-  TableCell,
-  Text,
-  Title,
-  Badge,
-  Flex,
-} from '@tremor/react'
+import { Text, Title, Flex } from '@tremor/react'
 import { Link } from 'react-router-dom'
 import React from 'react'
-import { listPipelines } from '../repository'
 
-import { Pipeline } from '../types'
-import { formatDateTime } from '../utils'
+import { listPipelines } from '@/repository'
 import ManualRunDialog from './ManualRunDialog'
-
-interface TriggersListProps {
-  pipeline: Pipeline
-}
-
-const TriggersList: React.FC<TriggersListProps> = ({ pipeline }) => (
-  <Card marginTop="mt-5">
-    <Table>
-      <TableHead>
-        <TableRow>
-          <TableHeaderCell>Name</TableHeaderCell>
-          <TableHeaderCell>Interval</TableHeaderCell>
-          <TableHeaderCell>Next fire time</TableHeaderCell>
-          <TableHeaderCell>Latest Status</TableHeaderCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {pipeline.triggers.map((trigger) => (
-          <TableRow key={trigger.id}>
-            <TableCell>
-              <Link to={`/pipelines/${pipeline.id}/triggers/${trigger.id}`}>
-                {trigger.name}
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Text>{trigger.interval}</Text>
-            </TableCell>
-            <TableCell>
-              {trigger.paused ? (
-                <Badge
-                  text="Disabled"
-                  color="amber"
-                  tooltip="Re-enable the trigger setting paused=False"
-                  size="xs"
-                />
-              ) : (
-                formatDateTime(trigger.next_fire_time)
-              )}
-            </TableCell>
-            <TableCell>
-              -
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </Card>
-)
+import TriggersList from './TriggersList'
 
 const PipelinesList: React.FC = () => {
   const query = useQuery({
@@ -86,17 +25,31 @@ const PipelinesList: React.FC = () => {
       {pipelines.map((pipeline) => (
         <React.Fragment key={pipeline.id}>
           <Flex>
-            <Flex justifyContent="justify-start" spaceX="space-x-2">
-              <Title>{pipeline.name}</Title>
-              <Text>
-                <span className="tr-block tr-truncate tr-max-w-lg">
-                  {pipeline.description}
-                </span>
-              </Text>
+            <Flex>
+              <Flex
+                justifyContent="justify-start"
+                alignItems="items-baseline"
+                spaceX="space-x-2"
+              >
+                <Title>
+                  <Link
+                    to={`/pipelines/${pipeline.id}`}
+                    className="hover:text-indigo-500 transition-colors"
+                  >
+                    {pipeline.name}
+                  </Link>
+                </Title>
+                <Text>
+                  <span className="tr-block tr-truncate tr-max-w-lg">
+                    {pipeline.description}
+                  </span>
+                </Text>
+              </Flex>
             </Flex>
 
             <ManualRunDialog pipeline={pipeline} />
           </Flex>
+
           <TriggersList pipeline={pipeline} />
         </React.Fragment>
       ))}

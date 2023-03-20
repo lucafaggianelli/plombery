@@ -10,6 +10,7 @@ import {
   Icon,
   List,
   Bold,
+  Col,
 } from '@tremor/react'
 import { useParams } from 'react-router-dom'
 import React from 'react'
@@ -22,6 +23,7 @@ import RunsList from '@/components/RunsList'
 import RunsStatusChart from '@/components/RunsStatusChart'
 import { getPipeline, getPipelineRunUrl, listRuns } from '@/repository'
 import ManualRunDialog from '@/components/ManualRunDialog'
+import TriggersList from '@/components/TriggersList'
 
 const PipelineView: React.FC = () => {
   const urlParams = useParams()
@@ -127,9 +129,23 @@ const PipelineView: React.FC = () => {
         <RunsDurationChart runs={runsQuery.data} />
       </ColGrid>
 
-      <Block marginTop="mt-6">
-        <RunsList runs={runsQuery.data} pipelineId={pipelineId} />
-      </Block>
+      <ColGrid
+        numCols={1}
+        numColsSm={1}
+        numColsMd={1}
+        numColsLg={2}
+        gapX="gap-x-6"
+        gapY="gap-y-6"
+        marginTop="mt-6"
+      >
+        <Col>
+          <TriggersList pipeline={pipeline} />
+        </Col>
+
+        <Col>
+          <RunsList runs={runsQuery.data} pipelineId={pipelineId} />
+        </Col>
+      </ColGrid>
     </main>
   )
 }
