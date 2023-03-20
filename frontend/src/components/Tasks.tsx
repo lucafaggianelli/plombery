@@ -38,20 +38,18 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
 
       <List>
         {pipeline.tasks.map((task) => (
-          <ListItem key={task.id}>
-            <Flex spaceX="space-x-4">
-              <Icon
-                variant="light"
-                icon={STATUS_ICONS[run.status]}
-                color={STATUS_COLORS[run.status]}
-              />
-              <Block>
-                <Text>
-                  <Bold>{task.name}</Bold>
-                </Text>
-                {task.description && <Text truncate>{task.description}</Text>}
-              </Block>
-            </Flex>
+          <ListItem key={task.id} spaceX="space-x-4">
+            <Icon
+              variant="light"
+              icon={STATUS_ICONS[run.status]}
+              color={STATUS_COLORS[run.status]}
+            />
+            <Block truncate>
+              <Text truncate>
+                <Bold>{task.name}</Bold>
+              </Text>
+              {task.description && <Text truncate>{task.description}</Text>}
+            </Block>
 
             {run.status === 'completed' && (
               <Button
