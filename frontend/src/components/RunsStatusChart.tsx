@@ -34,16 +34,16 @@ const RunsStatusChart: React.FC<Props> = ({ runs, subject }) => {
           <Flex marginTop="mt-4">
             <Text>Successful runs</Text>
             <Text>{successPercentage.toFixed(1)} %</Text>
-            <Tracking marginTop="mt-2">
-              {runs.map((run) => (
-                <TrackingBlock
-                  key={run.id}
-                  color={STATUS_COLORS[run.status]}
-                  tooltip={`#${run.id} ${run.status}`}
-                />
-              ))}
-            </Tracking>
           </Flex>
+          <Tracking marginTop="mt-2">
+            {runs.map((run) => (
+              <TrackingBlock
+                key={run.id}
+                color={STATUS_COLORS[run.status]}
+                tooltip={`#${run.id} ${run.status}`}
+              />
+            ))}
+          </Tracking>
         </>
       ) : (
         <Text textAlignment="text-center" marginTop="mt-8">
