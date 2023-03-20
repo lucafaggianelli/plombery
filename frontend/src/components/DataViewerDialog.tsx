@@ -41,6 +41,8 @@ const DataViewerDialog: React.FC<Props> = ({
         title={taskId}
         subtitle="View data"
         isOpen={open}
+        maxWidth="90%"
+        minWidth="90%"
         footer={
           <Button variant="secondary" color="indigo" onClick={() => onClose()}>
             Close
@@ -54,6 +56,7 @@ const DataViewerDialog: React.FC<Props> = ({
             rowHeaders={true}
             colHeaders={Object.keys(query.data[0])}
             height="70vh"
+            width="100%"
             licenseKey="non-commercial-and-evaluation"
           />
         )}

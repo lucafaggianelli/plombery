@@ -11,6 +11,7 @@ interface Props extends PropsWithChildren {
   footer?: ReactNode
   isOpen: boolean
   maxWidth?: React.CSSProperties['maxWidth']
+  minWidth?: React.CSSProperties['minWidth']
   subtitle?: string
   title?: string
   onClose: () => any
@@ -21,6 +22,7 @@ const Dialog: React.FC<Props> = ({
   footer,
   isOpen: open,
   maxWidth = '600px',
+  minWidth = '350px',
   subtitle,
   title,
   onClose,
@@ -62,6 +64,7 @@ const Dialog: React.FC<Props> = ({
         background: 'transparent',
         overflow: 'visible',
         maxWidth,
+        minWidth,
       }}
       onClick={closeDialogOnBackdropClick}
     >
@@ -69,12 +72,7 @@ const Dialog: React.FC<Props> = ({
         {title && <Title>{title}</Title>}
         {subtitle && <Subtitle>{subtitle}</Subtitle>}
 
-        <div
-          className={(title || subtitle) && 'mt-6'}
-          style={{ minWidth: 350 }}
-        >
-          {children}
-        </div>
+        <div className={(title || subtitle) && 'mt-6'}>{children}</div>
 
         {footer && (
           <Flex
