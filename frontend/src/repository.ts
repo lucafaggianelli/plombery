@@ -31,8 +31,7 @@ export const getPipeline = async (pipelineId: string): Promise<Pipeline> => {
 }
 
 export const getPipelineInputSchema = async (pipelineId: string) => {
-  const response = await client.get(`/pipelines/${pipelineId}/input-schema`)
-  return await response.json()
+  return await client.get(`/pipelines/${pipelineId}/input-schema`)
 }
 
 export const listRuns = async (
