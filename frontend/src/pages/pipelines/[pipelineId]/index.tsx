@@ -54,7 +54,9 @@ const PipelineView: React.FC = () => {
         <Block>
           <Flex justifyContent="justify-start" spaceX="space-x-2">
             <Title>Pipeline {pipeline.name}</Title>
-            {pipeline.description && <Text truncate>&middot; {pipeline.description}</Text>}
+            {pipeline.description && (
+              <Text truncate>&middot; {pipeline.description}</Text>
+            )}
           </Flex>
           <Breadcrumbs pipeline={pipeline} />
         </Block>
@@ -82,7 +84,9 @@ const PipelineView: React.FC = () => {
                     <Text>
                       <Bold>{task.name}</Bold>
                     </Text>
-                    {task.description && <Text truncate>{task.description}</Text>}
+                    {task.description && (
+                      <Text truncate>{task.description}</Text>
+                    )}
                   </Block>
                 </ListItem>
               ))}
@@ -117,7 +121,10 @@ const PipelineView: React.FC = () => {
           </div>
         </Card>
 
-        <RunsStatusChart runs={[...runsQuery.data].reverse()} />
+        <RunsStatusChart
+          subject="Pipeline"
+          runs={[...runsQuery.data].reverse()}
+        />
 
         <RunsDurationChart runs={runsQuery.data} />
       </ColGrid>

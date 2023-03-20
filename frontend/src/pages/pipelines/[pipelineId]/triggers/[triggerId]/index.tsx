@@ -151,7 +151,10 @@ const TriggerView: React.FC = () => {
           </div>
         </Card>
 
-        <RunsStatusChart runs={[...runsQuery.data].reverse()} />
+        <RunsStatusChart
+          subject="Trigger"
+          runs={[...runsQuery.data].reverse()}
+        />
 
         <RunsDurationChart runs={runsQuery.data} />
       </ColGrid>
