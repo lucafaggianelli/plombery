@@ -22,7 +22,6 @@ from mario.orchestrator.executor import (
     get_pipeline_run_data,
     run,
 )
-from mario.database.models import PipelineRun
 from mario.database.repository import (
     list_pipeline_runs,
     get_pipeline_run,
@@ -113,16 +112,15 @@ def get_run(run_id: int):
     return get_pipeline_run(run_id)
 
 
-@api.get("/pipelines/{pipeline_id}/triggers/{trigger_id}/runs/{run_id}/logs")
-def get_logs(pipeline_id: str, trigger_id: str, run_id: int):
-    logs = get_pipeline_run_logs(PipelineRun(pipeline_id=pipeline_id, id=run_id))
+@api.get("/runs/{run_id}/logs")
+def get_logs(run_id: int):
+    logs = get_pipeline_run_logs(run_id)
     return Response(content=logs, media_type="application/jsonl")
 
 
 @api.get("/runs/{run_id}/data/{task}")
 def get_data(run_id: int, task: str):
-    run = get_pipeline_run(run_id)
-    data = get_pipeline_run_data(run, task)
+    data = get_pipeline_run_data(run_id, task)
 
     if not data:
         raise HTTPException(status_code=404, detail="Task has no data")

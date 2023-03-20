@@ -66,7 +66,7 @@ const RunViewPage = () => {
 
       <Block marginTop="mt-6">
         <Card>
-          <LogViewer pipeline={pipeline} trigger={trigger} runId={runId} />
+          <LogViewer pipeline={pipeline} runId={runId} />
         </Card>
       </Block>
     </main>

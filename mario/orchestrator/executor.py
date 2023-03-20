@@ -69,7 +69,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
 
     pipeline_run = _on_pipeline_start(pipeline, trigger)
 
-    log_filename = get_data_path(pipeline_run) / "task_run.log"
+    log_filename = get_data_path(pipeline_run.id) / "task_run.log"
 
     input_params = trigger.params if trigger else params
     params = {}
@@ -98,7 +98,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
         # Store task output if the task succeeds
         if type(flowing_data) is pandas.DataFrame:
             flowing_data: pandas.DataFrame = flowing_data
-            data_path = get_data_path(pipeline_run)
+            data_path = get_data_path(pipeline_run.id)
 
             flowing_data.to_json(data_path / f"{task.uuid}.json", orient="records")
 
@@ -128,9 +128,9 @@ async def _execute_task(
     return result
 
 
-def get_pipeline_run_logs(pipeline_run: PipelineRun):
-    return read_logs_file(pipeline_run)
+def get_pipeline_run_logs(pipeline_run_id: int):
+    return read_logs_file(pipeline_run_id)
 
 
-def get_pipeline_run_data(pipeline_run: PipelineRun, task_id: str):
-    return read_task_run_data(pipeline_run, task_id)
+def get_pipeline_run_data(pipeline_run_id: int, task_id: str):
+    return read_task_run_data(pipeline_run_id, task_id)

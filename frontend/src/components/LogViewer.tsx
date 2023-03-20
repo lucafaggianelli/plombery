@@ -23,7 +23,6 @@ import TracebackInfoDialog from './TracebackInfoDialog'
 
 interface Props {
   pipeline: Pipeline
-  trigger: Trigger
   runId: number
 }
 
@@ -39,13 +38,13 @@ interface FilterType {
   tasks: string[]
 }
 
-const LogViewer: React.FC<Props> = ({ pipeline, trigger, runId }) => {
+const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
   const [filter, setFilter] = useState<FilterType>({ levels: [], tasks: [] })
 
   const query = useQuery({
-    queryKey: ['logs', pipeline.id, trigger.id, runId],
-    queryFn: () => getLogs(pipeline.id, trigger.id, runId),
-    enabled: [pipeline.id, trigger.id, runId].every((x) => !!x),
+    queryKey: ['logs', runId],
+    queryFn: () => getLogs(runId),
+    enabled: !!runId,
     initialData: [],
   })
 

@@ -64,14 +64,8 @@ export const getRun = async (runId: number): Promise<PipelineRun> => {
   return run as PipelineRun
 }
 
-export const getLogs = async (
-  pipelineId: string,
-  triggerId: string,
-  runId: number
-): Promise<LogEntry[]> => {
-  const rawLogs = await client.get<string>(
-    `/pipelines/${pipelineId}/triggers/${triggerId}/runs/${runId}/logs`
-  )
+export const getLogs = async (runId: number): Promise<LogEntry[]> => {
+  const rawLogs = await client.get<string>(`/runs/${runId}/logs`)
 
   // Logs data is in JSONL format (1 JSON object per line)
   return rawLogs.split('\n').map((line, i) => {

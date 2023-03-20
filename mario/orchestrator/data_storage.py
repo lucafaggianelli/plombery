@@ -1,15 +1,13 @@
 import json
 from pathlib import Path
 
-from mario.database.models import PipelineRun
-
 
 BASE_DATA_PATH = Path.cwd() / ".data"
 
 
-def get_data_path(pipeline_run: PipelineRun):
+def get_data_path(pipeline_run_id: int):
     data_path = (
-        BASE_DATA_PATH / str(pipeline_run.pipeline_id) / f"run_{pipeline_run.id}"
+        BASE_DATA_PATH / "runs" / f"run_{pipeline_run_id}"
     )
 
     # Create dirs (eq. of mkdir -p)
@@ -18,15 +16,15 @@ def get_data_path(pipeline_run: PipelineRun):
     return data_path
 
 
-def store_data(filename: str, content: str, pipeline_run: PipelineRun):
-    data_path = get_data_path(pipeline_run)
+def store_data(filename: str, content: str, pipeline_run_id: int):
+    data_path = get_data_path(pipeline_run_id)
 
     with (data_path / filename).open(mode="w") as f:
         f.write(content)
 
 
-def read_logs_file(pipeline_run: PipelineRun):
-    data_path = get_data_path(pipeline_run)
+def read_logs_file(pipeline_run_id: int):
+    data_path = get_data_path(pipeline_run_id)
     file = data_path / "task_run.log"
 
     if not file.exists():
@@ -36,8 +34,8 @@ def read_logs_file(pipeline_run: PipelineRun):
         return f.read().rstrip()
 
 
-def read_task_run_data(pipeline_run: PipelineRun, task_id: str):
-    data_path = get_data_path(pipeline_run)
+def read_task_run_data(pipeline_run_id: int, task_id: str):
+    data_path = get_data_path(pipeline_run_id)
     file = data_path / f"{task_id}.json"
 
     if not file.exists():
