@@ -6,7 +6,9 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import LogViewer from '@/components/LogViewer'
 import StatusBadge from '@/components/StatusBadge'
 import RunsTasksList from '@/components/Tasks'
+import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun } from '@/repository'
+import { Trigger } from '@/types'
 
 const RunViewPage = () => {
   const urlParams = useParams()
@@ -28,7 +30,12 @@ const RunViewPage = () => {
   })
 
   const pipeline = pipelineQuery.data
-  const trigger = pipeline.triggers.find((trigger) => trigger.id === triggerId)
+
+  const isManualTrigger = triggerId === MANUAL_TRIGGER.id
+  const trigger: Trigger | undefined = !isManualTrigger
+    ? pipeline.triggers.find((trigger) => trigger.id === triggerId)
+    : MANUAL_TRIGGER
+
   const run = runQuery.data
 
   if (!run) {

@@ -14,11 +14,11 @@ export interface LogEntry {
 export interface Trigger {
     id: string
     name: string
-    description: string
-    interval: string
-    next_fire_time: Date
-    paused: boolean
-    params: any
+    description?: string
+    interval?: string
+    next_fire_time?: Date
+    paused?: boolean
+    params?: any
 }
 
 export interface Task {

@@ -51,8 +51,10 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => (
                   tooltip="Re-enable the trigger setting paused=False"
                   size="xs"
                 />
-              ) : (
+              ) : trigger.next_fire_time ? (
                 formatDateTime(trigger.next_fire_time)
+              ) : (
+                '-'
               )}
             </TableCell>
             <TableCell>-</TableCell>

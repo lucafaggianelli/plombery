@@ -12,6 +12,7 @@ import {
   Flex,
   Icon,
 } from '@tremor/react'
+import { PlayIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 import { useParams } from 'react-router-dom'
 import React from 'react'
 
@@ -21,6 +22,7 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import RunsDurationChart from '@/components/RunsDurationChart'
 import RunsList from '@/components/RunsList'
 import RunsStatusChart from '@/components/RunsStatusChart'
+import { MANUAL_TRIGGER } from '@/constants'
 import {
   getPipeline,
   listRuns,
@@ -28,7 +30,7 @@ import {
   runPipelineTrigger,
 } from '@/repository'
 import { formatDateTime } from '@/utils'
-import { PlayIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
+import { Trigger } from '@/types'
 
 const TriggerView: React.FC = () => {
   const urlParams = useParams()
@@ -60,7 +62,11 @@ const TriggerView: React.FC = () => {
     return <div>An error has occurred</div>
 
   const pipeline = pipelineQuery.data
-  const trigger = pipeline.triggers.find((trigger) => trigger.id === triggerId)
+
+  const isManualTrigger = triggerId === MANUAL_TRIGGER.id
+  const trigger: Trigger | undefined = !isManualTrigger
+    ? pipeline.triggers.find((trigger) => trigger.id === triggerId)
+    : MANUAL_TRIGGER
 
   if (!trigger) {
     return <div>Trigger not found</div>
@@ -110,7 +116,11 @@ const TriggerView: React.FC = () => {
             <ListItem>
               <Text>Next run</Text>
               <Text>
-                <Bold>{formatDateTime(trigger.next_fire_time)}</Bold>
+                <Bold>
+                  {trigger.next_fire_time
+                    ? formatDateTime(trigger.next_fire_time)
+                    : '-'}
+                </Bold>
               </Text>
             </ListItem>
 
