@@ -2,8 +2,8 @@ from asyncio import iscoroutinefunction
 import asyncio
 from datetime import datetime
 from logging import Logger
+from typing import Coroutine, List
 
-import pandas
 from pydantic import BaseModel
 
 from mario.constants import MANUAL_TRIGGER_ID
@@ -13,8 +13,22 @@ from mario.websocket import manager
 from mario.database.models import PipelineRun
 from mario.database.repository import create_pipeline_run, update_pipeline_run
 from mario.database.schemas import PipelineRunCreate
-from mario.orchestrator.data_storage import get_data_path, read_logs_file, read_task_run_data
+from mario.orchestrator.data_storage import (
+    get_data_path,
+    read_logs_file,
+    read_task_run_data,
+)
 from mario.pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger, Task
+
+
+def _run_all_tasks(coros: List[Coroutine]):
+    tasks = set()
+
+    for coro in coros:
+        task = asyncio.create_task(coro)
+
+        tasks.add(task)
+        task.add_done_callback(tasks.discard)
 
 
 def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger = None):
@@ -41,9 +55,7 @@ def _on_pipeline_executed(pipeline_run: PipelineRun, status: PipelineRunStatus):
 
 
 def _send_pipeline_event(pipeline_run: PipelineRun):
-    asyncio.ensure_future(
-        notification_manager.notify(pipeline_run)
-    )
+    notify_coro = notification_manager.notify(pipeline_run)
 
     run = dict(
         id=pipeline_run.id,
@@ -52,7 +64,7 @@ def _send_pipeline_event(pipeline_run: PipelineRun):
         duration=pipeline_run.duration,
     )
 
-    awaitable = manager.broadcast(
+    ws_coro = manager.broadcast(
         type="run-update",
         data=dict(
             run=run,
@@ -61,11 +73,13 @@ def _send_pipeline_event(pipeline_run: PipelineRun):
         ),
     )
 
-    asyncio.ensure_future(awaitable)
+    _run_all_tasks([notify_coro, ws_coro])
 
 
 async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
-    print(f"Executing pipeline `{pipeline.uuid}` via trigger `{trigger.id if trigger else '_manual'}`")
+    print(
+        f"Executing pipeline `{pipeline.uuid}` via trigger `{trigger.id if trigger else '_manual'}`"
+    )
 
     pipeline_run = _on_pipeline_start(pipeline, trigger)
 
@@ -95,12 +109,16 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
             _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
             break
 
-        # Store task output if the task succeeds
-        if type(flowing_data) is pandas.DataFrame:
-            flowing_data: pandas.DataFrame = flowing_data
-            data_path = get_data_path(pipeline_run.id)
+        # Store task output if it's a known format
+        try:
+            import pandas
 
-            flowing_data.to_json(data_path / f"{task.uuid}.json", orient="records")
+            if type(flowing_data) is pandas.DataFrame:
+                data_path = get_data_path(pipeline_run.id)
+
+                flowing_data.to_json(data_path / f"{task.uuid}.json", orient="records")
+        except ModuleNotFoundError:
+            pass
 
     else:
         # All task succeeded so the entire pipeline succeeded

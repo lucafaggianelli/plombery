@@ -64,7 +64,7 @@ class NotificationManager:
             )
 
             if result:
-                logger.info("Successfully sent email")
+                logger.info("Successfully sent notifications")
             else:
                 logger.error(output.read())
                 logger.error("Error sending notifications")
