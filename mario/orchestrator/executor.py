@@ -78,7 +78,7 @@ def _send_pipeline_event(pipeline_run: PipelineRun):
 
 async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
     print(
-        f"Executing pipeline `{pipeline.uuid}` via trigger `{trigger.id if trigger else '_manual'}`"
+        f"Executing pipeline `{pipeline.uuid}` via trigger `{trigger.id if trigger else MANUAL_TRIGGER_ID}`"
     )
 
     pipeline_run = _on_pipeline_start(pipeline, trigger)
