@@ -1,16 +1,10 @@
-import { HotTable } from '@handsontable/react'
-import {
-  registerAllCellTypes,
-  registerAllRenderers,
-  registerAllPlugins,
-} from 'handsontable/registry'
-import 'handsontable/dist/handsontable.full.min.css'
+import React, { Suspense } from 'react'
 import { Button, Text } from '@tremor/react'
 import { useQuery } from '@tanstack/react-query'
 
+import { HTTPError } from '@/http-client'
 import { getRunData } from '@/repository'
 import Dialog from './Dialog'
-import { HTTPError } from '@/http-client'
 
 interface Props {
   runId: number
@@ -19,9 +13,7 @@ interface Props {
   onClose: () => any
 }
 
-registerAllCellTypes()
-registerAllRenderers()
-registerAllPlugins()
+const HotTable = React.lazy(() => import('./HandsonTable.js'))
 
 const DataViewerDialog: React.FC<Props> = ({
   runId,
@@ -51,14 +43,16 @@ const DataViewerDialog: React.FC<Props> = ({
         onClose={onClose}
       >
         {!query.isLoading && !query.isError && (
-          <HotTable
-            data={query.data}
-            rowHeaders={true}
-            colHeaders={Object.keys(query.data[0])}
-            height="70vh"
-            width="100%"
-            licenseKey="non-commercial-and-evaluation"
-          />
+          <Suspense fallback={<div>Loading...</div>}>
+            <HotTable
+              data={query.data}
+              rowHeaders={true}
+              colHeaders={Object.keys(query.data[0])}
+              height="70vh"
+              width="100%"
+              licenseKey="non-commercial-and-evaluation"
+            />
+          </Suspense>
         )}
 
         {query.isError &&
