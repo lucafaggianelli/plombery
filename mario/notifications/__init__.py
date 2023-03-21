@@ -59,7 +59,7 @@ class NotificationManager:
                 body=f"""
     Your pipeline {pipeline_run.pipeline_id} {PIPELINE_STATUS_TO_VERB[pipeline_run.status]}
 
-    To have more info: http://localhost:3000/pipelines/dummy_pipeline/triggers/daily/runs/{pipeline_run.id}
+    To have more info: http://localhost:8000/pipelines/dummy_pipeline/triggers/daily/runs/{pipeline_run.id}
     """,
             )
 
