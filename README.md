@@ -201,7 +201,7 @@ Project Link: [https://github.com/lucafaggianelli/mario-pype](https://github.com
 [issues-shield]: https://img.shields.io/github/issues/lucafaggianelli/mario-pype.svg?style=for-the-badge
 [issues-url]: https://github.com/lucafaggianelli/mario-pype/issues
 [license-shield]: https://img.shields.io/github/license/lucafaggianelli/mario-pype.svg?style=for-the-badge
-[license-url]: https://github.com/lucafaggianelli/mario-pype/blob/master/LICENSE.txt
+[license-url]: https://github.com/lucafaggianelli/mario-pype/blob/master/LICENSE
 [product-screenshot]: images/screenshot.png
 [Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
 [Next-url]: https://nextjs.org/
