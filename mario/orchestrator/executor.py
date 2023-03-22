@@ -1,14 +1,12 @@
 from asyncio import iscoroutinefunction
 import asyncio
 from datetime import datetime
-from logging import Logger
 from typing import Coroutine, List
 
 from pydantic import BaseModel
 
 from mario.constants import MANUAL_TRIGGER_ID
 from mario.notifications import notification_manager
-from mario.logger import get_logger
 from mario.websocket import manager
 from mario.database.models import PipelineRun
 from mario.database.repository import create_pipeline_run, update_pipeline_run
@@ -19,6 +17,7 @@ from mario.orchestrator.data_storage import (
     read_task_run_data,
 )
 from mario.pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger, Task
+from mario.pipeline.context import run_context
 
 
 def _run_all_tasks(coros: List[Coroutine]):
@@ -83,7 +82,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
 
     pipeline_run = _on_pipeline_start(pipeline, trigger)
 
-    log_filename = get_data_path(pipeline_run.id) / "task_run.log"
+    token = run_context.set(pipeline_run)
 
     input_params = trigger.params if trigger else params
     params = {}
@@ -96,14 +95,13 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
     flowing_data = None
 
     for task in pipeline.tasks:
-        logger = get_logger(log_filename, task.uuid)
-        logger.info("Executing task %s", task.uuid)
+        pipeline.logger.info("Executing task %s", task.uuid)
         try:
             flowing_data = await _execute_task(
-                task, flowing_data, logger, input_params, params
+                task, flowing_data, input_params, params
             )
         except Exception as e:
-            logger.error(str(e), exc_info=e)
+            pipeline.logger.error(str(e), exc_info=e)
 
             # A task failed so the entire pipeline failed
             _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
@@ -124,11 +122,12 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
         # All task succeeded so the entire pipeline succeeded
         _on_pipeline_executed(pipeline_run, PipelineRunStatus.COMPLETED)
 
+    run_context.reset(token)
+
 
 async def _execute_task(
     task: Task,
     flowing_data,
-    logger: Logger,
     input_params: dict = None,
     pipeline_params: BaseModel = None,
 ):
@@ -137,7 +136,6 @@ async def _execute_task(
     if not pipeline_params and task.params:
         params = task.params(**(input_params or {}))
 
-    task.logger = logger
     if iscoroutinefunction(task.run):
         result = await task.run(flowing_data, params=params)
     else:

@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from mario.constants import PIPELINE_RUN_LOGS_FILE
+
 
 BASE_DATA_PATH = Path.cwd() / ".data"
 
@@ -25,7 +27,7 @@ def store_data(filename: str, content: str, pipeline_run_id: int):
 
 def read_logs_file(pipeline_run_id: int):
     data_path = get_data_path(pipeline_run_id)
-    file = data_path / "task_run.log"
+    file = data_path / PIPELINE_RUN_LOGS_FILE
 
     if not file.exists():
         return
