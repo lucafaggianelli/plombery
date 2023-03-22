@@ -43,9 +43,10 @@ def store_task_output(pipeline_run_id: int, task_id: str, data: Any):
         import json
 
         with output_file.open(mode="w", encoding="utf-8") as f:
-            json.dump(data, f)
+            json.dump(data, f, default=str)
     except Exception as exc:
-        print(exc)
+        print(f"Failed to save task {task_id} output", exc)
+        output_file.unlink()
         pass
 
 
