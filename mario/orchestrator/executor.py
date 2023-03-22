@@ -12,9 +12,9 @@ from mario.database.models import PipelineRun
 from mario.database.repository import create_pipeline_run, update_pipeline_run
 from mario.database.schemas import PipelineRunCreate
 from mario.orchestrator.data_storage import (
-    get_data_path,
     read_logs_file,
     read_task_run_data,
+    store_task_output,
 )
 from mario.pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger, Task
 from mario.pipeline.context import run_context
@@ -97,9 +97,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
     for task in pipeline.tasks:
         pipeline.logger.info("Executing task %s", task.uuid)
         try:
-            flowing_data = await _execute_task(
-                task, flowing_data, input_params, params
-            )
+            flowing_data = await _execute_task(task, flowing_data, input_params, params)
         except Exception as e:
             pipeline.logger.error(str(e), exc_info=e)
 
@@ -107,16 +105,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
             _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
             break
 
-        # Store task output if it's a known format
-        try:
-            import pandas
-
-            if type(flowing_data) is pandas.DataFrame:
-                data_path = get_data_path(pipeline_run.id)
-
-                flowing_data.to_json(data_path / f"{task.uuid}.json", orient="records")
-        except ModuleNotFoundError:
-            pass
+        store_task_output(pipeline_run.id, task.uuid, flowing_data)
 
     else:
         # All task succeeded so the entire pipeline succeeded

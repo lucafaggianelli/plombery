@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any
 
 from mario.constants import PIPELINE_RUN_LOGS_FILE
 
@@ -23,6 +24,29 @@ def store_data(filename: str, content: str, pipeline_run_id: int):
 
     with (data_path / filename).open(mode="w") as f:
         f.write(content)
+
+
+def store_task_output(pipeline_run_id: int, task_id: str, data: Any):
+    data_path = get_data_path(pipeline_run_id)
+    output_file = data_path / f"{task_id}.json"
+
+    try:
+        import pandas
+
+        if type(data) is pandas.DataFrame:
+            data.to_json(output_file, orient="records")
+            return
+    except ModuleNotFoundError:
+        pass
+
+    try:
+        import json
+
+        with output_file.open(mode="w", encoding="utf-8") as f:
+            json.dump(data, f)
+    except Exception as exc:
+        print(exc)
+        pass
 
 
 def read_logs_file(pipeline_run_id: int):
