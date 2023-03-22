@@ -21,7 +21,7 @@ class Mario:
     def _load_settings(self):
         settings = Settings()
 
-        for notification in settings.notifications:
+        for notification in settings.notifications or []:
             self.add_notification_rule(notification)
 
     def register_pipeline(self, pipeline):
