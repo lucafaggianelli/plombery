@@ -122,7 +122,8 @@ and install it.
 
 ### Installation
 
-Create and activate a virtual enrivonment, for example:
+Create and activate a virtual enrivonment in your new project folder,
+for example:
 
 ```sh
 python -m venv .venv
@@ -141,6 +142,10 @@ Then install the library:
 pip install git+https://github.com/lucafaggianelli/mario-pype
 ```
 
+Now you're ready to get started! Create a new folder in your project root with
+a file named `app.py` (or any name you want) in it,
+as in Python files should be in a top-level package.
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
@@ -148,9 +153,17 @@ pip install git+https://github.com/lucafaggianelli/mario-pype
 
 *Pipelines* are entities that can be scheduled and are composed of 1 or multiple *Tasks*.
 
-A Pipeline is a Python class that contains a list of tasks and eventually a list of triggers:
+A Pipeline is a Python class that contains a list of tasks and eventually a list of triggers,
+so in your `app.py` add this:
 
 ```py
+from datetime import datetime
+from random import randint
+
+from apscheduler.triggers.interval import IntervalTrigger
+from mario import Mario, task, get_logger, Pipeline, Trigger
+
+
 class DummyPipeline(Pipeline):
     """This is a very useless pipeline"""
 
@@ -174,29 +187,30 @@ but it showcase the basics:
 
 ```py
 @task
-async def fetch_raw_sales_data(input_data, params = None):
+async def fetch_raw_sales_data(input_data, params=None):
     logger = get_logger()
 
-    for i in range(10):
-        await sleep(1 + np.random.random() / 2)
-        logger.debug("I slept for %d s", i)
+    logger.debug("Fetching sales data...")
 
-    sales = pd.DataFrame({
-        "price": np.random.randint(1, 1000, 50),
-        "store_id": np.random.randint(1, 10, 50),
-        "date": datetime.today(),
-        "sku": np.random.randint(1, 50, 50)
-    })
+    sales = [
+        {
+            "price": randint(1, 1000),
+            "store_id": randint(1, 10),
+            "date": datetime.today(),
+            "sku": randint(1, 50),
+        }
+        for _ in range(50)
+    ]
+
+    logger.info("Fetched %s sales data rows", len(sales))
 
     return sales
 ```
 
-Finally register the pipeline so Mario Pype knows it's there:
+Finally create a MarioPype instance and register the pipeline so
+Mario knows it's there:
 
 ```py
-# app.py
-from mario import Mario
-
 app = Mario()
 
 app.register_pipeline(DummyPipeline())
@@ -209,6 +223,16 @@ Mario Pype is based on FastAPI so you can run it as a normal FastAPI app via `uv
 ```sh
 uvicorn my_project.app:app --reload
 ```
+
+Now open the page http://localhost:8000 in your browser and enjoy!
+
+### Usage from the UI
+
+From the home page at http://localhost:8000 hit the button *Run pipeline*
+then click *Run* in the dialog.
+
+Now close the dialog and click on the pipeline name, then find the run on the right
+and click on its number to view the details
 
 ### Configure notifications
 
