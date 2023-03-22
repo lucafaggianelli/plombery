@@ -19,6 +19,7 @@ import React from 'react'
 import TriggerParamsDialog from '@/components/TriggerParamsDialog'
 import CopyButton from '@/components/CopyButton'
 import Breadcrumbs from '@/components/Breadcrumbs'
+import ManualRunDialog from '@/components/ManualRunDialog'
 import RunsDurationChart from '@/components/RunsDurationChart'
 import RunsList from '@/components/RunsList'
 import RunsStatusChart from '@/components/RunsStatusChart'
@@ -72,6 +73,21 @@ const TriggerView: React.FC = () => {
     return <div>Trigger not found</div>
   }
 
+  const runTriggerButton = isManualTrigger ? (
+    <ManualRunDialog pipeline={pipeline} />
+  ) : (
+    <Button
+      size="xs"
+      color="indigo"
+      icon={PlayIcon}
+      onClick={() => {
+        runPipelineMutation.mutateAsync()
+      }}
+    >
+      Run trigger
+    </Button>
+  )
+
   return (
     <main className="bg-slate-50 p-6 sm:p-10 min-h-screen">
       <Flex alignItems="items-start">
@@ -80,16 +96,7 @@ const TriggerView: React.FC = () => {
           <Breadcrumbs pipeline={pipeline} trigger={trigger} />
         </Block>
 
-        <Button
-          size="xs"
-          color="indigo"
-          icon={PlayIcon}
-          onClick={() => {
-            runPipelineMutation.mutateAsync()
-          }}
-        >
-          Run trigger
-        </Button>
+        {runTriggerButton}
       </Flex>
 
       <ColGrid
