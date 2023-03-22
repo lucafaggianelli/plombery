@@ -1,1 +1,1 @@
-recursive-include mario/static/
+recursive-include mario/static *
