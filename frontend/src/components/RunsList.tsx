@@ -1,5 +1,3 @@
-import { PipelineRun } from '@/types'
-import { formatDateTime } from '@/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   Card,
@@ -13,7 +11,10 @@ import {
   Title,
 } from '@tremor/react'
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+
+import { PipelineRun } from '@/types'
+import { formatDateTime } from '@/utils'
 import StatusBadge from './StatusBadge'
 
 interface Props {
@@ -46,6 +47,7 @@ const ws =
 const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
   const [runs, setRuns] = useState(_runs)
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const onWsMessage = useCallback(
     (event: MessageEvent) => {
@@ -100,22 +102,21 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
             <TableHeaderCell>Status</TableHeaderCell>
             {!triggerId && <TableHeaderCell>Trigger</TableHeaderCell>}
             <TableHeaderCell>Started at</TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              Duration
-            </TableHeaderCell>
+            <TableHeaderCell className="text-right">Duration</TableHeaderCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {runs.map((run) => (
-            <TableRow key={run.id}>
-              <TableCell className="text-right">
-                <Link
-                  to={`/pipelines/${pipelineId}/triggers/${run.trigger_id}/runs/${run.id}`}
-                  className="hover:text-indigo-500 hover:border-b-indigo-500 border-b border-b-transparent transition-colors"
-                >
-                  {run.id}
-                </Link>
-              </TableCell>
+            <TableRow
+              key={run.id}
+              className="cursor-pointer hover:bg-slate-50 transition-colors"
+              onClick={() =>
+                navigate(
+                  `/pipelines/${pipelineId}/triggers/${run.trigger_id}/runs/${run.id}`
+                )
+              }
+            >
+              <TableCell className="text-right">{run.id}</TableCell>
               <TableCell>
                 <StatusBadge status={run.status} />
               </TableCell>
@@ -123,8 +124,9 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
                 <TableCell>
                   <Link
                     to={`/pipelines/${pipelineId}/triggers/${run.trigger_id}`}
-                    className="hover:text-indigo-500 hover:border-b-indigo-500 border-b border-b-transparent transition-colors"
+                    className="link--arrow"
                     title="View trigger details"
+                    onClick={(event) => event.stopPropagation()}
                   >
                     {run.trigger_id}
                   </Link>

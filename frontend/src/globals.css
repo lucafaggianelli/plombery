@@ -2,8 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-.breadcrumbs a {
-    @apply underline underline-offset-2 decoration-slate-200 hover:decoration-slate-400 transition-colors duration-300;
+a {
+    @apply hover:text-indigo-500 hover:decoration-indigo-500 decoration-slate-200 underline underline-offset-2;
+    transition: text-decoration .3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+a.link--arrow::after {
+    content: "→";
+    opacity: 0;
+    position: absolute;
+    transform: translateX(-2px);
+    transition: transform .3s cubic-bezier(0.22, 0.61, 0.36, 1), opacity .3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+a.link--arrow:hover::after {
+    opacity: 1;
+    transform: translateX(5px);
 }
 
 .logs-table table td:last-child {

@@ -28,12 +28,7 @@ const PipelinesList: React.FC = () => {
             <Flex>
               <Flex className="justify-start items-baseline space-x-2">
                 <Title>
-                  <Link
-                    to={`/pipelines/${pipeline.id}`}
-                    className="hover:text-indigo-500 transition-colors"
-                  >
-                    {pipeline.name}
-                  </Link>
+                  <Link to={`/pipelines/${pipeline.id}`}>{pipeline.name}</Link>
                 </Title>
                 <Text className="truncate max-w-lg">
                   {pipeline.description}
