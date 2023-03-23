@@ -2,15 +2,14 @@ import { useQuery } from '@tanstack/react-query'
 import {
   Card,
   Title,
-  ColGrid,
-  Block,
+  Col,
   Text,
   ListItem,
   Flex,
   Icon,
   List,
   Bold,
-  Col,
+  Grid,
 } from '@tremor/react'
 import { useParams } from 'react-router-dom'
 import React from 'react'
@@ -52,73 +51,65 @@ const PipelineView: React.FC = () => {
 
   return (
     <main className="bg-slate-50 p-6 sm:p-10 min-h-screen">
-      <Flex alignItems="items-start">
-        <Block>
-          <Flex justifyContent="justify-start" spaceX="space-x-2">
+      <Flex className="items-start">
+        <div>
+          <Flex className="justify-start space-x-2">
             <Title>Pipeline {pipeline.name}</Title>
             {pipeline.description && (
-              <Text truncate>&middot; {pipeline.description}</Text>
+              <Text className="truncate">&middot; {pipeline.description}</Text>
             )}
           </Flex>
           <Breadcrumbs pipeline={pipeline} />
-        </Block>
+        </div>
 
         <ManualRunDialog pipeline={pipeline} />
       </Flex>
 
-      <ColGrid
-        numColsMd={2}
-        numColsLg={3}
-        gapX="gap-x-6"
-        gapY="gap-y-6"
-        marginTop="mt-6"
-      >
-        <Card>
-          <div className="tr-flex tr-flex-col tr-h-full">
-            <Title>Tasks</Title>
+      <Grid numColsMd={2} numColsLg={3} className="gap-6 mt-6">
+        <Card className="flex flex-col h-full">
+          <Title>Tasks</Title>
 
-            <List>
-              {pipeline.tasks.map((task) => (
-                <ListItem key={task.id}>
-                  <Block>
-                    <Text>
-                      <Bold>{task.name}</Bold>
-                    </Text>
-                    {task.description && (
-                      <Text truncate>{task.description}</Text>
-                    )}
-                  </Block>
-                </ListItem>
-              ))}
-            </List>
-
-            <div style={{ flexGrow: 1 }} />
-
-            <ListItem>
-              <Flex justifyContent="justify-start">
-                <Text>Run URL</Text>
-
-                <Icon
-                  size="sm"
-                  color="slate"
-                  icon={QuestionMarkCircleIcon}
-                  tooltip="URL to run the pipeline programmatically via an HTTP POST request"
-                />
-              </Flex>
-
-              <Flex justifyContent="justify-end">
-                <div
-                  className="bg-slate-100 tr-border-slate-300 rounded tr-border text-slate-500 text-xs truncate px-1 mr-2"
-                  style={{ maxWidth: 200 }}
-                  title={getPipelineRunUrl(pipelineId)}
-                >
-                  {getPipelineRunUrl(pipelineId)}
+          <List>
+            {pipeline.tasks.map((task) => (
+              <ListItem key={task.id}>
+                <div>
+                  <Text>
+                    <Bold>{task.name}</Bold>
+                  </Text>
+                  {task.description && (
+                    <Text className="truncate">{task.description}</Text>
+                  )}
                 </div>
+              </ListItem>
+            ))}
+          </List>
 
-                <CopyButton content={getPipelineRunUrl(pipelineId)} />
-              </Flex>
-            </ListItem>
-          </div>
+          <div style={{ flexGrow: 1 }} />
+
+          <ListItem>
+            <Flex className="justify-start">
+              <Text>Run URL</Text>
+
+              <Icon
+                size="sm"
+                color="slate"
+                icon={QuestionMarkCircleIcon}
+                tooltip="URL to run the pipeline programmatically via an HTTP POST request"
+              />
+            </Flex>
+
+            <Flex className="justify-end">
+              <div
+                className="bg-slate-100 border-slate-300 rounded border text-slate-500 text-xs truncate px-1 py-0.5 mr-2"
+                style={{ maxWidth: 200 }}
+                title={getPipelineRunUrl(pipelineId)}
+              >
+                {getPipelineRunUrl(pipelineId)}
+              </div>
+
+              <CopyButton content={getPipelineRunUrl(pipelineId)} />
+            </Flex>
+          </ListItem>
         </Card>
 
         <RunsStatusChart
@@ -127,16 +118,14 @@ const PipelineView: React.FC = () => {
         />
 
         <RunsDurationChart runs={runsQuery.data} />
-      </ColGrid>
+      </Grid>
 
-      <ColGrid
+      <Grid
         numCols={1}
         numColsSm={1}
         numColsMd={1}
         numColsLg={2}
-        gapX="gap-x-6"
-        gapY="gap-y-6"
-        marginTop="mt-6"
+        className="gap-6 mt-6"
       >
         <Col>
           <TriggersList pipeline={pipeline} />
@@ -145,7 +134,7 @@ const PipelineView: React.FC = () => {
         <Col>
           <RunsList runs={runsQuery.data} pipelineId={pipelineId} />
         </Col>
-      </ColGrid>
+      </Grid>
     </main>
   )
 }

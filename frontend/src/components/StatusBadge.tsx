@@ -8,11 +8,9 @@ interface Props {
 }
 
 const StatusBadge: React.FC<Props> = ({ status }) => (
-  <Badge
-    text={status}
-    color={STATUS_COLORS[status]}
-    icon={STATUS_ICONS[status]}
-  />
+  <Badge color={STATUS_COLORS[status]} icon={STATUS_ICONS[status]}>
+    {status}
+  </Badge>
 )
 
 export default StatusBadge

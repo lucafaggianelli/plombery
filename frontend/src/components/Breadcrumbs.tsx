@@ -19,7 +19,7 @@ const Breadcrumbs: React.FC<Props> = ({ pipeline, trigger, run }) => {
 
   return (
     <div className="breadcrumbs">
-      <Flex spaceX="space-x-2" justifyContent="justify-start">
+      <Flex className="space-x-2 justify-start">
         <Text>
           <Link to="/">Pipelines</Link>
         </Text>

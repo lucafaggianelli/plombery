@@ -1,6 +1,6 @@
 import { PlayIcon } from '@heroicons/react/24/outline'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Block, Bold, Button, Flex, Text, TextInput } from '@tremor/react'
+import { Bold, Button, Flex, Text, TextInput } from '@tremor/react'
 import { JSONSchema7 } from 'json-schema'
 import { createRef, useState } from 'react'
 
@@ -21,7 +21,7 @@ const schemaToForm = (schema: JSONSchema7) => {
   const properties = schema.properties
 
   if (!properties) {
-    return <Text marginTop="mt-4">This pipeline has no input</Text>
+    return <Text className="mt-4">This pipeline has no input</Text>
   }
 
   const inputFields = Object.entries(properties).map(([key, _value]) => {
@@ -69,7 +69,7 @@ const schemaToForm = (schema: JSONSchema7) => {
         const step = value_type === 'number' ? (maximum - minimum) / 10 : 1
 
         return (
-          <Block key={key}>
+          <div key={key}>
             <Text>{label}</Text>
 
             <input
@@ -89,9 +89,9 @@ const schemaToForm = (schema: JSONSchema7) => {
               className="w-full mt-2 cursor-ew-resize appearance-none h-2 bg-slate-200 border border-slate-400 rounded"
             />
 
-            <Flex alignItems="items-baseline" spaceX="space-x-4">
+            <Flex className="items-baseline space-x-4">
               <div className="ml-1">
-                <div className="tr-border-r border-slate-400 h-2 w-1" />
+                <div className="border-r border-slate-300 h-2 w-1" />
                 <Text>{minimum}</Text>
               </div>
 
@@ -107,15 +107,15 @@ const schemaToForm = (schema: JSONSchema7) => {
               </Text>
 
               <div className="mr-1">
-                <div className="tr-border-r border-slate-400 h-2 w-1" />
+                <div className="border-r border-slate-300 h-2 w-1" />
                 <Text>{maximum}</Text>
               </div>
             </Flex>
-          </Block>
+          </div>
         )
       } else {
         return (
-          <Block key={key}>
+          <div key={key}>
             <Text>{label}</Text>
             <input
               name={key}
@@ -123,11 +123,11 @@ const schemaToForm = (schema: JSONSchema7) => {
               min={minimum}
               max={maximum}
               defaultValue={defaultValue}
-              className="tr-border-gray-300 tr-rounded-md tr-border tr-shadow-sm tr-pl-4 tr-pr-4 tr-pt-2 tr-pb-2 tr-text-sm tr-font-medium invalid:border-rose-500 mt-2"
+              className="border-gray-300 rounded-md border shadow-sm px-4 py-2 text-sm font-medium invalid:border-rose-500 mt-2"
               style={{ textAlign: 'end', width: '100%' }}
               required={required}
             />
-          </Block>
+          </div>
         )
       }
     } else if (value_type === 'enum') {
@@ -137,14 +137,14 @@ const schemaToForm = (schema: JSONSchema7) => {
           <select
             name={key}
             defaultValue={defaultValue || ''}
-            className="tr-border-gray-300 tr-rounded-md tr-border tr-shadow-sm tr-pl-4 tr-pr-4 tr-pt-2 tr-pb-2 tr-text-sm tr-font-medium tr-w-full invalid:border-rose-500 mt-2"
+            className="border-gray-300 rounded-md border shadow-sm px-4 py-2 text-sm font-medium w-full invalid:border-rose-500 mt-2"
             required={required}
           >
             <option disabled value="">
               Select...
             </option>
             {value.enum!.map((item) => (
-              <option key={item?.toString()} value={item?.toString()}>
+              <option key={item?.toString()} value={item!.toString()}>
                 {item?.toString()}
               </option>
             ))}
@@ -161,14 +161,14 @@ const schemaToForm = (schema: JSONSchema7) => {
             name={key}
             placeholder={label}
             defaultValue={defaultValue}
-            marginTop="mt-2"
+            className="mt-2"
           />
         </div>
       )
     }
   })
 
-  return <Block spaceY="space-y-4">{inputFields}</Block>
+  return <div className="space-y-4">{inputFields}</div>
 }
 
 interface Props {
@@ -218,11 +218,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
             <div style={{ width: 350 }}>{schemaToForm(query.data)}</div>
           )}
 
-          <Flex
-            justifyContent="justify-end"
-            spaceX="space-x-6"
-            marginTop="mt-6"
-          >
+          <Flex className="justify-end space-x-6 mt-6">
             <Button
               variant="secondary"
               color="indigo"

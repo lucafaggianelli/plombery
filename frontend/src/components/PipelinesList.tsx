@@ -26,11 +26,7 @@ const PipelinesList: React.FC = () => {
         <React.Fragment key={pipeline.id}>
           <Flex>
             <Flex>
-              <Flex
-                justifyContent="justify-start"
-                alignItems="items-baseline"
-                spaceX="space-x-2"
-              >
+              <Flex className="justify-start items-baseline space-x-2">
                 <Title>
                   <Link
                     to={`/pipelines/${pipeline.id}`}
@@ -39,10 +35,8 @@ const PipelinesList: React.FC = () => {
                     {pipeline.name}
                   </Link>
                 </Title>
-                <Text>
-                  <span className="tr-block tr-truncate tr-max-w-lg">
-                    {pipeline.description}
-                  </span>
+                <Text className="truncate max-w-lg">
+                  {pipeline.description}
                 </Text>
               </Flex>
             </Flex>

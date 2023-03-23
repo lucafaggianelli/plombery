@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import {
   Badge,
-  Block,
-  ColGrid,
   Color,
+  Grid,
   MultiSelectBox,
   MultiSelectBoxItem,
   Table,
@@ -17,7 +16,7 @@ import {
 import { useCallback, useState } from 'react'
 
 import { getLogs } from '@/repository'
-import { LogLevel, Pipeline, Trigger } from '@/types'
+import { LogLevel, Pipeline } from '@/types'
 import { formatTimestamp } from '@/utils'
 import TracebackInfoDialog from './TracebackInfoDialog'
 
@@ -69,12 +68,12 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
 
   return (
     <>
-      <ColGrid numColsMd={3} gapX="gap-x-6" gapY="gap-y-6">
-        <Block>
+      <Grid numColsMd={3} className="gap-6">
+        <div>
           <Text>Tasks</Text>
 
-          <MultiSelectBox<string>
-            marginTop="mt-1"
+          <MultiSelectBox
+            className="mt-1"
             onValueChange={(tasks) => {
               onFilterChange({ tasks })
             }}
@@ -87,13 +86,13 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
               />
             ))}
           </MultiSelectBox>
-        </Block>
+        </div>
 
-        <Block>
+        <div>
           <Text>Log level</Text>
 
-          <MultiSelectBox<string>
-            marginTop="mt-1"
+          <MultiSelectBox
+            className="mt-1"
             onValueChange={(levels) => {
               onFilterChange({ levels })
             }}
@@ -102,10 +101,11 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
               <MultiSelectBoxItem text={level} value={level} key={level} />
             ))}
           </MultiSelectBox>
-        </Block>
-      </ColGrid>
+        </div>
+      </Grid>
+
       <div className="logs-table">
-        <Table marginTop="mt-6">
+        <Table className="mt-6">
           <TableHead>
             <TableRow>
               <TableHeaderCell>Time</TableHeaderCell>
@@ -135,10 +135,11 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      text={log.level}
                       size="xs"
                       color={LOG_LEVELS_COLORS[log.level]}
-                    />
+                    >
+                      {log.level}
+                    </Badge>
                   </TableCell>
                   <TableCell>{log.task}</TableCell>
                   <TableCell>

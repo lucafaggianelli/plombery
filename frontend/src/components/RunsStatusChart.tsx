@@ -1,12 +1,5 @@
-import {
-  Card,
-  Title,
-  Text,
-  Flex,
-  Tracking,
-  TrackingBlock,
-  Italic,
-} from '@tremor/react'
+import { Card, Title, Text, Flex, Tracker, Italic } from '@tremor/react'
+
 import { PipelineRun } from '../types'
 import { STATUS_COLORS } from '../utils'
 
@@ -31,26 +24,25 @@ const RunsStatusChart: React.FC<Props> = ({ runs, subject }) => {
 
       {runs.length ? (
         <>
-          <Flex marginTop="mt-4">
+          <Flex className="mt-4">
             <Text>Successful runs</Text>
             <Text>{successPercentage.toFixed(1)} %</Text>
           </Flex>
-          <Tracking marginTop="mt-2">
-            {runs.map((run) => (
-              <TrackingBlock
-                key={run.id}
-                color={STATUS_COLORS[run.status]}
-                tooltip={`#${run.id} ${run.status}`}
-              />
-            ))}
-          </Tracking>
+          <Tracker
+            className="mt-2"
+            data={runs.map((run) => ({
+              key: run.id,
+              color: STATUS_COLORS[run.status],
+              tooltip: `#${run.id} ${run.status}`,
+            }))}
+          />
         </>
       ) : (
-        <Text textAlignment="text-center" marginTop="mt-8">
+        <Text className="text-center mt-8">
           <Italic>This {subject.toLowerCase()} has no runs yet</Italic>
         </Text>
       )}
-      <Flex marginTop="mt-2">
+      <Flex className="mt-2">
         <Text>{fromDate && fromDate.toDateString()}</Text>
         <Text>{toDate && toDate.toDateString()}</Text>
       </Flex>

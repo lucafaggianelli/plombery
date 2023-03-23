@@ -1,5 +1,5 @@
 import PipelinesList from '@/components/PipelinesList'
-import { Block, Card, ColGrid, Text, Title } from '@tremor/react'
+import { Text, Title } from '@tremor/react'
 
 export default function HomePage() {
   return (
@@ -7,9 +7,9 @@ export default function HomePage() {
       <Title>Mario Pype</Title>
       <Text>All your pipelines.</Text>
 
-      <Block marginTop="mt-6">
+      <div className="mt-6">
         <PipelinesList />
-      </Block>
+      </div>
     </main>
   )
 }

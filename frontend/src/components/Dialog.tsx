@@ -77,15 +77,7 @@ const Dialog: React.FC<Props> = ({
 
         <div className={(title || subtitle) && 'mt-6'}>{children}</div>
 
-        {footer && (
-          <Flex
-            justifyContent="justify-end"
-            spaceX="space-x-6"
-            marginTop="mt-6"
-          >
-            {footer}
-          </Flex>
-        )}
+        {footer && <Flex className="justify-end space-x-6 mt-6">{footer}</Flex>}
       </Card>
     </dialog>
   )

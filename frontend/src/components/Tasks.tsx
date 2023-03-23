@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import {
-  Block,
   Bold,
   Button,
   Card,
-  Flex,
   Icon,
   List,
   ListItem,
@@ -38,18 +36,20 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
 
       <List>
         {pipeline.tasks.map((task) => (
-          <ListItem key={task.id} spaceX="space-x-4">
+          <ListItem key={task.id} className="space-x-4">
             <Icon
               variant="light"
               icon={STATUS_ICONS[run.status]}
               color={STATUS_COLORS[run.status]}
             />
-            <Block truncate>
-              <Text truncate>
+            <div className="truncate flex-grow">
+              <Text className="truncate">
                 <Bold>{task.name}</Bold>
               </Text>
-              {task.description && <Text truncate>{task.description}</Text>}
-            </Block>
+              {task.description && (
+                <Text className="truncate">{task.description}</Text>
+              )}
+            </div>
 
             {run.status === 'completed' && (
               <Button

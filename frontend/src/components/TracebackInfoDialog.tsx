@@ -12,7 +12,7 @@ const TracebackInfoDialog: React.FC<Props> = ({ logEntry }) => {
   const [open, setOpen] = useState(false)
 
   return (
-    <Flex marginTop="mt-1">
+    <Flex className="mt-1">
       <Button
         color="rose"
         variant="secondary"
@@ -48,7 +48,7 @@ const TracebackInfoDialog: React.FC<Props> = ({ logEntry }) => {
               flexGrow: 1,
               maxHeight: '70vh',
             }}
-            className="p-3 my-3 tr-bg-slate-100 rounded-md whitespace-pre font-mono"
+            className="p-3 my-3 bg-slate-100 rounded-md whitespace-pre font-mono"
           >
             {logEntry.exc_info}
           </div>

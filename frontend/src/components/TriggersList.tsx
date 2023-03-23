@@ -20,7 +20,7 @@ interface Props {
 }
 
 const TriggersList: React.FC<Props> = ({ pipeline }) => (
-  <Card marginTop="mt-5">
+  <Card className="mt-5">
     <Title>Triggers</Title>
 
     <Table>
@@ -46,11 +46,12 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => (
             <TableCell>
               {trigger.paused ? (
                 <Badge
-                  text="Disabled"
                   color="amber"
                   tooltip="Re-enable the trigger setting paused=False"
                   size="xs"
-                />
+                >
+                  Disabled
+                </Badge>
               ) : trigger.next_fire_time ? (
                 formatDateTime(trigger.next_fire_time)
               ) : (

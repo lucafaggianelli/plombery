@@ -41,7 +41,7 @@ const TriggerParamsDialog: React.FC<Props> = ({ trigger }) => {
         }
         onClose={() => setOpen(false)}
       >
-        <pre className="p-3 tr-bg-slate-100 rounded-md">
+        <pre className="p-3 bg-slate-100 rounded-md">
           {JSON.stringify(trigger.params, null, 2)}
         </pre>
       </Dialog>

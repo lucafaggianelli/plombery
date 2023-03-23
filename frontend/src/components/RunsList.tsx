@@ -90,17 +90,17 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
   }, [_runs])
 
   return (
-    <Card marginTop="mt-5">
+    <Card className="mt-5">
       <Title>Runs</Title>
 
       <Table>
         <TableHead>
           <TableRow>
-            <TableHeaderCell textAlignment="text-right">#</TableHeaderCell>
+            <TableHeaderCell className="text-right">#</TableHeaderCell>
             <TableHeaderCell>Status</TableHeaderCell>
             {!triggerId && <TableHeaderCell>Trigger</TableHeaderCell>}
             <TableHeaderCell>Started at</TableHeaderCell>
-            <TableHeaderCell textAlignment="text-right">
+            <TableHeaderCell className="text-right">
               Duration
             </TableHeaderCell>
           </TableRow>
@@ -108,7 +108,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
         <TableBody>
           {runs.map((run) => (
             <TableRow key={run.id}>
-              <TableCell textAlignment="text-right">
+              <TableCell className="text-right">
                 <Link
                   to={`/pipelines/${pipelineId}/triggers/${run.trigger_id}/runs/${run.id}`}
                   className="hover:text-indigo-500 hover:border-b-indigo-500 border-b border-b-transparent transition-colors"
@@ -133,7 +133,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
               <TableCell>
                 <Text>{formatDateTime(run.start_time)}</Text>
               </TableCell>
-              <TableCell textAlignment="text-right">
+              <TableCell className="text-right">
                 {run.status !== 'running' ? (
                   (run.duration / 1000).toFixed(2)
                 ) : (
