@@ -74,7 +74,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+![Mario Pype Screen Shot](docs/screenshot.png)
 
 Mario Pype is a simple task scheduler for Python with a web UI and a REST API,
 if you need to run and monitor recurring python scripts then it's
