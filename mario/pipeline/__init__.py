@@ -1,13 +1,11 @@
 from asyncio import iscoroutinefunction
 import functools
 
-from mario.pipeline.task import Task
+from .task import Task
 from .context import task_context
 
 
 def task(func):
-    task_instance = Task()
-
     @functools.wraps(func)
     async def wrapper_decorator(*args, **kwargs):
         token = task_context.set(task_instance)
@@ -21,6 +19,8 @@ def task(func):
 
         return value
 
-    task_instance.run = wrapper_decorator
+    task_instance = Task(
+        id=func.__name__, description=func.__doc__, run=wrapper_decorator
+    )
 
     return task_instance

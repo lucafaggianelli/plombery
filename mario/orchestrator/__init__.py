@@ -13,17 +13,17 @@ class _Orchestrator:
         self.scheduler = AsyncIOScheduler()
 
     def register_pipeline(self, pipeline: Pipeline):
-        if pipeline.uuid in self._all_pipelines:
-            print(f"Pipeline {pipeline.uuid} already registered")
+        if pipeline.id in self._all_pipelines:
+            print(f"Pipeline {pipeline.id} already registered")
             return
 
-        self._all_pipelines[pipeline.uuid] = pipeline
+        self._all_pipelines[pipeline.id] = pipeline
 
         for trigger in pipeline.triggers:
             if trigger.paused:
                 continue
 
-            job_id = f"{pipeline.uuid}: {trigger.id}"
+            job_id = f"{pipeline.id}: {trigger.id}"
             self._all_triggers[job_id] = (pipeline, trigger)
 
             if self.scheduler.get_job(job_id):

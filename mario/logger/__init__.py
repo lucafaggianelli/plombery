@@ -13,7 +13,7 @@ def get_logger():
     filename = get_data_path(pipeline_run.id) / PIPELINE_RUN_LOGS_FILE
 
     json_handler = logging.FileHandler(filename)
-    json_formatter = JsonFormatter(task.uuid)
+    json_formatter = JsonFormatter(task.id)
     json_handler.setFormatter(json_formatter)
 
     logger = logging.getLogger()

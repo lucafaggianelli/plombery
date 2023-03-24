@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from mario.constants import MANUAL_TRIGGER_ID
 from mario.orchestrator import orchestrator
-from mario.pipeline.pipeline import Pipeline, Trigger, Task
+from mario.pipeline.pipeline import Pipeline, Trigger
 from mario.orchestrator.executor import (
     get_pipeline_run_logs,
     get_pipeline_run_data,
@@ -65,20 +65,12 @@ def _serialize_trigger(trigger: Trigger):
     )
 
 
-def _serialize_task(task: Task):
-    return {
-        "id": task.uuid,
-        "name": task.uuid,
-        "description": task.description,
-    }
-
-
 def _serialize_pipeline(pipeline: Pipeline):
     return dict(
-        id=pipeline.uuid,
-        name=pipeline.uuid,
+        id=pipeline.id,
+        name=pipeline.name,
         description=pipeline.description,
-        tasks=[_serialize_task(task) for task in pipeline.tasks],
+        tasks=pipeline.tasks,
         triggers=[_serialize_trigger(trigger) for trigger in pipeline.triggers],
     )
 
@@ -136,7 +128,7 @@ async def run_pipeline(pipeline_id: str, params: Optional[dict] = Body()):
     executor.submit_job(
         Job(
             orchestrator.scheduler,
-            id=f"{pipeline.uuid}: {MANUAL_TRIGGER_ID}",
+            id=f"{pipeline.id}: {MANUAL_TRIGGER_ID}",
             func=run,
             args=[],
             kwargs={"pipeline": pipeline, "params": params},
@@ -163,7 +155,7 @@ async def run_trigger(pipeline_id: str, trigger_id: str):
     executor.submit_job(
         Job(
             orchestrator.scheduler,
-            id=f"{pipeline.uuid}: {trigger.id}",
+            id=f"{pipeline.id}: {trigger.id}",
             func=run,
             args=[],
             kwargs={"pipeline": pipeline, "trigger": trigger},

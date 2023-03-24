@@ -34,7 +34,7 @@ def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger = None):
     pipeline_run = create_pipeline_run(
         PipelineRunCreate(
             start_time=datetime.now(),
-            pipeline_id=pipeline.uuid,
+            pipeline_id=pipeline.id,
             trigger_id=trigger.id if trigger else MANUAL_TRIGGER_ID,
             status="running",
         )
@@ -77,7 +77,7 @@ def _send_pipeline_event(pipeline_run: PipelineRun):
 
 async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
     print(
-        f"Executing pipeline `{pipeline.uuid}` via trigger `{trigger.id if trigger else MANUAL_TRIGGER_ID}`"
+        f"Executing pipeline `{pipeline.id}` via trigger `{trigger.id if trigger else MANUAL_TRIGGER_ID}`"
     )
 
     pipeline_run = _on_pipeline_start(pipeline, trigger)
@@ -95,7 +95,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
     flowing_data = None
 
     for task in pipeline.tasks:
-        pipeline.logger.info("Executing task %s", task.uuid)
+        pipeline.logger.info("Executing task %s", task.id)
         try:
             flowing_data = await _execute_task(task, flowing_data, input_params, params)
         except Exception as e:
@@ -105,7 +105,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
             _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
             break
 
-        store_task_output(pipeline_run.id, task.uuid, flowing_data)
+        store_task_output(pipeline_run.id, task.id, flowing_data)
 
     else:
         # All task succeeded so the entire pipeline succeeded

@@ -4,8 +4,8 @@ from .api import app
 from .logger import get_logger  # noqa F401
 from .notifications import NotificationRule, notification_manager
 from .orchestrator import orchestrator
-from .pipeline import task  # noqa F401
-from .pipeline.pipeline import Task, Pipeline, PipelineRunStatus, Trigger  # noqa F401
+from .pipeline import task, Task  # noqa F401
+from .pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger  # noqa F401
 from .settings import Settings
 
 

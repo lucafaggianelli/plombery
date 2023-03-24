@@ -10,7 +10,7 @@ def cmd_pipelines(args):
     else:
         for p in orchestrator.pipelines:
             print("Pipelines:")
-            print(f" * {p.uuid}")
+            print(f" * {p.id}")
 
 
 def cmd_run(args):

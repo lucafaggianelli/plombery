@@ -1,15 +1,20 @@
-from typing import Callable
-from pydantic import BaseModel
+from typing import Any, Callable, Dict
 
-from ._utils import to_snake_case
+from pydantic import BaseModel, validator
+
+from ._utils import prettify_name
 
 
-class Task:
+class Task(BaseModel):
+    id: str
     run: Callable
-    params: BaseModel = None
-    uuid: str = None
+    name: str = None
     description: str = None
+    params: BaseModel = None
 
-    def __init__(self):
-        self.uuid = to_snake_case(self.__class__.__name__)
-        self.description = self.__class__.__doc__
+    @validator("name", always=True)
+    def generate_default_name(cls, name: str, values: Dict[str, Any]) -> str:
+        if not name:
+            return prettify_name(values["id"]).title()
+
+        return name
