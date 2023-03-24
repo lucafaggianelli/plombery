@@ -6,6 +6,7 @@ from typing import Coroutine, List
 from pydantic import BaseModel
 
 from mario.constants import MANUAL_TRIGGER_ID
+from mario.logger import get_logger
 from mario.notifications import notification_manager
 from mario.websocket import manager
 from mario.database.models import PipelineRun
@@ -17,7 +18,7 @@ from mario.orchestrator.data_storage import (
     store_task_output,
 )
 from mario.pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger, Task
-from mario.pipeline.context import run_context
+from mario.pipeline.context import pipeline_context, run_context
 
 
 def _run_all_tasks(coros: List[Coroutine]):
@@ -82,24 +83,27 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
 
     pipeline_run = _on_pipeline_start(pipeline, trigger)
 
-    token = run_context.set(pipeline_run)
+    pipeline_token = pipeline_context.set(pipeline)
+    run_token = run_context.set(pipeline_run)
 
     input_params = trigger.params if trigger else params
     params = {}
 
+    logger = get_logger()
+
     if pipeline.params:
         params = pipeline.params(**(input_params or {}))
     elif input_params:
-        pipeline.logger.warning("This pipeline doesn't support input params")
+        logger.warning("This pipeline doesn't support input params")
 
     flowing_data = None
 
     for task in pipeline.tasks:
-        pipeline.logger.info("Executing task %s", task.id)
+        logger.info("Executing task %s", task.id)
         try:
             flowing_data = await _execute_task(task, flowing_data, input_params, params)
         except Exception as e:
-            pipeline.logger.error(str(e), exc_info=e)
+            logger.error(str(e), exc_info=e)
 
             # A task failed so the entire pipeline failed
             _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
@@ -111,7 +115,8 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
         # All task succeeded so the entire pipeline succeeded
         _on_pipeline_executed(pipeline_run, PipelineRunStatus.COMPLETED)
 
-    run_context.reset(token)
+    pipeline_context.reset(pipeline_token)
+    run_context.reset(run_token)
 
 
 async def _execute_task(

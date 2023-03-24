@@ -6,7 +6,7 @@ DEFAULT_LOG_ATTRIBUTES = {
     "level": "levelname",
     "message": "message",
     "loggerName": "name",
-    "timestamp": "asctime"
+    "timestamp": "asctime",
 }
 
 
@@ -18,7 +18,16 @@ class JsonFormatter(logging.Formatter):
     @param str time_format: time.strftime() format string. Default: "%Y-%m-%dT%H:%M:%S"
     @param str msec_format: Microsecond formatting. Appended at the end. Default: "%s.%03dZ"
     """
-    def __init__(self, task: str, fmt_dict: dict = None, time_format: str = "%Y-%m-%dT%H:%M:%S", msec_format: str = "%s.%03dZ"):
+
+    def __init__(
+        self,
+        pipeline: str,
+        task: str = None,
+        fmt_dict: dict = None,
+        time_format: str = "%Y-%m-%dT%H:%M:%S",
+        msec_format: str = "%s.%03dZ",
+    ):
+        self.pipeline = pipeline
         self.task = task
         self.fmt_dict = fmt_dict if fmt_dict is not None else DEFAULT_LOG_ATTRIBUTES
         self.default_time_format = time_format
@@ -36,7 +45,11 @@ class JsonFormatter(logging.Formatter):
         Overwritten to return a dictionary of the relevant LogRecord attributes instead of a string.
         KeyError is raised if an unknown attribute is provided in the fmt_dict.
         """
-        msg = {fmt_key: record.__dict__[fmt_val] for fmt_key, fmt_val in self.fmt_dict.items()}
+        msg = {
+            fmt_key: record.__dict__[fmt_val]
+            for fmt_key, fmt_val in self.fmt_dict.items()
+        }
+        msg["pipeline"] = self.pipeline
         msg["task"] = self.task
 
         return msg
