@@ -19,7 +19,7 @@ class Pipeline(BaseModel):
     id: str
     name: str = None
     description: str = None
-    params: Type[BaseModel] = None
+    params: Type[BaseModel] = Field(exclude=True, default=None)
     tasks: List[Task] = Field(default_factory=list)
     triggers: List[Trigger] = Field(default_factory=list)
 

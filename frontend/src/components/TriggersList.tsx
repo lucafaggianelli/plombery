@@ -46,7 +46,7 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
             >
               <TableCell>{trigger.name}</TableCell>
               <TableCell>
-                <Text>{trigger.interval}</Text>
+                <Text>{trigger.aps_trigger}</Text>
               </TableCell>
               <TableCell>
                 {trigger.paused ? (

@@ -43,14 +43,11 @@ async def get_sales_data(data, params: InputParams):
     return data
 
 
-class DummyPipeline(Pipeline):
-    """This is a very useless pipeline"""
-
-    params = InputParams
-
-    tasks = [get_sales_data]
-
-    triggers = [
+sales_pipeline = Pipeline(
+    id="sales_pipeline",
+    description="""This is a very useless pipeline""",
+    tasks=[get_sales_data],
+    triggers=[
         Trigger(
             id="daily",
             name="Daily",
@@ -63,4 +60,6 @@ class DummyPipeline(Pipeline):
                 ),
             ),
         )
-    ]
+    ],
+    params=InputParams,
+)

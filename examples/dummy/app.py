@@ -9,9 +9,9 @@ uvicorn dummy.app:app --reload --reload-dir ..
 
 from mario import Mario
 
-from .dummy_pipeline import DummyPipeline
+from .dummy_pipeline import sales_pipeline
 
 
 app = Mario()
 
-app.register_pipeline(DummyPipeline())
+app.register_pipeline(sales_pipeline)

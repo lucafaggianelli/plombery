@@ -1,14 +1,18 @@
+from datetime import datetime
+
 from apscheduler.triggers.base import BaseTrigger
-from pydantic import BaseModel, Field
+from apscheduler.triggers.interval import IntervalTrigger
+from pydantic import BaseModel
 
 
 class Trigger(BaseModel):
     id: str
     name: str
-    aps_trigger: BaseTrigger = Field(exclude=True)
+    aps_trigger: IntervalTrigger
     description: str = __doc__
     params: dict = None
     paused: bool = False
+    next_fire_time: datetime = None
 
     class Config:
         arbitrary_types_allowed = True
