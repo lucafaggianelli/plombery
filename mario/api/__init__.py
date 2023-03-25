@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from apscheduler.job import Job
 from apscheduler.executors.asyncio import AsyncIOExecutor
@@ -65,27 +65,25 @@ def _serialize_trigger(trigger: Trigger):
     )
 
 
-def _serialize_pipeline(pipeline: Pipeline):
-    return dict(
-        id=pipeline.id,
-        name=pipeline.name,
-        description=pipeline.description,
-        tasks=pipeline.tasks,
-        triggers=[_serialize_trigger(trigger) for trigger in pipeline.triggers],
-    )
+# def _serialize_pipeline(pipeline: Pipeline):
+#     return dict(
+#         id=pipeline.id,
+#         name=pipeline.name,
+#         description=pipeline.description,
+#         tasks=pipeline.tasks,
+#         triggers=[_serialize_trigger(trigger) for trigger in pipeline.triggers],
+#     )
 
 
-@api.get("/pipelines")
-def list_pipelines():
-    return [
-        _serialize_pipeline(pipeline) for pipeline in orchestrator.pipelines.values()
-    ]
+@api.get("/pipelines", response_model_exclude={"params"})
+def list_pipelines() -> List[Pipeline]:
+    return list(orchestrator.pipelines.values())
 
 
-@api.get("/pipelines/{pipeline_id}")
-def get_pipelines(pipeline_id: str):
+@api.get("/pipelines/{pipeline_id}", response_model_exclude={"params"})
+def get_pipelines(pipeline_id: str) -> None:
     pipeline = orchestrator.get_pipeline(pipeline_id)
-    return _serialize_pipeline(pipeline)
+    return pipeline
 
 
 @api.get("/pipelines/{pipeline_id}/input-schema")
