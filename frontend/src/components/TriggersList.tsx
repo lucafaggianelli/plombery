@@ -31,8 +31,6 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
           <TableRow>
             <TableHeaderCell>Name</TableHeaderCell>
             <TableHeaderCell>Interval</TableHeaderCell>
-            <TableHeaderCell>Next fire time</TableHeaderCell>
-            <TableHeaderCell>Latest Status</TableHeaderCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -48,22 +46,6 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
               <TableCell>
                 <Text>{trigger.aps_trigger}</Text>
               </TableCell>
-              <TableCell>
-                {trigger.paused ? (
-                  <Badge
-                    color="amber"
-                    tooltip="Re-enable the trigger setting paused=False"
-                    size="xs"
-                  >
-                    Disabled
-                  </Badge>
-                ) : trigger.next_fire_time ? (
-                  formatDateTime(trigger.next_fire_time)
-                ) : (
-                  '-'
-                )}
-              </TableCell>
-              <TableCell>-</TableCell>
             </TableRow>
           ))}
         </TableBody>

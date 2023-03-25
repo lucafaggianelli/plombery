@@ -114,17 +114,6 @@ const TriggerView: React.FC = () => {
           </ListItem>
 
           <ListItem>
-            <Text>Next run</Text>
-            <Text>
-              <Bold>
-                {trigger.next_fire_time
-                  ? formatDateTime(trigger.next_fire_time)
-                  : '-'}
-              </Bold>
-            </Text>
-          </ListItem>
-
-          <ListItem>
             <Text>Params</Text>
             {trigger.params ? (
               <TriggerParamsDialog trigger={trigger} />

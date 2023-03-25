@@ -16,7 +16,6 @@ export interface Trigger {
     name: string
     description?: string
     aps_trigger?: string
-    next_fire_time?: Date
     paused?: boolean
     params?: any
 }
