@@ -23,6 +23,7 @@ import RunsStatusChart from '@/components/RunsStatusChart'
 import { getPipeline, getPipelineRunUrl, listRuns } from '@/repository'
 import ManualRunDialog from '@/components/ManualRunDialog'
 import TriggersList from '@/components/TriggersList'
+import PageLayout from '@/components/PageLayout'
 
 const PipelineView: React.FC = () => {
   const urlParams = useParams()
@@ -50,21 +51,25 @@ const PipelineView: React.FC = () => {
   const pipeline = pipelineQuery.data
 
   return (
-    <main className="bg-slate-50 p-6 sm:p-10 min-h-screen">
-      <Flex className="items-start">
-        <div>
-          <Flex className="justify-start space-x-2">
-            <Title>Pipeline {pipeline.name}</Title>
-            {pipeline.description && (
-              <Text className="truncate">&middot; {pipeline.description}</Text>
-            )}
-          </Flex>
-          <Breadcrumbs pipeline={pipeline} />
-        </div>
+    <PageLayout
+      header={
+        <Flex className="items-start">
+          <div>
+            <Flex className="justify-start space-x-2">
+              <Title>Pipeline {pipeline.name}</Title>
+              {pipeline.description && (
+                <Text className="truncate">
+                  &middot; {pipeline.description}
+                </Text>
+              )}
+            </Flex>
+            <Breadcrumbs pipeline={pipeline} />
+          </div>
 
-        <ManualRunDialog pipeline={pipeline} />
-      </Flex>
-
+          <ManualRunDialog pipeline={pipeline} />
+        </Flex>
+      }
+    >
       <Grid numColsMd={2} numColsLg={3} className="gap-6 mt-6">
         <Card className="flex flex-col h-full">
           <Title>Tasks</Title>
@@ -135,7 +140,7 @@ const PipelineView: React.FC = () => {
           <RunsList runs={runsQuery.data} pipelineId={pipelineId} />
         </Col>
       </Grid>
-    </main>
+    </PageLayout>
   )
 }
 
