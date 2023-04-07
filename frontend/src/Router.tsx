@@ -7,7 +7,6 @@ import {
   Route,
 } from 'react-router-dom'
 
-import PageLayout from '@/components/PageLayout'
 import { useAuthState } from '@/contexts/AuthContext'
 
 const ProtectedRoute: React.FC<PropsWithChildren> = ({ children }) => {
@@ -40,9 +39,7 @@ const routes: RouteObject[] = Object.entries(pages).map(
       element:
         path !== '/login' ? (
           <ProtectedRoute>
-            <PageLayout>
-              <Component />
-            </PageLayout>
+            <Component />
           </ProtectedRoute>
         ) : (
           <Component />

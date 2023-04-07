@@ -1,15 +1,21 @@
-import PipelinesList from '@/components/PipelinesList'
 import { Text, Title } from '@tremor/react'
+
+import PageLayout from '@/components/PageLayout'
+import PipelinesList from '@/components/PipelinesList'
 
 export default function HomePage() {
   return (
-    <main className="bg-slate-50 p-6 sm:p-10 min-h-screen">
-      <Title>Mario Pype</Title>
-      <Text>All your pipelines.</Text>
-
+    <PageLayout
+      header={
+        <>
+          <Title>Mario Pype</Title>
+          <Text>All your pipelines.</Text>
+        </>
+      }
+    >
       <div className="mt-6">
         <PipelinesList />
       </div>
-    </main>
+    </PageLayout>
   )
 }

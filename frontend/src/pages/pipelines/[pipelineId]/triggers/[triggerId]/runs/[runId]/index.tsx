@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Card, Col, Flex, Grid, Metric, Text, Title } from '@tremor/react'
+import { Card, Flex, Grid, Metric, Text, Title } from '@tremor/react'
 import { useParams } from 'react-router-dom'
 
 import Breadcrumbs from '@/components/Breadcrumbs'
 import LogViewer from '@/components/LogViewer'
+import PageLayout from '@/components/PageLayout'
 import StatusBadge from '@/components/StatusBadge'
 import RunsTasksList from '@/components/Tasks'
 import { MANUAL_TRIGGER } from '@/constants'
@@ -47,11 +48,14 @@ const RunViewPage = () => {
   }
 
   return (
-    <main className="bg-slate-50 p-6 sm:p-10 min-h-screen">
-      <Title>Run #{runId}</Title>
-
-      <Breadcrumbs pipeline={pipeline} trigger={trigger} run={run} />
-
+    <PageLayout
+      header={
+        <>
+          <Title>Run #{runId}</Title>
+          <Breadcrumbs pipeline={pipeline} trigger={trigger} run={run} />
+        </>
+      }
+    >
       <Grid numColsMd={3} className="gap-6 mt-6">
         <RunsTasksList pipeline={pipeline} run={run} />
 
@@ -60,9 +64,7 @@ const RunViewPage = () => {
             <Text>Duration</Text>
             <StatusBadge status={run.status} />
           </Flex>
-          <Flex
-            className="justify-start items-baseline pace-x-3 truncate"
-          >
+          <Flex className="justify-start items-baseline pace-x-3 truncate">
             <Metric>{(run.duration / 1000).toFixed(1)}s</Metric>
           </Flex>
         </Card>
@@ -73,7 +75,7 @@ const RunViewPage = () => {
           <LogViewer pipeline={pipeline} runId={runId} />
         </Card>
       </div>
-    </main>
+    </PageLayout>
   )
 }
 
