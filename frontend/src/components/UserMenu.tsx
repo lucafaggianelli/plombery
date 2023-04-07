@@ -22,7 +22,7 @@ const UserMenu: React.FC<Props> = () => {
     <Popover placement="bottom-start">
       <PopoverTrigger>
         <div
-          className="flex justify-center items-center font-medium bg-white ring-1 ring-gray-200 text-indigo-500 rounded-full ml-4 hover:ring-2 transition-shadow"
+          className="flex justify-center items-center font-medium bg-white ring-1 ring-slate-200 text-indigo-500 rounded-full ml-4 hover:ring-2 transition-shadow"
           style={{ width: 34, height: 34 }}
         >
           {initials}
