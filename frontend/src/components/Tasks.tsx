@@ -3,6 +3,7 @@ import {
   Bold,
   Button,
   Card,
+  Flex,
   Icon,
   List,
   ListItem,
@@ -12,7 +13,7 @@ import {
 import { TableCellsIcon } from '@heroicons/react/24/outline'
 
 import { Pipeline, PipelineRun } from '@/types'
-import { STATUS_COLORS, STATUS_ICONS } from '@/utils'
+import { STATUS_COLORS, STATUS_ICONS, getTasksColors } from '@/utils'
 import DataViewerDialog from './DataViewerDialog'
 
 interface Props {
@@ -22,6 +23,8 @@ interface Props {
 
 const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
   const [viewDataDialog, setViewDataDialog] = useState<string | undefined>()
+
+  const tasksColors = getTasksColors(pipeline.tasks)
 
   return (
     <Card>
@@ -43,9 +46,16 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
               color={STATUS_COLORS[run.status]}
             />
             <div className="truncate flex-grow">
-              <Text className="truncate">
-                <Bold>{task.name}</Bold>
-              </Text>
+              <Flex className="justify-start">
+                <div
+                  className={`h-2 w-2 mr-2 rounded-full ${
+                    tasksColors[task.id]
+                  }`}
+                />
+                <Text className="truncate">
+                  <Bold>{task.name}</Bold>
+                </Text>
+              </Flex>
               {task.description && (
                 <Text className="truncate">{task.description}</Text>
               )}

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   Badge,
   Color,
+  Flex,
   Grid,
   MultiSelectBox,
   MultiSelectBoxItem,
@@ -17,7 +18,7 @@ import { useCallback, useState } from 'react'
 
 import { getLogs } from '@/repository'
 import { LogLevel, Pipeline } from '@/types'
-import { formatTimestamp } from '@/utils'
+import { formatTimestamp, getTasksColors } from '@/utils'
 import TracebackInfoDialog from './TracebackInfoDialog'
 
 interface Props {
@@ -65,6 +66,8 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
       (filter.tasks.length === 0 || filter.tasks.includes(log.task))
     )
   })
+
+  const tasksColors = getTasksColors(pipeline.tasks)
 
   return (
     <>
@@ -134,14 +137,20 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      size="xs"
-                      color={LOG_LEVELS_COLORS[log.level]}
-                    >
+                    <Badge size="xs" color={LOG_LEVELS_COLORS[log.level]}>
                       {log.level}
                     </Badge>
                   </TableCell>
-                  <TableCell>{log.task}</TableCell>
+                  <TableCell>
+                    <Flex>
+                      <div
+                        className={`h-2 w-2 mr-2 rounded-full ${
+                          tasksColors[log.task]
+                        }`}
+                      />
+                      {log.task}
+                    </Flex>
+                  </TableCell>
                   <TableCell>
                     <Text>{log.message}</Text>
 

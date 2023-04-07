@@ -9,7 +9,7 @@ import {
 import { Color } from '@tremor/react'
 import dayjs from 'dayjs'
 
-import { PipelineRunStatus } from './types'
+import { PipelineRunStatus, Task } from './types'
 
 type ExtendedStatus = PipelineRunStatus | 'warning' | 'notrun'
 
@@ -29,6 +29,17 @@ export const STATUS_ICONS: Record<ExtendedStatus, React.ElementType<any>> = {
   running: ArrowPathIcon,
   notrun: NoSymbolIcon,
   warning: ExclamationTriangleIcon,
+}
+
+const TASKS_COLORS: Color[] = ['cyan', 'violet', 'pink']
+
+export const getTasksColors = (tasks: Task[]) => {
+  return Object.fromEntries(
+    tasks.map((task, i) => [
+      task.id,
+      `bg-${TASKS_COLORS[i % TASKS_COLORS.length]}-500`,
+    ])
+  )
 }
 
 export const formatDateTime = (date: Date) =>
