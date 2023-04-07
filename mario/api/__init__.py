@@ -13,6 +13,7 @@ from fastapi import (
     WebSocketDisconnect,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from mario.api.authentication import init_auth
 
 from mario.constants import MANUAL_TRIGGER_ID
 from mario.orchestrator import orchestrator
@@ -34,6 +35,8 @@ app = FastAPI()
 
 api = FastAPI()
 app.mount("/api", api)
+
+init_auth(api)
 
 origins = [
     "http://localhost:5173",  # frontend
