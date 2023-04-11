@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Badge,
   Color,
@@ -13,10 +13,11 @@ import {
   TableRow,
   Text,
 } from '@tremor/react'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import useWebSocket from 'react-use-websocket'
 
-import { getLogs } from '@/repository'
-import { LogLevel, Pipeline } from '@/types'
+import { getLogs, getWebsocketUrl } from '@/repository'
+import { LogEntry, LogLevel, Pipeline, WebSocketMessage } from '@/types'
 import { formatTimestamp } from '@/utils'
 import TracebackInfoDialog from './TracebackInfoDialog'
 
@@ -39,6 +40,8 @@ interface FilterType {
 
 const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
   const [filter, setFilter] = useState<FilterType>({ levels: [], tasks: [] })
+  const { lastJsonMessage } = useWebSocket(getWebsocketUrl().toString())
+  const queryClient = useQueryClient()
 
   const query = useQuery({
     queryKey: ['logs', runId],
@@ -46,6 +49,30 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
     enabled: !!runId,
     initialData: [],
   })
+
+  const onWsMessage = useCallback(
+    (message: WebSocketMessage) => {
+      const { data, type } = message
+
+      if (type !== 'logs') {
+        return
+      }
+
+      queryClient.setQueryData<LogEntry[]>(['logs', runId], (oldLogs = []) => {
+        const log: LogEntry = JSON.parse(data)
+        log.id = oldLogs.length
+        log.timestamp = new Date(log.timestamp)
+        return [...oldLogs, log]
+      })
+    },
+    [runId]
+  )
+
+  useEffect(() => {
+    if (lastJsonMessage) {
+      onWsMessage(lastJsonMessage as any)
+    }
+  }, [lastJsonMessage])
 
   const onFilterChange = useCallback((newFilter: Partial<FilterType>) => {
     setFilter((currentFilter) => ({ ...currentFilter, ...newFilter }))
@@ -134,10 +161,7 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      size="xs"
-                      color={LOG_LEVELS_COLORS[log.level]}
-                    >
+                    <Badge size="xs" color={LOG_LEVELS_COLORS[log.level]}>
                       {log.level}
                     </Badge>
                   </TableCell>

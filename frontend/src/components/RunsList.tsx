@@ -49,9 +49,14 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
 
   const onWsMessage = useCallback(
     (message: WebSocketMessage) => {
-      const { data } = message
+      const { data, type } = message
+
+      if (type !== 'run-update') {
+        return
+      }
 
       data.run.start_time = new Date(data.run.start_time)
+      data.run.trigger_id = data.trigger
 
       if (data.run.status === 'running') {
         setRuns([data.run, ...runs])

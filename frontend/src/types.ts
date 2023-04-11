@@ -43,6 +43,6 @@ export interface PipelineRun {
 }
 
 export interface WebSocketMessage {
-  type: string
+  type: 'logs' | 'run-update'
   data: any
 }
