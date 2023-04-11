@@ -323,6 +323,21 @@ run the development server:
 yarn dev
 ```
 
+### Testing
+
+Tests are based on `pytest`, to run the entire suite just run:
+
+```sh
+pytest
+```
+
+To run tests coverage, run:
+
+```sh
+coverage run -m pytest
+coverage report -m
+```
+
 <!-- LICENSE -->
 ## License
 

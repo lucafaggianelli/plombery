@@ -1,7 +1,12 @@
-from typing import Dict, Tuple
+from datetime import datetime
+from typing import Any, Dict, Tuple
 
+from apscheduler.executors.asyncio import AsyncIOExecutor
+from apscheduler.job import Job
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.date import DateTrigger
 
+from mario.constants import MANUAL_TRIGGER_ID
 from mario.orchestrator.executor import Pipeline, run, Trigger
 
 
@@ -58,4 +63,20 @@ class _Orchestrator:
 orchestrator = _Orchestrator()
 
 
-orchestrator.start()
+async def run_pipeline_now(
+    pipeline: Pipeline, trigger: Trigger = None, params: Any = None
+):
+    executor: AsyncIOExecutor = orchestrator.scheduler._lookup_executor("default")
+    executor.submit_job(
+        Job(
+            orchestrator.scheduler,
+            id=f"{pipeline.id}: {MANUAL_TRIGGER_ID}",
+            func=run,
+            args=[],
+            kwargs={"pipeline": pipeline, "trigger": trigger, "params": params},
+            max_instances=1,
+            misfire_grace_time=None,
+            trigger=DateTrigger(),
+        ),
+        [datetime.now()],
+    )
