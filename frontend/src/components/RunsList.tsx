@@ -12,10 +12,12 @@ import {
 } from '@tremor/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import useWebSocket from 'react-use-websocket'
 
-import { PipelineRun } from '@/types'
+import { PipelineRun, WebSocketMessage } from '@/types'
 import { formatDateTime } from '@/utils'
 import StatusBadge from './StatusBadge'
+import { getWebsocketUrl } from '@/repository'
 
 interface Props {
   pipelineId: string
@@ -39,21 +41,22 @@ const Timer: React.FC<{ startTime: Date }> = ({ startTime }) => {
   return <span>{(time / 1000).toFixed(2)}</span>
 }
 
-const ws =
-  typeof window !== 'undefined'
-    ? new WebSocket('ws://localhost:8000/api/ws')
-    : undefined
-
 const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
   const [runs, setRuns] = useState(_runs)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const { lastJsonMessage } = useWebSocket(getWebsocketUrl().toString())
 
   const onWsMessage = useCallback(
-    (event: MessageEvent) => {
-      const { data } = JSON.parse(event.data)
+    (message: WebSocketMessage) => {
+      const { data, type } = message
+
+      if (type !== 'run-update') {
+        return
+      }
 
       data.run.start_time = new Date(data.run.start_time)
+      data.run.trigger_id = data.trigger
 
       if (data.run.status === 'running') {
         setRuns([data.run, ...runs])
@@ -78,12 +81,10 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
   )
 
   useEffect(() => {
-    ws?.addEventListener('message', onWsMessage)
-
-    return () => {
-      ws?.removeEventListener('message', onWsMessage)
+    if (lastJsonMessage) {
+      onWsMessage(lastJsonMessage as any)
     }
-  }, [onWsMessage])
+  }, [lastJsonMessage])
 
   useEffect(() => {
     if (_runs.length) {

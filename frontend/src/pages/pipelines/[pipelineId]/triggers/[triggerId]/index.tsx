@@ -46,7 +46,7 @@ const TriggerView: React.FC = () => {
   })
 
   const runsQuery = useQuery({
-    queryKey: ['runs', triggerId, pipelineId],
+    queryKey: ['runs', pipelineId, triggerId],
     queryFn: () => listRuns(pipelineId, triggerId),
     initialData: [],
     enabled: !!triggerId,
