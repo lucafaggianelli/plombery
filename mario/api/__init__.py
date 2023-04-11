@@ -59,7 +59,8 @@ app.add_middleware(
 )
 def list_pipelines():
     return jsonable_encoder(
-        orchestrator.pipelines.values(), custom_encoder=Trigger.Config.json_encoders
+        list(orchestrator.pipelines.values()),
+        custom_encoder=Trigger.Config.json_encoders,
     )
 
 
@@ -68,7 +69,7 @@ def list_pipelines():
     response_model=None,
     tags=["Pipelines"],
 )
-def get_pipelines(pipeline_id: str):
+def get_pipeline(pipeline_id: str):
     if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
         raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
 
