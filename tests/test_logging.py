@@ -5,7 +5,7 @@ import pytest
 from mario import Mario
 from mario.orchestrator import run_pipeline_now
 from mario.orchestrator.executor import get_pipeline_run_logs
-from .pipeline_1 import Pipeline1
+from .pipeline_1 import pipeline1
 
 
 def _clean_log_message(log):
@@ -23,9 +23,9 @@ def get_parsed_logs(run_id: int):
 @pytest.mark.asyncio
 async def test_pipeline_logs_are_correclty_captured():
     app = Mario()
-    app.register_pipeline(pipeline := Pipeline1())
+    app.register_pipeline(pipeline1)
 
-    await run_pipeline_now(pipeline)
+    await run_pipeline_now(pipeline1)
 
     await sleep(1)
 
