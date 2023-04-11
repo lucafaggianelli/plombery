@@ -12,11 +12,12 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
 )
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 
 from mario.constants import MANUAL_TRIGGER_ID
 from mario.orchestrator import orchestrator
-from mario.pipeline.pipeline import Pipeline, Trigger
+from mario.pipeline.pipeline import Trigger
 from mario.orchestrator.executor import (
     get_pipeline_run_logs,
     get_pipeline_run_data,
@@ -51,66 +52,61 @@ app.add_middleware(
 )
 
 
-def _serialize_trigger(trigger: Trigger):
-    return dict(
-        id=trigger.id,
-        name=trigger.name,
-        description=trigger.description,
-        interval=str(trigger.aps_trigger),
-        next_fire_time=trigger.aps_trigger.get_next_fire_time(
-            datetime.now(), datetime.now()
-        ),
-        paused=trigger.paused,
-        params=trigger.params,
-    )
-
-
-def _serialize_pipeline(pipeline: Pipeline):
-    return dict(
-        id=pipeline.id,
-        name=pipeline.name,
-        description=pipeline.description,
-        tasks=pipeline.tasks,
-        triggers=[_serialize_trigger(trigger) for trigger in pipeline.triggers],
-    )
-
-
-@api.get("/pipelines")
+@api.get(
+    "/pipelines",
+    response_model=None,
+    tags=["Pipelines"],
+)
 def list_pipelines():
-    return [
-        _serialize_pipeline(pipeline) for pipeline in orchestrator.pipelines.values()
-    ]
+    return jsonable_encoder(
+        list(orchestrator.pipelines.values()),
+        custom_encoder=Trigger.Config.json_encoders,
+    )
 
 
-@api.get("/pipelines/{pipeline_id}")
-def get_pipelines(pipeline_id: str):
-    pipeline = orchestrator.get_pipeline(pipeline_id)
-    return _serialize_pipeline(pipeline)
+@api.get(
+    "/pipelines/{pipeline_id}",
+    response_model=None,
+    tags=["Pipelines"],
+)
+def get_pipeline(pipeline_id: str):
+    if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
+        raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
+
+    return jsonable_encoder(pipeline, custom_encoder=Trigger.Config.json_encoders)
 
 
-@api.get("/pipelines/{pipeline_id}/input-schema")
+@api.get(
+    "/pipelines/{pipeline_id}/input-schema",
+    tags=["Pipelines"],
+)
 def get_pipeline_input_schema(pipeline_id: str):
-    pipeline = orchestrator.get_pipeline(pipeline_id)
+    if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
+        raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
+
     return pipeline.params.schema() if pipeline.params else dict()
 
 
-@api.get("/runs")
+@api.get(
+    "/runs",
+    tags=["Runs"],
+)
 def list_runs(pipeline_id: str = None, trigger_id: str = None):
     return list_pipeline_runs(pipeline_id=pipeline_id, trigger_id=trigger_id)
 
 
-@api.get("/runs/{run_id}")
+@api.get("/runs/{run_id}", tags=["Runs"])
 def get_run(run_id: int):
     return get_pipeline_run(run_id)
 
 
-@api.get("/runs/{run_id}/logs")
+@api.get("/runs/{run_id}/logs", tags=["Runs"])
 def get_logs(run_id: int):
     logs = get_pipeline_run_logs(run_id)
     return Response(content=logs, media_type="application/jsonl")
 
 
-@api.get("/runs/{run_id}/data/{task}")
+@api.get("/runs/{run_id}/data/{task}", tags=["Runs"])
 def get_data(run_id: int, task: str):
     data = get_pipeline_run_data(run_id, task)
 
@@ -120,7 +116,7 @@ def get_data(run_id: int, task: str):
     return data
 
 
-@api.post("/pipelines/{pipeline_id}/run")
+@api.post("/pipelines/{pipeline_id}/run", tags=["Runs"])
 async def run_pipeline(pipeline_id: str, params: Optional[dict] = Body()):
     pipeline = orchestrator.get_pipeline(pipeline_id)
 
@@ -140,7 +136,7 @@ async def run_pipeline(pipeline_id: str, params: Optional[dict] = Body()):
     )
 
 
-@api.post("/pipelines/{pipeline_id}/triggers/{trigger_id}/run")
+@api.post("/pipelines/{pipeline_id}/triggers/{trigger_id}/run", tags=["Runs"])
 async def run_trigger(pipeline_id: str, trigger_id: str):
     pipeline = orchestrator.get_pipeline(pipeline_id)
 

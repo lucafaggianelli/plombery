@@ -13,21 +13,11 @@ const client = new SuperFetch({ baseUrl: BASE_URL })
 export const listPipelines = async (): Promise<Pipeline[]> => {
   const pipelines = await client.get<any[]>('/pipelines')
 
-  pipelines.forEach((pipeline) => {
-    pipeline.triggers.forEach((trigger: any) => {
-      trigger.next_fire_time = new Date(trigger.next_fire_time)
-    })
-  })
-
   return pipelines as Pipeline[]
 }
 
 export const getPipeline = async (pipelineId: string): Promise<Pipeline> => {
   const pipeline = await client.get(`/pipelines/${pipelineId}`)
-
-  pipeline.triggers.forEach((trigger: any) => {
-    trigger.next_fire_time = new Date(trigger.next_fire_time)
-  })
 
   return pipeline as Pipeline
 }

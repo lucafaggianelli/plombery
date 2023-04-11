@@ -44,7 +44,9 @@ class _Orchestrator:
             )
 
     def get_pipeline(self, pipeline_id: str):
-        return self._all_pipelines[pipeline_id]
+        """Finds a registered pipeline by its ID,
+            it returns None if the pipeline is not found"""
+        return self._all_pipelines.get(pipeline_id)
 
     @property
     def pipelines(self):

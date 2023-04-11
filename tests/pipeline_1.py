@@ -12,5 +12,4 @@ async def pipe_1_task_1(data, params=None):
     logger.critical("a critical log")
 
 
-class Pipeline1(Pipeline):
-    tasks = [pipe_1_task_1]
+pipeline1 = Pipeline(id="pipeline1", tasks=[pipe_1_task_1])
