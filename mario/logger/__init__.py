@@ -34,9 +34,8 @@ def get_logger() -> logging.Logger:
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.DEBUG)
 
-    print("---- has handlers", logger.handlers)
-
-    logger.addHandler(json_handler)
-    logger.addHandler(websocket_handler)
+    if not logger.handlers:
+        logger.addHandler(json_handler)
+        logger.addHandler(websocket_handler)
 
     return logger
