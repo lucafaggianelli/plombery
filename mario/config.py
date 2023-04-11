@@ -11,6 +11,8 @@ except ImportError:
     from yaml import SafeLoader
 
 from pydantic import BaseSettings
+from pydantic.env_settings import SettingsSourceCallable
+
 from mario.notifications import NotificationRule
 
 BASE_SETTINGS_FOLDER = Path()
@@ -62,6 +64,7 @@ def settings_file_source(settings: BaseSettings) -> Dict[str, Any]:
 
 
 class Settings(BaseSettings):
+    database_url: str = "sqlite:///./mario.db"
     notifications: Optional[List[NotificationRule]]
 
     class Config:
@@ -69,8 +72,17 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
 
         @classmethod
-        def customise_sources(cls, init_settings, **kwargs):
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            **kwargs,
+        ):
             return (
                 init_settings,
+                env_settings,
                 settings_file_source,
             )
+
+
+settings = Settings()

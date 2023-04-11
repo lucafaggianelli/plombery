@@ -1,12 +1,13 @@
 import logging
 
+
 from .api import app
+from .config import settings
 from .logger import get_logger  # noqa F401
 from .notifications import NotificationRule, notification_manager
 from .orchestrator import orchestrator
 from .pipeline import task, Task  # noqa F401
 from .pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger  # noqa F401
-from .settings import Settings
 
 
 _logger = logging.getLogger(__name__)
@@ -16,11 +17,10 @@ _logger.addHandler(logging.StreamHandler())
 
 class Mario:
     def __init__(self) -> None:
-        self._load_settings()
+        self._apply_settings()
+        orchestrator.start()
 
-    def _load_settings(self):
-        settings = Settings()
-
+    def _apply_settings(self):
         for notification in settings.notifications or []:
             self.add_notification_rule(notification)
 
