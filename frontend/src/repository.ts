@@ -5,10 +5,17 @@ import { LogEntry, Pipeline, PipelineRun } from './types'
 
 const DEFAULT_BASE_URL = import.meta.env.DEV
   ? 'http://localhost:8000/api'
-  : '/api'
+  : `${window.location}api`
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 
 const client = new SuperFetch({ baseUrl: BASE_URL })
+
+export const getWebsocketUrl = () => {
+  const url = new URL(BASE_URL)
+  url.protocol = 'ws'
+  url.pathname += '/ws'
+  return url
+}
 
 export const listPipelines = async (): Promise<Pipeline[]> => {
   const pipelines = await client.get<any[]>('/pipelines')
