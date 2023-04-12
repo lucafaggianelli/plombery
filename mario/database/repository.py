@@ -1,7 +1,7 @@
 from typing import List
 from datetime import datetime
 
-from mario.pipeline.pipeline import PipelineRunStatus
+from mario.schemas import PipelineRunStatus
 
 from .base import SessionLocal
 from .schemas import PipelineRunCreate

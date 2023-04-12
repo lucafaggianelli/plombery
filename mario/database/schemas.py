@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from mario.pipeline.pipeline import PipelineRunStatus
+from mario.schemas import PipelineRunStatus
 
 
 class PipelineRunBase(BaseModel):

@@ -6,20 +6,24 @@ type User = {
   email: string
   name: string
 } | null
+
 type AuthState = {
   isAuthenticated: boolean
-  user: User
+  isAuthenticationEnabled: boolean
   isLoading: boolean
   logout: () => Promise<any>
+  user: User
 }
+
 type Action =
-  | { type: 'LOGIN'; payload: User }
+  | { type: 'LOGIN'; payload: { user: User; isAuthenticationEnabled: boolean } }
   | { type: 'POPULATE'; payload: User }
   | { type: 'LOGOUT' }
   | { type: 'STOP_LOADING' }
 
 const StateContext = createContext<AuthState>({
   isAuthenticated: false,
+  isAuthenticationEnabled: true,
   isLoading: true,
   logout: async () => {},
   user: null,
@@ -31,7 +35,8 @@ const reducer = (state: AuthState, action: Action): AuthState => {
       return {
         ...state,
         isAuthenticated: true,
-        user: action.payload,
+        isAuthenticationEnabled: action.payload.isAuthenticationEnabled,
+        user: action.payload.user,
       }
     case 'LOGOUT':
       return {
@@ -62,6 +67,7 @@ const reducer = (state: AuthState, action: Action): AuthState => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, dispatch] = useReducer(reducer, {
     isAuthenticated: false,
+    isAuthenticationEnabled: true,
     isLoading: true,
     logout: async () => {
       await logout()
@@ -73,8 +79,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const user = await getCurrentUser()
-        dispatch({ type: 'LOGIN', payload: user })
+        const { is_authentication_enabled, user } = await getCurrentUser()
+
+        if ((is_authentication_enabled && user) || !is_authentication_enabled) {
+          dispatch({
+            type: 'LOGIN',
+            payload: {
+              user,
+              isAuthenticationEnabled: is_authentication_enabled,
+            },
+          })
+        }
       } catch (err) {
         console.error(err)
       } finally {
@@ -85,11 +100,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loadUser()
   }, [])
 
-  return (
-    <StateContext.Provider value={state}>
-      {children}
-    </StateContext.Provider>
-  )
+  return <StateContext.Provider value={state}>{children}</StateContext.Provider>
 }
 
 export const useAuthState = () => useContext(StateContext)

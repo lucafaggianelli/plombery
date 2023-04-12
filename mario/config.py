@@ -10,10 +10,10 @@ try:
 except ImportError:
     from yaml import SafeLoader
 
-from pydantic import BaseSettings
+from pydantic import BaseModel, BaseSettings, HttpUrl, SecretStr
 from pydantic.env_settings import SettingsSourceCallable
 
-from mario.notifications import NotificationRule
+from mario.schemas import NotificationRule
 
 BASE_SETTINGS_FOLDER = Path()
 SETTINGS_FILE_NAME = "mario.config"
@@ -63,7 +63,17 @@ def settings_file_source(settings: BaseSettings) -> Dict[str, Any]:
         return load(f, Loader=EnvVarLoader)
 
 
+class AuthSettings(BaseModel):
+    client_id: SecretStr
+    client_secret: SecretStr
+    access_token_url: HttpUrl
+    authorize_url: HttpUrl
+    jwks_uri: HttpUrl
+    client_kwargs: Optional[Any] = None
+
+
 class Settings(BaseSettings):
+    auth: Optional[AuthSettings] = None
     database_url: str = "sqlite:///./mario.db"
     notifications: Optional[List[NotificationRule]]
 

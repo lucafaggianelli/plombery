@@ -2,10 +2,9 @@ import logging
 from typing import List
 from apprise import Apprise
 import apprise
-from pydantic import BaseModel, Field
 
-from mario.pipeline.pipeline import PipelineRunStatus
 from mario.database.schemas import PipelineRun
+from mario.schemas import NotificationRule
 
 
 logger = logging.getLogger(__name__)
@@ -18,13 +17,6 @@ PIPELINE_STATUS_TO_VERB = {
     "failed": "failed ❌",
     "cancelled": "was cancelled",
 }
-
-
-class NotificationRule(BaseModel):
-    channels: List[str]
-    pipeline_status: List[PipelineRunStatus] = Field(
-        default_factory=lambda: [PipelineRunStatus.FAILED]
-    )
 
 
 class NotificationManager:

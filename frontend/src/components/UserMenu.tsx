@@ -41,6 +41,7 @@ const UserMenu: React.FC<Props> = () => {
             color="rose"
             icon={ArrowRightOnRectangleIcon}
             className="w-full"
+            onClick={async () => await logout()}
           >
             Logout
           </Button>

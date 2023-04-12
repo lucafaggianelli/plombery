@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 
 from mario.database.base import Base, engine, SessionLocal
-from mario.pipeline.pipeline import PipelineRunStatus
+from mario.schemas import PipelineRunStatus
 
 
 class PipelineRun(Base):

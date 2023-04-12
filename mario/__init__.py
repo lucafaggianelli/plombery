@@ -7,7 +7,8 @@ from .logger import get_logger  # noqa F401
 from .notifications import NotificationRule, notification_manager
 from .orchestrator import orchestrator
 from .pipeline import task, Task  # noqa F401
-from .pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger  # noqa F401
+from .pipeline.pipeline import Pipeline, Trigger  # noqa F401
+from .schemas import PipelineRunStatus  # noqa F401
 
 
 _logger = logging.getLogger(__name__)

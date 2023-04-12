@@ -9,13 +9,13 @@ interface Props extends PropsWithChildren {
 }
 
 const PageLayout: React.FC<Props> = ({ children, header }) => {
-  const { isAuthenticated } = useAuthState()
+  const { isAuthenticated, isAuthenticationEnabled } = useAuthState()
 
   return (
     <div className="bg-slate-50 p-6 sm:p-10 min-h-screen">
       <Flex className="items-start">
         {header && <div className="flex-grow">{header}</div>}
-        {isAuthenticated && <UserMenu />}
+        {isAuthenticated && isAuthenticationEnabled && <UserMenu />}
       </Flex>
 
       <main>{children}</main>

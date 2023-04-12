@@ -13,7 +13,9 @@ const client = new SuperFetch({ baseUrl: BASE_URL })
 export const getApiUrl = () => client.baseUrl
 
 export const getCurrentUser = async () => {
-  return await client.get('/whoami')
+  return await client.get<{ user: any; is_authentication_enabled: boolean }>(
+    '/whoami'
+  )
 }
 
 export const logout = async () => {
