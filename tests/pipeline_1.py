@@ -13,3 +13,18 @@ async def pipe_1_task_1(data, params=None):
 
 
 pipeline1 = Pipeline(id="pipeline1", tasks=[pipe_1_task_1])
+
+pipeline1_serialized = {
+    "id": "pipeline1",
+    "name": "Pipeline1",
+    "description": None,
+    "tasks": [
+        {
+            "id": "pipe_1_task_1",
+            "name": "Pipe 1 Task 1",
+            "description": None,
+            "params": None,
+        }
+    ],
+    "triggers": [],
+}

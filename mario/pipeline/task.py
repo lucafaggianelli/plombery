@@ -1,13 +1,13 @@
 from typing import Any, Callable, Dict
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 
 from ._utils import prettify_name
 
 
 class Task(BaseModel):
     id: str
-    run: Callable
+    run: Callable = Field(exclude=True)
     name: str = None
     description: str = None
     params: BaseModel = None

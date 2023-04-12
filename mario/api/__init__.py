@@ -1,5 +1,5 @@
-from datetime import datetime
 from typing import Optional
+from datetime import datetime
 
 from apscheduler.job import Job
 from apscheduler.executors.asyncio import AsyncIOExecutor
@@ -14,8 +14,8 @@ from fastapi import (
 )
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from mario.api.authentication import init_auth
 
+from mario.api.authentication import NeedsAuth, init_auth
 from mario.constants import MANUAL_TRIGGER_ID
 from mario.orchestrator import orchestrator
 from mario.pipeline.pipeline import Trigger
@@ -60,7 +60,7 @@ app.add_middleware(
     response_model=None,
     tags=["Pipelines"],
 )
-def list_pipelines():
+def list_pipelines(user=NeedsAuth):
     return jsonable_encoder(
         list(orchestrator.pipelines.values()),
         custom_encoder=Trigger.Config.json_encoders,
@@ -72,7 +72,7 @@ def list_pipelines():
     response_model=None,
     tags=["Pipelines"],
 )
-def get_pipeline(pipeline_id: str):
+def get_pipeline(pipeline_id: str, user=NeedsAuth):
     if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
         raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
 

@@ -1,5 +1,5 @@
 from authlib.integrations.starlette_client import OAuth
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -60,3 +60,18 @@ def init_auth(app: FastAPI):
             request.session["user"] = dict(user)
 
         return RedirectResponse(url="http://localhost:5173/")
+
+
+async def _needs_auth(request: Request):
+    if not settings.auth:
+        return None
+
+    user = request.session.get("user")
+
+    if not user:
+        raise HTTPException(401, "You must be authenticated to access this API route")
+
+    return user
+
+
+NeedsAuth = Depends(_needs_auth)

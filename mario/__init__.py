@@ -1,5 +1,6 @@
 import logging
 
+from apscheduler.schedulers.base import SchedulerAlreadyRunningError
 
 from .api import app
 from .config import settings
@@ -19,7 +20,11 @@ _logger.addHandler(logging.StreamHandler())
 class Mario:
     def __init__(self) -> None:
         self._apply_settings()
-        orchestrator.start()
+
+        try:
+            orchestrator.start()
+        except SchedulerAlreadyRunningError:
+            pass
 
     def _apply_settings(self):
         for notification in settings.notifications or []:
@@ -30,6 +35,9 @@ class Mario:
 
     def add_notification_rule(self, notification: NotificationRule):
         notification_manager.register_rule(notification)
+
+    def stop(self):
+        orchestrator.stop()
 
     # Wrap FastAPI ASGI interface so the Mario object
     # can be served directly by uvicorn

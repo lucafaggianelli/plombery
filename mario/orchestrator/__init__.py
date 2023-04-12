@@ -61,6 +61,9 @@ class _Orchestrator:
     def start(self):
         self.scheduler.start()
 
+    def stop(self):
+        self.scheduler.shutdown(wait=False)
+
 
 orchestrator = _Orchestrator()
 
