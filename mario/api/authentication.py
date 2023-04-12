@@ -1,5 +1,5 @@
 from authlib.integrations.starlette_client import OAuth
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -45,9 +45,6 @@ def init_auth(app: FastAPI):
     @app.get("/whoami")
     async def get_current_user(request: Request):
         user = request.session.get("user")
-
-        if not user:
-            raise HTTPException(401)
 
         return {
             "user": user,
