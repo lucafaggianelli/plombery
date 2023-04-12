@@ -100,7 +100,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loadUser()
   }, [])
 
-  return <StateContext.Provider value={state}>{children}</StateContext.Provider>
+  return (
+    <StateContext.Provider value={state}>
+      {state.isAuthenticationEnabled && state.isLoading
+        ? 'Loading...'
+        : children}
+    </StateContext.Provider>
+  )
 }
 
 export const useAuthState = () => useContext(StateContext)
