@@ -1,12 +1,11 @@
-from typing import List
+from typing import Any, Dict, List, Type
 from enum import Enum
-import logging
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 
 from .task import Task
 from .trigger import Trigger
-from ._utils import to_snake_case, prettify_name
+from ._utils import prettify_name
 
 
 class PipelineRunStatus(str, Enum):
@@ -16,17 +15,26 @@ class PipelineRunStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-class Pipeline:
+class Pipeline(BaseModel):
     id: str
     name: str = None
     description: str = None
-    params: BaseModel = None
-    tasks: List[Task] = []
-    triggers: List[Trigger] = []
+    params: Type[BaseModel] = Field(exclude=True, default=None)
+    tasks: List[Task] = Field(default_factory=list)
+    triggers: List[Trigger] = Field(default_factory=list)
 
-    def __init__(self) -> None:
-        self.id = to_snake_case(self.__class__.__name__)
-        self.name = prettify_name(self.id).title()
-        self.description = self.__class__.__doc__
+    @validator("name", always=True)
+    def generate_default_name(cls, name: str, values: Dict[str, Any]) -> str:
+        if not name:
+            return prettify_name(values["id"]).title()
 
-        self.logger = logging.getLogger(f"[P]{self.id}")
+        return name
+
+    @validator("description", always=True)
+    def generate_default_description(
+        cls, description: str, values: Dict[str, Any]
+    ) -> str:
+        if not description:
+            return cls.__doc__
+
+        return description

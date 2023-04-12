@@ -21,10 +21,6 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/lucafaggianelli/mario-pype">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
-  </a>
-
 <h3 align="center">Mario Pype</h3>
 
   <p align="center">
@@ -164,11 +160,8 @@ from apscheduler.triggers.interval import IntervalTrigger
 from mario import Mario, task, get_logger, Pipeline, Trigger
 
 
-class DummyPipeline(Pipeline):
-    """This is a very useless pipeline"""
-
-    tasks = [fetch_raw_sales_data]
-
+dummy_pipeline = Pipeline(
+    tasks = [fetch_raw_sales_data],
     triggers = [
         Trigger(
             id="daily",
@@ -176,7 +169,8 @@ class DummyPipeline(Pipeline):
             description="Run the pipeline every day",
             aps_trigger=IntervalTrigger(days=1),
         )
-    ]
+    ],
+)
 ```
 
 A *Task* is the base block in Mario Pype and it's just a Python function that
@@ -213,7 +207,7 @@ Mario knows it's there:
 ```py
 app = Mario()
 
-app.register_pipeline(DummyPipeline())
+app.register_pipeline(dummy_pipeline)
 ```
 
 ### Run Mario Pype
@@ -321,6 +315,21 @@ run the development server:
 
 ```sh
 yarn dev
+```
+
+### Testing
+
+Tests are based on `pytest`, to run the entire suite just run:
+
+```sh
+pytest
+```
+
+To run tests coverage, run:
+
+```sh
+coverage run -m pytest
+coverage report -m
 ```
 
 <!-- LICENSE -->

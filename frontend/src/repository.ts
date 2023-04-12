@@ -5,7 +5,7 @@ import { LogEntry, Pipeline, PipelineRun } from './types'
 
 const DEFAULT_BASE_URL = import.meta.env.DEV
   ? 'http://localhost:8000/api'
-  : '/api'
+  : `${window.location}api`
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 
 const client = new SuperFetch({ baseUrl: BASE_URL })
@@ -20,24 +20,21 @@ export const logout = async () => {
   await client.post('/logout')
 }
 
+export const getWebsocketUrl = () => {
+  const url = new URL(BASE_URL)
+  url.protocol = 'ws'
+  url.pathname += '/ws'
+  return url
+}
+
 export const listPipelines = async (): Promise<Pipeline[]> => {
   const pipelines = await client.get<any[]>('/pipelines')
-
-  pipelines.forEach((pipeline) => {
-    pipeline.triggers.forEach((trigger: any) => {
-      trigger.next_fire_time = new Date(trigger.next_fire_time)
-    })
-  })
 
   return pipelines as Pipeline[]
 }
 
 export const getPipeline = async (pipelineId: string): Promise<Pipeline> => {
   const pipeline = await client.get(`/pipelines/${pipelineId}`)
-
-  pipeline.triggers.forEach((trigger: any) => {
-    trigger.next_fire_time = new Date(trigger.next_fire_time)
-  })
 
   return pipeline as Pipeline
 }

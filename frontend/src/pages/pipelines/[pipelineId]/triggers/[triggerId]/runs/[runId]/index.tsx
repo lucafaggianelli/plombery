@@ -1,6 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Card, Flex, Grid, Metric, Text, Title } from '@tremor/react'
 import { useParams } from 'react-router-dom'
+import useWebSocket from 'react-use-websocket'
+import { useEffect } from 'react'
 
 import Breadcrumbs from '@/components/Breadcrumbs'
 import LogViewer from '@/components/LogViewer'
@@ -8,14 +10,30 @@ import PageLayout from '@/components/PageLayout'
 import StatusBadge from '@/components/StatusBadge'
 import RunsTasksList from '@/components/Tasks'
 import { MANUAL_TRIGGER } from '@/constants'
-import { getPipeline, getRun } from '@/repository'
-import { Trigger } from '@/types'
+import { getPipeline, getRun, getWebsocketUrl } from '@/repository'
+import { Trigger, WebSocketMessage } from '@/types'
 
 const RunViewPage = () => {
+  const { lastJsonMessage } = useWebSocket(getWebsocketUrl().toString())
+  const queryClient = useQueryClient()
   const urlParams = useParams()
   const pipelineId = urlParams.pipelineId as string
   const triggerId = urlParams.triggerId as string
   const runId = parseInt(urlParams.runId as string)
+
+  useEffect(() => {
+    if (lastJsonMessage) {
+      const { data, type } = lastJsonMessage as any as WebSocketMessage
+
+      if (type === 'run-update') {
+        queryClient
+          .invalidateQueries({
+            queryKey: ['run', pipelineId, triggerId, runId],
+          })
+          .catch(() => {})
+      }
+    }
+  }, [lastJsonMessage, pipelineId])
 
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],

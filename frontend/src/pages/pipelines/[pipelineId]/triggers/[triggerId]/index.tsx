@@ -46,7 +46,7 @@ const TriggerView: React.FC = () => {
   })
 
   const runsQuery = useQuery({
-    queryKey: ['runs', triggerId, pipelineId],
+    queryKey: ['runs', pipelineId, triggerId],
     queryFn: () => listRuns(pipelineId, triggerId),
     initialData: [],
     enabled: !!triggerId,
@@ -111,18 +111,7 @@ const TriggerView: React.FC = () => {
           <ListItem>
             <Text>Schedule</Text>
             <Text>
-              <Bold>{trigger.interval}</Bold>
-            </Text>
-          </ListItem>
-
-          <ListItem>
-            <Text>Next run</Text>
-            <Text>
-              <Bold>
-                {trigger.next_fire_time
-                  ? formatDateTime(trigger.next_fire_time)
-                  : '-'}
-              </Bold>
+              <Bold>{trigger.aps_trigger}</Bold>
             </Text>
           </ListItem>
 
