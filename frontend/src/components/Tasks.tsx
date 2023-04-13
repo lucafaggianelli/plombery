@@ -38,13 +38,21 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
       <Title>Tasks</Title>
 
       <List>
-        {pipeline.tasks.map((task) => (
+        {pipeline.tasks.map((task, i) => (
           <ListItem key={task.id} className="space-x-4">
-            <Icon
-              variant="light"
-              icon={STATUS_ICONS[run.status]}
-              color={STATUS_COLORS[run.status]}
-            />
+            {run.tasks_run[i] ? (
+              <Icon
+                variant="light"
+                icon={STATUS_ICONS[run.tasks_run[i].status]}
+                color={STATUS_COLORS[run.tasks_run[i].status]}
+              />
+            ) : (
+              <Icon
+                variant="light"
+                icon={STATUS_ICONS.notrun}
+                color={STATUS_COLORS.notrun}
+              />
+            )}
             <div className="truncate flex-grow">
               <Flex className="justify-start">
                 <div
@@ -61,7 +69,7 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
               )}
             </div>
 
-            {run.status === 'completed' && (
+            {run.tasks_run[i]?.has_output && (
               <Button
                 variant="light"
                 color="indigo"

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, Tuple
 
 from apscheduler.executors.asyncio import AsyncIOExecutor
@@ -40,12 +40,16 @@ class _Orchestrator:
                 func=run,
                 trigger=trigger.aps_trigger,
                 kwargs=dict(pipeline=pipeline, trigger=trigger),
+                # run once instead of many times if the scheduler determines that the
+                # job should be run more than once in succession
                 coalesce=True,
+                # Jobs will be run even if they arrive 1 min late
+                misfire_grace_time=timedelta(minutes=1).seconds,
             )
 
     def get_pipeline(self, pipeline_id: str):
         """Finds a registered pipeline by its ID,
-            it returns None if the pipeline is not found"""
+        it returns None if the pipeline is not found"""
         return self._all_pipelines.get(pipeline_id)
 
     @property

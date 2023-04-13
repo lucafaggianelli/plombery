@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Card, Flex, Grid, Metric, Text, Title } from '@tremor/react'
+import { Card, CategoryBar, Flex, Grid, Metric, Text, Title } from '@tremor/react'
 import { useParams } from 'react-router-dom'
 import useWebSocket from 'react-use-websocket'
 import { useEffect } from 'react'
@@ -12,6 +12,7 @@ import RunsTasksList from '@/components/Tasks'
 import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun, getWebsocketUrl } from '@/repository'
 import { Trigger, WebSocketMessage } from '@/types'
+import { TASKS_COLORS, getTasksColors } from '@/utils'
 
 const RunViewPage = () => {
   const { lastJsonMessage } = useWebSocket(getWebsocketUrl().toString())
@@ -65,6 +66,9 @@ const RunViewPage = () => {
     return <div>Trigger not found</div>
   }
 
+  const totalTasksDuration = run.tasks_run.reduce((tot, cur) => tot + cur.duration, 0)
+  const tasksRunDurations = run.tasks_run.map(tr => tr.duration / totalTasksDuration * 100)
+
   return (
     <PageLayout
       header={
@@ -82,9 +86,17 @@ const RunViewPage = () => {
             <Text>Duration</Text>
             <StatusBadge status={run.status} />
           </Flex>
+
           <Flex className="justify-start items-baseline pace-x-3 truncate">
             <Metric>{(run.duration / 1000).toFixed(1)}s</Metric>
           </Flex>
+
+          <CategoryBar
+            categoryPercentageValues={tasksRunDurations}
+            colors={TASKS_COLORS}
+            showLabels={false}
+            className="mt-3"
+          />
         </Card>
       </Grid>
 
