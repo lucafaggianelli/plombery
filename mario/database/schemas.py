@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import List
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -19,7 +19,7 @@ class PipelineRunBase(BaseModel):
 class PipelineRun(PipelineRunBase):
     id: int
     duration: int
-    tasks_run: Dict[str, TaskRun]
+    tasks_run: List[TaskRun]
 
 
 class PipelineRunCreate(PipelineRunBase):

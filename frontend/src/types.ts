@@ -34,12 +34,20 @@ export interface Pipeline {
   triggers: Trigger[]
 }
 
+export interface TaskRun {
+  duration: number
+  has_output: boolean
+  status: PipelineRunStatus
+  task_id: string
+}
+
 export interface PipelineRun {
   id: number
   status: PipelineRunStatus
   trigger_id: string
   start_time: Date
   duration: number
+  tasks_run: TaskRun[]
 }
 
 export interface WebSocketMessage {

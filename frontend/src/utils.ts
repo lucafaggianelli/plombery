@@ -31,7 +31,15 @@ export const STATUS_ICONS: Record<ExtendedStatus, React.ElementType<any>> = {
   warning: ExclamationTriangleIcon,
 }
 
-const TASKS_COLORS: Color[] = ['cyan', 'violet', 'pink']
+export const TASKS_COLORS: Color[] = [
+  'cyan',
+  'violet',
+  'pink',
+  'emerald',
+  'orange',
+  'stone',
+  'fuchsia',
+]
 
 export const getTasksColors = (tasks: Task[]) => {
   return Object.fromEntries(

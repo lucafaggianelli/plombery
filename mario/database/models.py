@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import List
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import parse_obj_as
@@ -59,7 +59,7 @@ class PipelineRun(Base):
     status = Column(String)
     start_time = Column(DateTime)
     duration = Column(Integer, default=0)
-    tasks_run = Column(PydanticType(Dict[str, TaskRun]))
+    tasks_run = Column(PydanticType(List[TaskRun]))
 
 
 Base.metadata.create_all(bind=engine)

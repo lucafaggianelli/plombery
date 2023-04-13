@@ -17,6 +17,7 @@ class TaskRun(BaseModel):
     has_output: bool = False
     """True if the task generated an output"""
     status: Optional[PipelineRunStatus]
+    task_id: str
 
     class Config:
         orm_mode = True

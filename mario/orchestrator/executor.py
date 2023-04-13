@@ -1,7 +1,7 @@
 from asyncio import iscoroutinefunction
 import asyncio
 from datetime import datetime
-from typing import Coroutine, Dict, List
+from typing import Coroutine, List
 
 from pydantic import BaseModel
 
@@ -83,7 +83,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
     )
 
     pipeline_run = _on_pipeline_start(pipeline, trigger)
-    pipeline_run.tasks_run: Dict[str, TaskRun] = dict()
+    pipeline_run.tasks_run = []
 
     pipeline_token = pipeline_context.set(pipeline)
     run_token = run_context.set(pipeline_run)
@@ -103,7 +103,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
     for task in pipeline.tasks:
         logger.info("Executing task %s", task.id)
 
-        task_run = TaskRun()
+        task_run = TaskRun(task_id=task.id)
 
         try:
             task_start_time = datetime.now()
@@ -111,16 +111,18 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
             task_run.status = PipelineRunStatus.COMPLETED
         except Exception as e:
             logger.error(str(e), exc_info=e)
-
-            # A task failed so the entire pipeline failed
+            flowing_data = None
             task_run.status = PipelineRunStatus.FAILED
-            _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
-            break
         finally:
             task_run.duration = (datetime.now() - task_start_time).total_seconds() * 1000
             task_run.has_output = store_task_output(pipeline_run.id, task.id, flowing_data)
 
-            pipeline_run.tasks_run[task.id] = task_run
+            pipeline_run.tasks_run.append(task_run)
+
+            if task_run.status == PipelineRunStatus.FAILED:
+                # A task failed so the entire pipeline failed
+                _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
+                break
 
     else:
         # All task succeeded so the entire pipeline succeeded
