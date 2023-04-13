@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, Optional
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PositiveInt
 
 
 class PipelineRunStatus(str, Enum):
@@ -9,6 +9,17 @@ class PipelineRunStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+
+class TaskRun(BaseModel):
+    duration: Optional[PositiveInt]
+    """Task duration in milliseconds"""
+    has_output: bool = False
+    """True if the task generated an output"""
+    status: Optional[PipelineRunStatus]
+
+    class Config:
+        orm_mode = True
 
 
 class NotificationRule(BaseModel):

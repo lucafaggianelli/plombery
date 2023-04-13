@@ -1,8 +1,9 @@
+from typing import Dict
 from datetime import datetime
 
 from pydantic import BaseModel
 
-from mario.schemas import PipelineRunStatus
+from mario.schemas import PipelineRunStatus, TaskRun
 
 
 class PipelineRunBase(BaseModel):
@@ -18,6 +19,7 @@ class PipelineRunBase(BaseModel):
 class PipelineRun(PipelineRunBase):
     id: int
     duration: int
+    tasks_run: Dict[str, TaskRun]
 
 
 class PipelineRunCreate(PipelineRunBase):

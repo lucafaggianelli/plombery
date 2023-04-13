@@ -21,7 +21,20 @@ def store_data(filename: str, content: str, pipeline_run_id: int):
         f.write(content)
 
 
-def store_task_output(pipeline_run_id: int, task_id: str, data: Any):
+def store_task_output(pipeline_run_id: int, task_id: str, data: Any) -> bool:
+    """
+    Store a task output as a JSON file
+
+    Args:
+        pipeline_run_id (int): the pipeline run ID used to name the folder
+            containing the run data
+        task_id (str): the id of the task
+        data (Any): the actual data to store, if is None or is an empty DataFrame
+            it will not be saved
+
+    Returns:
+        bool: returns True if the store succeeded, False otherwise
+    """
     data_path = _get_data_path(pipeline_run_id)
     output_file = data_path / f"{task_id}.json"
 
@@ -29,20 +42,26 @@ def store_task_output(pipeline_run_id: int, task_id: str, data: Any):
         import pandas
 
         if type(data) is pandas.DataFrame:
-            data.to_json(output_file, orient="records")
-            return
+            if not data.empty:
+                data.to_json(output_file, orient="records")
+                return True
+            else:
+                return False
     except ModuleNotFoundError:
         pass
 
     try:
-        import json
+        if data is None:
+            return False
 
         with output_file.open(mode="w", encoding="utf-8") as f:
             json.dump(data, f, default=str)
+
+        return True
     except Exception as exc:
         print(f"Failed to save task {task_id} output", exc)
         output_file.unlink()
-        pass
+        return False
 
 
 def get_logs_filename(pipeline_run_id: int):

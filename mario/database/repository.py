@@ -33,6 +33,7 @@ def update_pipeline_run(
         dict(
             duration=pipeline_run.duration,
             status=pipeline_run.status,
+            tasks_run=pipeline_run.tasks_run,
         )
     )
 
