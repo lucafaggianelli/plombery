@@ -10,6 +10,18 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 
 const client = new SuperFetch({ baseUrl: BASE_URL })
 
+export const getApiUrl = () => client.baseUrl
+
+export const getCurrentUser = async () => {
+  return await client.get<{ user: any; is_authentication_enabled: boolean }>(
+    '/whoami'
+  )
+}
+
+export const logout = async () => {
+  await client.post('/logout')
+}
+
 export const getWebsocketUrl = () => {
   const url = new URL(BASE_URL)
   url.protocol = 'ws'

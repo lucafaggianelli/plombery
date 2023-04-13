@@ -1,5 +1,5 @@
-from datetime import datetime
 from typing import Optional
+from datetime import datetime
 
 from apscheduler.job import Job
 from apscheduler.executors.asyncio import AsyncIOExecutor
@@ -15,6 +15,7 @@ from fastapi import (
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 
+from mario.api.authentication import NeedsAuth, init_auth
 from mario.constants import MANUAL_TRIGGER_ID
 from mario.orchestrator import orchestrator
 from mario.pipeline.pipeline import Trigger
@@ -35,6 +36,8 @@ app = FastAPI()
 
 api = FastAPI()
 app.mount("/api", api)
+
+init_auth(api)
 
 origins = [
     "http://localhost:5173",  # frontend
@@ -57,7 +60,7 @@ app.add_middleware(
     response_model=None,
     tags=["Pipelines"],
 )
-def list_pipelines():
+def list_pipelines(user=NeedsAuth):
     return jsonable_encoder(
         list(orchestrator.pipelines.values()),
         custom_encoder=Trigger.Config.json_encoders,
@@ -69,7 +72,7 @@ def list_pipelines():
     response_model=None,
     tags=["Pipelines"],
 )
-def get_pipeline(pipeline_id: str):
+def get_pipeline(pipeline_id: str, user=NeedsAuth):
     if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
         raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
 
@@ -80,7 +83,7 @@ def get_pipeline(pipeline_id: str):
     "/pipelines/{pipeline_id}/input-schema",
     tags=["Pipelines"],
 )
-def get_pipeline_input_schema(pipeline_id: str):
+def get_pipeline_input_schema(pipeline_id: str, user=NeedsAuth):
     if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
         raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
 
@@ -91,23 +94,23 @@ def get_pipeline_input_schema(pipeline_id: str):
     "/runs",
     tags=["Runs"],
 )
-def list_runs(pipeline_id: str = None, trigger_id: str = None):
+def list_runs(pipeline_id: str = None, trigger_id: str = None, user=NeedsAuth):
     return list_pipeline_runs(pipeline_id=pipeline_id, trigger_id=trigger_id)
 
 
 @api.get("/runs/{run_id}", tags=["Runs"])
-def get_run(run_id: int):
+def get_run(run_id: int, user=NeedsAuth):
     return get_pipeline_run(run_id)
 
 
 @api.get("/runs/{run_id}/logs", tags=["Runs"])
-def get_logs(run_id: int):
+def get_logs(run_id: int, user=NeedsAuth):
     logs = get_pipeline_run_logs(run_id)
     return Response(content=logs, media_type="application/jsonl")
 
 
 @api.get("/runs/{run_id}/data/{task}", tags=["Runs"])
-def get_data(run_id: int, task: str):
+def get_data(run_id: int, task: str, user=NeedsAuth):
     data = get_pipeline_run_data(run_id, task)
 
     if not data:
@@ -117,7 +120,7 @@ def get_data(run_id: int, task: str):
 
 
 @api.post("/pipelines/{pipeline_id}/run", tags=["Runs"])
-async def run_pipeline(pipeline_id: str, params: Optional[dict] = Body()):
+async def run_pipeline(pipeline_id: str, params: Optional[dict] = Body(), user=NeedsAuth):
     pipeline = orchestrator.get_pipeline(pipeline_id)
 
     executor: AsyncIOExecutor = orchestrator.scheduler._lookup_executor("default")
@@ -137,7 +140,7 @@ async def run_pipeline(pipeline_id: str, params: Optional[dict] = Body()):
 
 
 @api.post("/pipelines/{pipeline_id}/triggers/{trigger_id}/run", tags=["Runs"])
-async def run_trigger(pipeline_id: str, trigger_id: str):
+async def run_trigger(pipeline_id: str, trigger_id: str, user=NeedsAuth):
     pipeline = orchestrator.get_pipeline(pipeline_id)
 
     triggers = [trigger for trigger in pipeline.triggers if trigger.id == trigger_id]

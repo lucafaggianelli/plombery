@@ -52,6 +52,10 @@ export class SuperFetch {
     this.config.baseUrl = this.config.baseUrl?.replace(/\/+$/, '')
   }
 
+  get baseUrl () {
+    return this.config.baseUrl
+  }
+
   private async fetch<ResponseType = any>(
     request: FetchRequest | string
   ): Promise<ResponseType> {
@@ -82,7 +86,10 @@ export class SuperFetch {
       url = this.config.baseUrl + url
     }
 
-    const fetchRequest = new Request(url, otherRequestParams)
+    const fetchRequest = new Request(url, {
+      ...otherRequestParams,
+      credentials: 'include',
+    })
     const response = await fetch(fetchRequest)
 
     if (!response.ok) {

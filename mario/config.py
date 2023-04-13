@@ -10,10 +10,10 @@ try:
 except ImportError:
     from yaml import SafeLoader
 
-from pydantic import BaseSettings
+from pydantic import BaseModel, BaseSettings, HttpUrl, SecretStr
 from pydantic.env_settings import SettingsSourceCallable
 
-from mario.notifications import NotificationRule
+from mario.schemas import NotificationRule
 
 BASE_SETTINGS_FOLDER = Path()
 SETTINGS_FILE_NAME = "mario.config"
@@ -46,9 +46,11 @@ def settings_file_source(settings: BaseSettings) -> Dict[str, Any]:
 
     from dotenv import load_dotenv
 
-    # Load the env vars explicitely as pydantic uses the
+    # Load the env vars explicitely as pydantic reads env vars
+    # locally without loading them into the system
     load_dotenv(settings.__config__.env_file)
 
+    # Find user's defined config file among the supported ones
     for [ext, file_type] in SUPPORTED_CONFIG_FILES:
         config_file = BASE_SETTINGS_FOLDER / f"{SETTINGS_FILE_NAME}.{ext}"
         if config_file.exists():
@@ -60,10 +62,21 @@ def settings_file_source(settings: BaseSettings) -> Dict[str, Any]:
     encoding = settings.__config__.env_file_encoding
 
     with config_file.open(mode="r", encoding=encoding) as f:
-        return load(f, Loader=EnvVarLoader)
+        # `or {}` because the file may be empty
+        return load(f, Loader=EnvVarLoader) or {}
+
+
+class AuthSettings(BaseModel):
+    client_id: SecretStr
+    client_secret: SecretStr
+    access_token_url: HttpUrl
+    authorize_url: HttpUrl
+    jwks_uri: HttpUrl
+    client_kwargs: Optional[Any]
 
 
 class Settings(BaseSettings):
+    auth: Optional[AuthSettings]
     database_url: str = "sqlite:///./mario.db"
     notifications: Optional[List[NotificationRule]]
 

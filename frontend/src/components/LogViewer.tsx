@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Badge,
   Color,
+  Flex,
   Grid,
   MultiSelectBox,
   MultiSelectBoxItem,
@@ -18,7 +19,7 @@ import useWebSocket from 'react-use-websocket'
 
 import { getLogs, getWebsocketUrl } from '@/repository'
 import { LogEntry, LogLevel, Pipeline, WebSocketMessage } from '@/types'
-import { formatTimestamp } from '@/utils'
+import { formatTimestamp, getTasksColors } from '@/utils'
 import TracebackInfoDialog from './TracebackInfoDialog'
 
 interface Props {
@@ -93,6 +94,8 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
     )
   })
 
+  const tasksColors = getTasksColors(pipeline.tasks)
+
   return (
     <>
       <Grid numColsMd={3} className="gap-6">
@@ -165,7 +168,16 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
                       {log.level}
                     </Badge>
                   </TableCell>
-                  <TableCell>{log.task}</TableCell>
+                  <TableCell>
+                    <Flex>
+                      <div
+                        className={`h-2 w-2 mr-2 rounded-full ${
+                          tasksColors[log.task]
+                        }`}
+                      />
+                      {log.task}
+                    </Flex>
+                  </TableCell>
                   <TableCell>
                     <Text>{log.message}</Text>
 

@@ -17,8 +17,9 @@ from mario.orchestrator.data_storage import (
     read_task_run_data,
     store_task_output,
 )
-from mario.pipeline.pipeline import Pipeline, PipelineRunStatus, Trigger, Task
+from mario.pipeline.pipeline import Pipeline, Trigger, Task
 from mario.pipeline.context import pipeline_context, run_context
+from mario.schemas import PipelineRunStatus
 
 
 def _run_all_tasks(coros: List[Coroutine]):
