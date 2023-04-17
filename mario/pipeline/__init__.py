@@ -1,3 +1,4 @@
+from typing import Callable, Union
 from asyncio import iscoroutinefunction
 import functools
 
@@ -5,7 +6,7 @@ from .task import Task
 from .context import task_context
 
 
-def task(func):
+def task(func: Union[Callable, functools.partial]):
     @functools.wraps(func)
     async def wrapper_decorator(*args, **kwargs):
         token = task_context.set(task_instance)
@@ -19,8 +20,13 @@ def task(func):
 
         return value
 
-    task_instance = Task(
-        id=func.__name__, description=func.__doc__, run=wrapper_decorator
-    )
+    if isinstance(func, functools.partial):
+        id = func.func.__name__
+        description = func.func.__doc__
+    else:
+        id = func.__name__
+        description = func.__doc__
+
+    task_instance = Task(id=id, description=description, run=wrapper_decorator)
 
     return task_instance

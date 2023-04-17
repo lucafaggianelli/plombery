@@ -1,7 +1,7 @@
-from asyncio import iscoroutinefunction
+from typing import Callable, Coroutine, List
 import asyncio
 from datetime import datetime
-from typing import Coroutine, List
+import inspect
 
 from pydantic import BaseModel
 
@@ -89,7 +89,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
     run_token = run_context.set(pipeline_run)
 
     input_params = trigger.params if trigger else params
-    params = {}
+    params = None
 
     logger = get_logger()
 
@@ -107,15 +107,20 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
 
         try:
             task_start_time = datetime.now()
-            flowing_data = await _execute_task(task, flowing_data, input_params, params)
+            flowing_data = await _execute_task(task, flowing_data, params)
             task_run.status = PipelineRunStatus.COMPLETED
         except Exception as e:
             logger.error(str(e), exc_info=e)
             flowing_data = None
             task_run.status = PipelineRunStatus.FAILED
         finally:
-            task_run.duration = (datetime.now() - task_start_time).total_seconds() * 1000
-            task_run.has_output = store_task_output(pipeline_run.id, task.id, flowing_data)
+            task_run.duration = (
+                datetime.now() - task_start_time
+            ).total_seconds() * 1000
+
+            task_run.has_output = store_task_output(
+                pipeline_run.id, task.id, flowing_data
+            )
 
             pipeline_run.tasks_run.append(task_run)
 
@@ -132,21 +137,36 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
     run_context.reset(run_token)
 
 
+def _has_positional_args(func: Callable) -> bool:
+    """
+    Check if a function signature declares positional args.
+
+    This is meant to be used to check if a task function
+    accepts data inputs from another task
+    """
+
+    for name, parameter in inspect.signature(func).parameters.items():
+        if (
+            parameter.kind == inspect.Parameter.POSITIONAL_ONLY
+            or inspect.Parameter.VAR_POSITIONAL
+        ) and name != "params":
+            return True
+
+    return False
+
+
 async def _execute_task(
     task: Task,
     flowing_data,
-    input_params: dict = None,
-    pipeline_params: BaseModel = None,
+    params: BaseModel = None,
 ):
-    params = pipeline_params
+    args = [flowing_data] if _has_positional_args(task.run) else []
+    kwargs = {"params": params} if params else {}
 
-    if not pipeline_params and task.params:
-        params = task.params(**(input_params or {}))
-
-    if iscoroutinefunction(task.run):
-        result = await task.run(flowing_data, params=params)
+    if asyncio.iscoroutinefunction(task.run):
+        result = await task.run(*args, **kwargs)
     else:
-        result = task.run(flowing_data, params=params)
+        result = task.run(*args, **kwargs)
 
     return result
 

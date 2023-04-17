@@ -10,7 +10,6 @@ class Task(BaseModel):
     run: Callable = Field(exclude=True)
     name: str = None
     description: str = None
-    params: BaseModel = None
 
     @validator("name", always=True)
     def generate_default_name(cls, name: str, values: Dict[str, Any]) -> str:
