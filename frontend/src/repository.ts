@@ -5,7 +5,7 @@ import { LogEntry, Pipeline, PipelineRun } from './types'
 
 const DEFAULT_BASE_URL = import.meta.env.DEV
   ? 'http://localhost:8000/api'
-  : `${window.location}api`
+  : `${window.location.protocol}//${window.location.host}/api`
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 
 const client = new SuperFetch({ baseUrl: BASE_URL })
