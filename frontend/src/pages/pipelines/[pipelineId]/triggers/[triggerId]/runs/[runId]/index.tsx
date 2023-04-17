@@ -66,8 +66,8 @@ const RunViewPage = () => {
     return <div>Trigger not found</div>
   }
 
-  const totalTasksDuration = run.tasks_run.reduce((tot, cur) => tot + cur.duration, 0)
-  const tasksRunDurations = run.tasks_run.map(tr => tr.duration / totalTasksDuration * 100)
+  const totalTasksDuration = (run.tasks_run || []).reduce((tot, cur) => tot + cur.duration, 0)
+  const tasksRunDurations = (run.tasks_run || []).map(tr => tr.duration / totalTasksDuration * 100)
 
   return (
     <PageLayout
@@ -87,7 +87,7 @@ const RunViewPage = () => {
             <StatusBadge status={run.status} />
           </Flex>
 
-          <Flex className="justify-start items-baseline pace-x-3 truncate">
+          <Flex className="justify-start items-baseline space-x-3 truncate">
             <Metric>{(run.duration / 1000).toFixed(1)}s</Metric>
           </Flex>
 
