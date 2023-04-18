@@ -16,9 +16,10 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 
 from mario.api.authentication import NeedsAuth, init_auth
+from mario.config import settings
 from mario.constants import MANUAL_TRIGGER_ID
-from mario.orchestrator import orchestrator
 from mario.pipeline.pipeline import Trigger
+from mario.orchestrator import orchestrator
 from mario.orchestrator.executor import (
     get_pipeline_run_logs,
     get_pipeline_run_data,
@@ -40,8 +41,7 @@ app.mount("/api", api)
 init_auth(api)
 
 origins = [
-    "http://localhost:5173",  # frontend
-    "http://127.0.0.1:5173",
+    settings.server_url,  # frontend
     "http://localhost:8000",  # backend
     "http://127.0.0.1:8000",
 ]

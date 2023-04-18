@@ -79,6 +79,7 @@ class Settings(BaseSettings):
     auth: Optional[AuthSettings]
     database_url: str = "sqlite:///./mario.db"
     notifications: Optional[List[NotificationRule]]
+    server_url: Optional[HttpUrl] = "http://localhost:5173"
 
     class Config:
         env_file = BASE_SETTINGS_FOLDER / ".env"

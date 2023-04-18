@@ -59,7 +59,7 @@ def init_auth(app: FastAPI):
         if user:
             request.session["user"] = dict(user)
 
-        return RedirectResponse(url="http://localhost:5173/")
+        return RedirectResponse(url=settings.server_url)
 
 
 async def _needs_auth(request: Request):
