@@ -20,7 +20,7 @@ import StatusBadge from './StatusBadge'
 import { getWebsocketUrl } from '@/repository'
 
 interface Props {
-  pipelineId: string
+  pipelineId?: string
   runs: PipelineRun[]
   triggerId?: string
 }
@@ -93,7 +93,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
   }, [_runs])
 
   return (
-    <Card className="mt-5">
+    <Card>
       <Title>Runs</Title>
 
       <Table>
@@ -113,7 +113,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
               className="cursor-pointer hover:bg-slate-50 transition-colors"
               onClick={() =>
                 navigate(
-                  `/pipelines/${pipelineId}/triggers/${run.trigger_id}/runs/${run.id}`
+                  `/pipelines/${run.pipeline_id}/triggers/${run.trigger_id}/runs/${run.id}`
                 )
               }
             >
@@ -124,7 +124,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
               {!triggerId && (
                 <TableCell>
                   <Link
-                    to={`/pipelines/${pipelineId}/triggers/${run.trigger_id}`}
+                    to={`/pipelines/${run.pipeline_id}/triggers/${run.trigger_id}`}
                     className="link--arrow"
                     title="View trigger details"
                     onClick={(event) => event.stopPropagation()}
