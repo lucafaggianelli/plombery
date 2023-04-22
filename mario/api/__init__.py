@@ -41,9 +41,8 @@ app.mount("/api", api)
 init_auth(api)
 
 origins = [
-    settings.server_url,  # frontend
-    "http://localhost:8000",  # backend
-    "http://127.0.0.1:8000",
+    settings.server_url,
+    settings.frontend_url,
 ]
 
 app.add_middleware(
