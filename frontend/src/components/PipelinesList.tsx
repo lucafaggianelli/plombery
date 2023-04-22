@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Text, Title, Flex } from '@tremor/react'
+import { Text, Title, Flex, Card, List, Bold, ListItem } from '@tremor/react'
 import { Link } from 'react-router-dom'
 import React from 'react'
 
@@ -21,28 +21,28 @@ const PipelinesList: React.FC = () => {
   const pipelines = query.data
 
   return (
-    <>
-      {pipelines.map((pipeline) => (
-        <React.Fragment key={pipeline.id}>
-          <Flex>
-            <Flex>
-              <Flex className="justify-start items-baseline space-x-2">
-                <Title>
+    <Card>
+      <Title>Pipelines</Title>
+
+      <List>
+        {pipelines.map((pipeline) => (
+          <ListItem key={pipeline.id}>
+            <div>
+              <Text>
+                <Bold>
                   <Link to={`/pipelines/${pipeline.id}`}>{pipeline.name}</Link>
-                </Title>
-                <Text className="truncate max-w-lg">
-                  {pipeline.description}
-                </Text>
-              </Flex>
-            </Flex>
+                </Bold>
+              </Text>
+              {pipeline.description && (
+                <Text className="truncate">{pipeline.description}</Text>
+              )}
+            </div>
 
             <ManualRunDialog pipeline={pipeline} />
-          </Flex>
-
-          <TriggersList pipeline={pipeline} />
-        </React.Fragment>
-      ))}
-    </>
+          </ListItem>
+        ))}
+      </List>
+    </Card>
   )
 }
 

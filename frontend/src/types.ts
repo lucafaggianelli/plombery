@@ -44,6 +44,7 @@ export interface TaskRun {
 export interface PipelineRun {
   id: number
   status: PipelineRunStatus
+  pipeline_id: string
   trigger_id: string
   start_time: Date
   duration: number

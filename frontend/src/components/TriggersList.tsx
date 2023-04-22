@@ -23,7 +23,7 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
   const navigate = useNavigate()
 
   return (
-    <Card className="mt-5">
+    <Card>
       <Title>Triggers</Title>
 
       <Table>
