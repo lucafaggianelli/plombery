@@ -45,6 +45,13 @@ origins = [
     settings.frontend_url,
 ]
 
+# Help during develop so the app can be opened at localhost or 127.0.0.1
+if settings.frontend_url.host == "localhost":
+    origins.append(str(settings.frontend_url).replace("localhost", "127.0.0.1"))
+elif settings.frontend_url.host == "127.0.0.1":
+    origins.append(str(settings.frontend_url).replace("127.0.0.1", "localhost"))
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -119,7 +126,9 @@ def get_data(run_id: int, task: str, user=NeedsAuth):
 
 
 @api.post("/pipelines/{pipeline_id}/run", tags=["Runs"])
-async def run_pipeline(pipeline_id: str, params: Optional[dict] = Body(), user=NeedsAuth):
+async def run_pipeline(
+    pipeline_id: str, params: Optional[dict] = Body(), user=NeedsAuth
+):
     pipeline = orchestrator.get_pipeline(pipeline_id)
 
     executor: AsyncIOExecutor = orchestrator.scheduler._lookup_executor("default")
