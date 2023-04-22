@@ -3,6 +3,7 @@ from typing import List
 from apprise import Apprise
 import apprise
 
+from mario.config import settings
 from mario.database.schemas import PipelineRun
 from mario.schemas import NotificationRule
 
@@ -51,7 +52,7 @@ class NotificationManager:
                 body=f"""
     Your pipeline {pipeline_run.pipeline_id} {PIPELINE_STATUS_TO_VERB[pipeline_run.status]}
 
-    To have more info: http://localhost:8000/pipelines/dummy_pipeline/triggers/daily/runs/{pipeline_run.id}
+    To have more info: {settings.frontend_url}/pipelines/{pipeline_run.pipeline_id}/triggers/{pipeline_run.trigger_id}/runs/{pipeline_run.id}
     """,
             )
 
