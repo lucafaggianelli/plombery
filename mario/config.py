@@ -73,6 +73,7 @@ class AuthSettings(BaseModel):
     authorize_url: HttpUrl
     jwks_uri: HttpUrl
     client_kwargs: Optional[Any]
+    secret_key: Optional[SecretStr] = "not-very-secret-string"
 
 
 class Settings(BaseSettings):

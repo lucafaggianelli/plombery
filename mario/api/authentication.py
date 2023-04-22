@@ -7,8 +7,6 @@ from mario.config import settings
 
 
 def init_auth(app: FastAPI):
-    app.add_middleware(SessionMiddleware, secret_key="secret-string")
-
     if not settings.auth:
         # If authentication is not enabled, register a
         # dummy endpoint to return an empty user
@@ -21,6 +19,8 @@ def init_auth(app: FastAPI):
             }
 
         return
+
+    app.add_middleware(SessionMiddleware, secret_key=settings.auth.secret_key.get_secret_value())
 
     oauth = OAuth()
     oauth.register(
