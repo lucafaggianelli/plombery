@@ -73,7 +73,7 @@ The URL of the frontend, by default is the same as the backend,
 change it if the frontend is served at a different URL, for example
 during the frontend development.
 
-## ✉️ Notifications
+## Notifications
 
 MarioPype can send notifications after a pipeline has run based on the status
 of the run itself (success, failure, etc.).

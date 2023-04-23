@@ -46,6 +46,13 @@ theme:
     edit: material/pencil
     view: material/eye
 
+  custom_dir: docs/overrides
+
+extra:
+  analytics:
+    provider: plausible
+    property:
+
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
