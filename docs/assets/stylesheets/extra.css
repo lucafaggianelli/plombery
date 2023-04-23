@@ -1,0 +1,13 @@
+[data-md-toggle="search"]:not(:checked) ~ .md-header .md-search__form::after {
+  position: absolute;
+  top: .3rem;
+  right: .3rem;
+  display: block;
+  padding: .1rem .4rem;
+  color: #ffffffb3;
+  font-weight: bold;
+  font-size: .8rem;
+  border: .05rem solid #ffffff3b;
+  border-radius: .1rem;
+  content: "/";
+}

@@ -1,4 +1,11 @@
 site_name: Mario Pype
+copyright: Copyright &copy; 2023 Luca Faggianelli
+
+repo_url: https://github.com/lucafaggianelli/mario-pype
+edit_uri: edit/main/docs/
+
+extra_css:
+  - assets/stylesheets/extra.css
 
 theme:
   name: material
@@ -27,6 +34,8 @@ theme:
   features:
     - content.action.view
     - content.action.edit
+    - content.code.copy
+    - navigation.footer
     - navigation.instant
     - navigation.top
     - toc.follow
@@ -36,12 +45,16 @@ theme:
     edit: material/pencil
     view: material/eye
 
-repo_url: https://github.com/lucafaggianelli/mario-pype
-edit_uri: edit/main/docs/
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
 
 nav:
-  - Get started: index.md
+  - Welcome: index.md
+  - Get started: get-started.md
   - Your first pipeline: create-a-pipeline.md
   - Configuration: configuration.md
-  - Notifications: notifications.md
   - Deployment: deployment.md

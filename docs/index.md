@@ -1,17 +1,23 @@
-# Get started
+---
+hide:
+  - toc
+---
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+# Python task scheduler with a user-friendly web UI
 
-## Commands
+![Mario Pype Screen Shot](assets/images/screenshot.png)
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+Mario Pype is an ⚖️ open source (MIT license) task scheduler for Python with a web UI and a REST API,
+if you need to run and monitor recurring python scripts then it's
+the right tool for you!
 
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+## Features
+* ⏰ Task scheduling based on [APScheduler](https://github.com/agronholm/apscheduler) (supports Interval, Cron and Date triggers)
+* 💻 Built-in Web interface, no HTML/JS/CSS coding required
+* 👩‍💻🐍 Pipelines and tasks are defined in pure Python
+* 🎛️ Pipelines can be parametrized via [Pydantic](https://docs.pydantic.dev/)
+* 👉 Pipelines can be run manually from the web UI
+* 🔐 Secured via OAuth2
+* 🔍 Debug each run exploring logs and output data
+* 📩 Monitor the pipelines and get alerted if something goes wrong
+* 💣 Use the REST API for advanced integrations
