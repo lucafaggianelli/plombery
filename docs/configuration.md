@@ -50,7 +50,7 @@ GMAIL_ACCOUNT=mailto://myuser:mypass@gmail.com
 MSTEAMS_WEBHOOK=msteams://TokenA/TokenB/TokenC/
 ```
 
-## 🔌 System
+## System
 
 !!! tip
 
@@ -127,7 +127,7 @@ Behind the scene MarioPype uses [Apprise](https://github.com/caronc/apprise),
 a library to send notifications to many notification providers, so check their
 docs for a full list of the available channels.
 
-## 🔐 Authentication
+## Authentication
 
 MarioPype has a buil-in and ready-to-use authentication system
 based on OAuth providers, so you can use your corporate auth system

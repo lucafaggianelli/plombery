@@ -3,13 +3,11 @@ hide:
   - toc
 ---
 
-# Python task scheduler with a user-friendly web UI
+# Mario Pype
 
-![Mario Pype Screen Shot](assets/images/screenshot.png)
+An ⚖️ open source (MIT license) task scheduler for Python with a web UI and a REST API.
 
-Mario Pype is an ⚖️ open source (MIT license) task scheduler for Python with a web UI and a REST API,
-if you need to run and monitor recurring python scripts then it's
-the right tool for you!
+If you need to run and monitor recurring python scripts then it's the right tool for you!
 
 ## Features
 * ⏰ Task scheduling based on [APScheduler](https://github.com/agronholm/apscheduler) (supports Interval, Cron and Date triggers)
@@ -21,3 +19,5 @@ the right tool for you!
 * 🔍 Debug each run exploring logs and output data
 * 📩 Monitor the pipelines and get alerted if something goes wrong
 * 💣 Use the REST API for advanced integrations
+
+![Mario Pype Screen Shot](assets/images/screenshot.png)

@@ -26,11 +26,9 @@
   <p align="center">
     Python task scheduler with a user-friendly web UI
     <br />
-    <a href="https://github.com/lucafaggianelli/mario-pype"><strong>Explore the docs »</strong></a>
+    <a href="https://lucafaggianelli.github.io/mario-pype/"><strong>Official website »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/lucafaggianelli/mario-pype">View Demo</a>
-    ·
     <a href="https://github.com/lucafaggianelli/mario-pype/issues">Report Bug</a>
     ·
     <a href="https://github.com/lucafaggianelli/mario-pype/issues">Request Feature</a>
@@ -38,43 +36,14 @@
 </div>
 
 
-
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
-
-
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
-![Mario Pype Screen Shot](docs/assets/images/screenshot.png)
 
 Mario Pype is a simple task scheduler for Python with a web UI and a REST API,
 if you need to run and monitor recurring python scripts then it's
 the right tool for you!
+
+![Mario Pype Screen Shot](docs/assets/images/screenshot.png)
 
 > This project is at its beginning, so it can be shaped and improved with
   your feedback and help!
@@ -110,6 +79,9 @@ When you shouldn't use it:
 
 <!-- GETTING STARTED -->
 ## Getting Started
+
+Check the 👉 [official website](https://lucafaggianelli.github.io/mario-pype/)
+for more detailed info!
 
 ### Prerequisites
 
