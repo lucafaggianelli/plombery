@@ -1,0 +1,47 @@
+site_name: Mario Pype
+
+theme:
+  name: material
+  logo: assets/images/mario-pipe-flower.png
+  favicon: assets/images/mario-pipe-flower.png
+
+  palette:
+     # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+
+  features:
+    - content.action.view
+    - content.action.edit
+    - navigation.instant
+    - navigation.top
+    - toc.follow
+
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+repo_url: https://github.com/lucafaggianelli/mario-pype
+edit_uri: edit/main/docs/
+
+nav:
+  - Get started: index.md
+  - Your first pipeline: create-a-pipeline.md
+  - Configuration: configuration.md
+  - Notifications: notifications.md
+  - Deployment: deployment.md
