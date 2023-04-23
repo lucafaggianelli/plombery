@@ -17,10 +17,12 @@ class InputParams(BaseModel):
 
 
 @task
-async def get_sales_data(data, params: InputParams):
+async def get_sales_data(params: InputParams):
     """Fetch raw sales data by store and SKU"""
 
     logger = get_logger()
+
+    logger.info("Pipeline called with some_value=%d", params.some_value)
 
     for i in range(10):
         await sleep(1 + np.random.random() / 2)

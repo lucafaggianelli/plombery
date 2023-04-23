@@ -27,6 +27,7 @@ def init_auth(app: FastAPI):
         name="default",
         client_id=settings.auth.client_id.get_secret_value(),
         client_secret=settings.auth.client_secret.get_secret_value(),
+        server_metadata_url=settings.auth.server_metadata_url,
         access_token_url=settings.auth.access_token_url,
         authorize_url=settings.auth.authorize_url,
         jwks_uri=settings.auth.jwks_uri,

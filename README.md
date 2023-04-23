@@ -26,11 +26,9 @@
   <p align="center">
     Python task scheduler with a user-friendly web UI
     <br />
-    <a href="https://github.com/lucafaggianelli/mario-pype"><strong>Explore the docs »</strong></a>
+    <a href="https://lucafaggianelli.github.io/mario-pype/"><strong>Official website »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/lucafaggianelli/mario-pype">View Demo</a>
-    ·
     <a href="https://github.com/lucafaggianelli/mario-pype/issues">Report Bug</a>
     ·
     <a href="https://github.com/lucafaggianelli/mario-pype/issues">Request Feature</a>
@@ -38,57 +36,29 @@
 </div>
 
 
-
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
-
-
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
-![Mario Pype Screen Shot](docs/screenshot.png)
 
 Mario Pype is a simple task scheduler for Python with a web UI and a REST API,
 if you need to run and monitor recurring python scripts then it's
 the right tool for you!
 
+![Mario Pype Screen Shot](docs/assets/images/screenshot.png)
+
 > This project is at its beginning, so it can be shaped and improved with
   your feedback and help!
   If you like it, star it 🌟! If you want a feature or find a bug, open an issue.
 
-Features:
-- ⏰ Task scheduing based on APScheduler (supports Interval, Cron and Date triggers)
-- 💻 Built-in Web interface, no HTML/JS/CSS coding required
-- 👩‍💻🐍 Pipelines and tasks are defined in pure Python
-- 👊 Pipelines can be run manually from the web UI
-- 🔍 Debug your tasks exploring logs and output data
-- 📩 Monitor tasks executions and get alerted if something goes wrong
-- 💣 Use the REST API for advanced integrations
-- ✨ A lot more features are coming, check the [open issues](https://github.com/lucafaggianelli/mario-pype/issues)!
+## Features
+* ⏰ Task scheduling based on [APScheduler](https://github.com/agronholm/apscheduler) (supports Interval, Cron and Date triggers)
+* 💻 Built-in Web interface, no HTML/JS/CSS coding required
+* 👩‍💻🐍 Pipelines and tasks are defined in pure Python
+* 🎛️ Pipelines can be parametrized via [Pydantic](https://docs.pydantic.dev/)
+* 👉 Pipelines can be run manually from the web UI
+* 🔐 Secured via OAuth2
+* 🔍 Debug each run exploring logs and output data
+* 📩 Monitor the pipelines and get alerted if something goes wrong
+* 💣 Use the REST API for advanced integrations
 
 When you shouldn't use it:
 - you need a lot of scalability and you want to run on a distributed system
@@ -109,6 +79,9 @@ When you shouldn't use it:
 
 <!-- GETTING STARTED -->
 ## Getting Started
+
+Check the 👉 [official website](https://lucafaggianelli.github.io/mario-pype/)
+for more detailed info!
 
 ### Prerequisites
 
@@ -160,7 +133,8 @@ from apscheduler.triggers.interval import IntervalTrigger
 from mario import Mario, task, get_logger, Pipeline, Trigger
 
 
-dummy_pipeline = Pipeline(
+sales_pipeline = Pipeline(
+    id="sales_pipeline",
     tasks = [fetch_raw_sales_data],
     triggers = [
         Trigger(
@@ -176,7 +150,7 @@ dummy_pipeline = Pipeline(
 A *Task* is the base block in Mario Pype and it's just a Python function that
 performs an action.
 
-This is the Task `fetch_raw_sales_data` used in the `DummyPipeline` pipeline ... it doesn't do much,
+This is the Task `fetch_raw_sales_data` used in the `sales_pipeline` pipeline ... it doesn't do much,
 but it showcase the basics:
 
 ```py

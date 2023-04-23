@@ -69,6 +69,7 @@ def settings_file_source(settings: BaseSettings) -> Dict[str, Any]:
 class AuthSettings(BaseModel):
     client_id: SecretStr
     client_secret: SecretStr
+    server_metadata_url: HttpUrl
     access_token_url: HttpUrl
     authorize_url: HttpUrl
     jwks_uri: HttpUrl
@@ -81,7 +82,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./mario.db"
     notifications: Optional[List[NotificationRule]]
     server_url: Optional[AnyHttpUrl] = "http://localhost:8000"
-    frontend_url: Optional[AnyHttpUrl] = "http://localhost:5173"
+    frontend_url: Optional[AnyHttpUrl] = "http://localhost:8000"
 
     class Config:
         env_file = BASE_SETTINGS_FOLDER / ".env"
