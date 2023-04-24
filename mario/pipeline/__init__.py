@@ -1,5 +1,5 @@
 from typing import Callable, Union
-from asyncio import iscoroutinefunction
+from asyncio import iscoroutinefunction, get_event_loop
 import functools
 
 from .task import Task
@@ -14,7 +14,9 @@ def task(func: Union[Callable, functools.partial]):
         if iscoroutinefunction(func):
             value = await func(*args, **kwargs)
         else:
-            value = func(*args, **kwargs)
+            value = await get_event_loop().run_in_executor(
+                None, functools.partial(func, **kwargs), *args
+            )
 
         task_context.reset(token)
 
