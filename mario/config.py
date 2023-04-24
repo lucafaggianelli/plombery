@@ -69,12 +69,12 @@ def settings_file_source(settings: BaseSettings) -> Dict[str, Any]:
 class AuthSettings(BaseModel):
     client_id: SecretStr
     client_secret: SecretStr
-    server_metadata_url: HttpUrl
-    access_token_url: HttpUrl
-    authorize_url: HttpUrl
-    jwks_uri: HttpUrl
+    server_metadata_url: Optional[HttpUrl]
+    access_token_url: Optional[HttpUrl]
+    authorize_url: Optional[HttpUrl]
+    jwks_uri: Optional[HttpUrl]
     client_kwargs: Optional[Any]
-    secret_key: Optional[SecretStr] = "not-very-secret-string"
+    secret_key: Optional[SecretStr] = SecretStr("not-very-secret-string")
 
 
 class Settings(BaseSettings):
