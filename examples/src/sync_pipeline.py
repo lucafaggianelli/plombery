@@ -1,6 +1,6 @@
 import time
 
-from mario import Pipeline, task
+from mario import register_pipeline, task
 
 
 @task
@@ -12,6 +12,8 @@ def sync_task():
     time.sleep(10)
 
 
-sync_pipeline = Pipeline(
-    id="sync_pipeline", description="This pipeline contains a sync task", tasks=[sync_task]
+register_pipeline(
+    id="sync_pipeline",
+    description="This pipeline contains a sync task",
+    tasks=[sync_task],
 )

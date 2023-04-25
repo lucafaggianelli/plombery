@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List, Optional, Type
 
 from pydantic import BaseModel, Field, validator
 
@@ -9,11 +9,14 @@ from ._utils import prettify_name
 
 class Pipeline(BaseModel):
     id: str
-    name: str = None
-    description: str = None
-    params: Type[BaseModel] = Field(exclude=True, default=None)
-    tasks: List[Task] = Field(default_factory=list)
-    triggers: List[Trigger] = Field(default_factory=list)
+    tasks: List[Task]
+    name: Optional[str] = None
+    description: Optional[str] = None
+    params: Optional[Type[BaseModel]] = Field(exclude=True, default=None)
+    triggers: Optional[List[Trigger]] = Field(default_factory=list)
+
+    class Config:
+        validate_assignment = True
 
     @validator("name", always=True)
     def generate_default_name(cls, name: str, values: Dict[str, Any]) -> str:
@@ -30,3 +33,7 @@ class Pipeline(BaseModel):
             return cls.__doc__
 
         return description
+
+    @validator("triggers", pre=True, always=True)
+    def set_name(cls, triggers):
+        return triggers or []

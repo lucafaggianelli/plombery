@@ -130,10 +130,10 @@ from datetime import datetime
 from random import randint
 
 from apscheduler.triggers.interval import IntervalTrigger
-from mario import Mario, task, get_logger, Pipeline, Trigger
+from mario import task, get_logger, Trigger, register_pipeline
 
 
-sales_pipeline = Pipeline(
+register_pipeline(
     id="sales_pipeline",
     tasks = [fetch_raw_sales_data],
     triggers = [
@@ -173,15 +173,6 @@ async def fetch_raw_sales_data(input_data, params=None):
     logger.info("Fetched %s sales data rows", len(sales))
 
     return sales
-```
-
-Finally create a MarioPype instance and register the pipeline so
-Mario knows it's there:
-
-```py
-app = Mario()
-
-app.register_pipeline(dummy_pipeline)
 ```
 
 ### Run Mario Pype

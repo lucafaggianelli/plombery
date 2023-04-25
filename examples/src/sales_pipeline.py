@@ -7,9 +7,7 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel
 
-from mario.pipeline import task
-from mario.pipeline.pipeline import Pipeline, Trigger
-from mario.logger import get_logger
+from mario import register_pipeline, task, Trigger, get_logger
 
 
 class InputParams(BaseModel):
@@ -45,7 +43,7 @@ async def get_sales_data(params: InputParams):
     return data
 
 
-sales_pipeline = Pipeline(
+register_pipeline(
     id="sales_pipeline",
     description="""This is a very useless pipeline""",
     tasks=[get_sales_data],

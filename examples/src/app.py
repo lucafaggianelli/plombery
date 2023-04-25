@@ -1,19 +1,16 @@
 """
-# Run as:
-```sh
-cd examples
-export PYTHONPATH=$(pwd)/..
-uvicorn src.app:app --reload --reload-dir ..
-```
+Run via the run.sh or run.ps1 script
 """
 
-from mario import Mario
+from mario import get_app  # noqa: F401
 
-from .sales_pipeline import sales_pipeline
-from .sync_pipeline import sync_pipeline
+from examples.src import sales_pipeline, sync_pipeline  # noqa: F401
 
 
-app = Mario()
+if __name__ == "__main__":
+    import uvicorn
 
-app.register_pipeline(sales_pipeline)
-app.register_pipeline(sync_pipeline)
+    # `reload_dirs` is used to reload when the mario package itself changes
+    # this is useful during development of the mario package, normally shouldn't
+    # be used
+    uvicorn.run("mario:get_app", reload=True, factory=True, reload_dirs="..")
