@@ -58,12 +58,18 @@ markdown_extensions:
       anchor_linenums: true
   - admonition
   - attr_list
+  - md_in_html
   - pymdownx.details
   - pymdownx.superfences
 
 nav:
   - Welcome: index.md
-  - Get started: get-started.md
-  - Your first pipeline: create-a-pipeline.md
-  - Configuration: configuration.md
-  - Deployment: deployment.md
+  - Get Started:
+    - Install: get-started.md
+    - Your first pipeline: create-a-pipeline.md
+  - Docs:
+    - Pipelines: pipelines.md
+    - Tasks: tasks.md
+    - Triggers: triggers.md
+    - Configuration: configuration.md
+    - Deployment: deployment.md
