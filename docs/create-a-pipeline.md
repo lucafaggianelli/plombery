@@ -28,15 +28,15 @@ Before starting, let's define some naming so there will be no confusion!
 A *Pipeline* contains a list of tasks and eventually a list of triggers,
 so in your `app.py` add this:
 
-```py
+```py title="src/app.py"
 from datetime import datetime
 from random import randint
 
 from apscheduler.triggers.interval import IntervalTrigger
-from mario import Mario, task, get_logger, Pipeline, Trigger
+from mario import task, get_logger, Trigger, register_pipeline
 
 
-sales_pipeline = Pipeline(
+register_pipeline(
     id="sales_pipeline",
     tasks = [fetch_raw_sales_data],
     triggers = [
@@ -60,7 +60,7 @@ but it showcases the basics:
 
     notice how the `@task` decorator is used to declare a task
 
-```py
+```py title="src/app.py"
 @task
 async def fetch_raw_sales_data():
     # using MarioPype logger your logs will be stored
@@ -86,23 +86,25 @@ async def fetch_raw_sales_data():
     return sales
 ```
 
-Finally create a Mario instance and register the pipeline so
-MarioPype knows it's there:
+Finally add this at the bottom of your file to start the app:
 
-```py
-app = Mario()
+```py title="src/app.py"
+if __name__ == "__main__":
+    import uvicorn
 
-app.register_pipeline(dummy_pipeline)
+    uvicorn.run("mario:get_app", reload=True, factory=True)
 ```
 
 ### Run Mario Pype
 
 Mario Pype is based on FastAPI so you can run it as a normal FastAPI app
-via `uvicorn` or another ASGI web server:
+via `uvicorn` (as in this example) or another ASGI web server.
+
+So install `uvicorn` and run the app:
 
 ```sh
 pip install uvicorn
-uvicorn src.app:app --reload
+python src/app.py
 ```
 
 Now open the page [http://localhost:8000](http://localhost:8000) in your browser and enjoy!

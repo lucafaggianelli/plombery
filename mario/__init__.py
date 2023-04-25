@@ -1,6 +1,8 @@
 import logging
+from typing import List, Type
 
 from apscheduler.schedulers.base import SchedulerAlreadyRunningError
+from pydantic import BaseModel
 
 from .api import app
 from .config import settings
@@ -17,7 +19,7 @@ _logger.setLevel(logging.INFO)
 _logger.addHandler(logging.StreamHandler())
 
 
-class Mario:
+class _Mario:
     def __init__(self) -> None:
         self._apply_settings()
 
@@ -30,7 +32,7 @@ class Mario:
         for notification in settings.notifications or []:
             self.add_notification_rule(notification)
 
-    def register_pipeline(self, pipeline):
+    def register_pipeline(self, pipeline: Pipeline):
         orchestrator.register_pipeline(pipeline)
 
     def add_notification_rule(self, notification: NotificationRule):
@@ -43,3 +45,30 @@ class Mario:
     # can be served directly by uvicorn
     async def __call__(self, scope, receive, send):
         await app.__call__(scope, receive, send)
+
+
+_app = _Mario()
+
+
+def get_app():
+    return _app
+
+
+def register_pipeline(
+    id: str,
+    tasks: List[Task],
+    name: str = None,
+    description: str = None,
+    params: Type[BaseModel] = None,
+    triggers: List[Trigger] = None,
+):
+    pipeline = Pipeline(
+        id=id,
+        tasks=tasks,
+        name=name,
+        description=description,
+        params=params,
+        triggers=triggers,
+    )
+
+    _app.register_pipeline(pipeline)
