@@ -177,10 +177,14 @@ async def fetch_raw_sales_data(input_data, params=None):
 
 ### Run Mario Pype
 
-Mario Pype is based on FastAPI so you can run it as a normal FastAPI app via `uvicorn`:
+Mario Pype is based on FastAPI so you can run it as a normal FastAPI app
+via `uvicorn` (as in this example) or another ASGI web server.
+
+So install `uvicorn` and run the app:
 
 ```sh
-uvicorn my_project.app:app --reload
+pip install uvicorn
+python src/app.py
 ```
 
 Now open the page http://localhost:8000 in your browser and enjoy!
@@ -280,6 +284,17 @@ run the development server:
 
 ```sh
 yarn dev
+```
+
+### Documentation
+
+The documentation website is based on MkDocs Material, the source code is in the
+`docs/` folder and the config is in the `mkdocs.yml` file.
+
+To run a local dev server, run:
+
+```
+mkdocs serve
 ```
 
 ### Testing
