@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta
 from typing import Any, Dict, Tuple
 
@@ -7,6 +8,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.date import DateTrigger
 
 from mario.constants import MANUAL_TRIGGER_ID
+from mario.graph import build_pipeline_graph
 from mario.orchestrator.executor import Pipeline, run, Trigger
 
 
@@ -46,6 +48,8 @@ class _Orchestrator:
                 # Jobs will be run even if they arrive 1 min late
                 misfire_grace_time=timedelta(minutes=1).seconds,
             )
+
+        asyncio.run(build_pipeline_graph(pipeline))
 
     def get_pipeline(self, pipeline_id: str):
         """Finds a registered pipeline by its ID,

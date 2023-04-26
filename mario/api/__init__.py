@@ -14,10 +14,12 @@ from fastapi import (
 )
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from mario.api.authentication import NeedsAuth, init_auth
 from mario.config import settings
 from mario.constants import MANUAL_TRIGGER_ID
+from mario.orchestrator.data_storage import BASE_DATA_PATH
 from mario.pipeline.pipeline import Trigger
 from mario.orchestrator import orchestrator
 from mario.orchestrator.executor import (
@@ -185,5 +187,12 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
+
+app.mount(
+    "/assets",
+    StaticFiles(
+        directory=BASE_DATA_PATH / "assets", html=False, check_dir=False, follow_symlink=False
+    ),
+)
 
 app.mount("/", SPAStaticFiles(directory=FRONTEND_FOLDER, html=True))

@@ -5,8 +5,11 @@ from typing import Any
 from mario.constants import PIPELINE_RUN_LOGS_FILE
 
 
+BASE_DATA_PATH = Path.cwd() / ".data"
+
+
 def _get_data_path(pipeline_run_id: int):
-    data_path = Path.cwd() / ".data" / "runs" / f"run_{pipeline_run_id}"
+    data_path = BASE_DATA_PATH / "runs" / f"run_{pipeline_run_id}"
 
     # Create dirs (eq. of mkdir -p)
     data_path.mkdir(parents=True, exist_ok=True)

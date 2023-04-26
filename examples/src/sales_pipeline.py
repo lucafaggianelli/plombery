@@ -15,8 +15,12 @@ class InputParams(BaseModel):
 
 
 @task
-async def get_sales_data(params: InputParams):
-    """Fetch raw sales data by store and SKU"""
+async def get_sales_data(params: InputParams) -> pd.DataFrame:
+    """
+    Fetch raw sales data by store and SKU
+
+    Latest 50 days worth of data are pulled from the e-commerce APIs.
+    """
 
     logger = get_logger()
 
@@ -43,10 +47,15 @@ async def get_sales_data(params: InputParams):
     return data
 
 
+@task
+async def upload_to_s3(data: pd.DataFrame):
+    pass
+
+
 register_pipeline(
     id="sales_pipeline",
     description="""This is a very useless pipeline""",
-    tasks=[get_sales_data],
+    tasks=[get_sales_data, upload_to_s3],
     triggers=[
         Trigger(
             id="daily",
