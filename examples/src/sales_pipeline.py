@@ -15,7 +15,7 @@ class InputParams(BaseModel):
 
 
 @task
-async def get_sales_data(params: InputParams):
+async def get_sales_data(params: InputParams) -> pd.DataFrame:
     """Fetch raw sales data by store and SKU"""
 
     logger = get_logger()
