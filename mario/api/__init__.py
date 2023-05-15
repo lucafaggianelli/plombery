@@ -131,6 +131,9 @@ async def run_pipeline(
 ):
     pipeline = orchestrator.get_pipeline(pipeline_id)
 
+    if not pipeline:
+        raise HTTPException(status_code=404, detail=f"Pipeline {pipeline_id} not found")
+
     executor: AsyncIOExecutor = orchestrator.scheduler._lookup_executor("default")
     executor.submit_job(
         Job(
@@ -150,6 +153,9 @@ async def run_pipeline(
 @api.post("/pipelines/{pipeline_id}/triggers/{trigger_id}/run", tags=["Runs"])
 async def run_trigger(pipeline_id: str, trigger_id: str, user=NeedsAuth):
     pipeline = orchestrator.get_pipeline(pipeline_id)
+
+    if not pipeline:
+        raise HTTPException(status_code=404, detail=f"Pipeline {pipeline_id} not found")
 
     triggers = [trigger for trigger in pipeline.triggers if trigger.id == trigger_id]
 
