@@ -1,4 +1,3 @@
-from asyncio import sleep
 from datetime import datetime
 from dateutil import tz
 
@@ -21,10 +20,6 @@ async def get_sales_data(params: InputParams):
     logger = get_logger()
 
     logger.info("Pipeline called with some_value=%d", params.some_value)
-
-    for i in range(10):
-        await sleep(1 + np.random.random() / 2)
-        logger.debug("Iteration %d", i)
 
     logger.warning("Nothing serious but you should fix this")
 

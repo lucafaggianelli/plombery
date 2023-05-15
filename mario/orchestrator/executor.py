@@ -1,4 +1,4 @@
-from typing import Callable, Coroutine, List
+from typing import Callable, Coroutine, List, Optional
 import asyncio
 from datetime import datetime
 import inspect
@@ -32,31 +32,33 @@ def _run_all_tasks(coros: List[Coroutine]):
         task.add_done_callback(tasks.discard)
 
 
-def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger = None):
+def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
     pipeline_run = create_pipeline_run(
         PipelineRunCreate(
             start_time=datetime.now(),
             pipeline_id=pipeline.id,
             trigger_id=trigger.id if trigger else MANUAL_TRIGGER_ID,
-            status="running",
+            status=PipelineRunStatus.RUNNING,
         )
     )
 
-    _send_pipeline_event(pipeline_run)
+    _send_pipeline_event(pipeline, pipeline_run)
 
     return pipeline_run
 
 
-def _on_pipeline_executed(pipeline_run: PipelineRun, status: PipelineRunStatus):
+def _on_pipeline_executed(
+    pipeline: Pipeline, pipeline_run: PipelineRun, status: PipelineRunStatus
+):
     update_pipeline_run(pipeline_run, datetime.now(), status)
 
-    _send_pipeline_event(pipeline_run)
+    _send_pipeline_event(pipeline, pipeline_run)
 
     return pipeline_run
 
 
-def _send_pipeline_event(pipeline_run: PipelineRun):
-    notify_coro = notification_manager.notify(pipeline_run)
+def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
+    notify_coro = notification_manager.notify(pipeline, pipeline_run)
 
     run = dict(
         id=pipeline_run.id,
@@ -126,12 +128,12 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
 
             if task_run.status == PipelineRunStatus.FAILED:
                 # A task failed so the entire pipeline failed
-                _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
+                _on_pipeline_executed(pipeline, pipeline_run, PipelineRunStatus.FAILED)
                 break
 
     else:
         # All task succeeded so the entire pipeline succeeded
-        _on_pipeline_executed(pipeline_run, PipelineRunStatus.COMPLETED)
+        _on_pipeline_executed(pipeline, pipeline_run, PipelineRunStatus.COMPLETED)
 
     pipeline_context.reset(pipeline_token)
     run_context.reset(run_token)
