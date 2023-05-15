@@ -1,2 +1,2 @@
 $env:PYTHONPATH="$(pwd)/.."
-python src/app.py
+uvicorn "src.app:get_app" --reload --factory --reload-dir=".."
