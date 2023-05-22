@@ -160,6 +160,7 @@ cython_debug/
 #.idea/
 
 node_modules
-static/
+/src/plombery/static/*
+!/src/plombery/static/.gitkeep
 
 .DS_Store
