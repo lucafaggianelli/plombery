@@ -35,10 +35,14 @@ jobs:
         cache: 'yarn'
 
     - name: Install frontend dependencies
-      run: yarn
+      run: |
+        cd frontend
+        yarn
 
     - name: Build frontend
-      run: yarn build
+      run: |
+        cd frontend
+        yarn build
 
     - name: Install py dependencies
       run: |
