@@ -51,7 +51,7 @@ Scheduling a pipeline is probably the first thing you're looking for
 when using Mario Pype. It's very easy, just add 1 or more triggers
 when registering a pipeline, (the `triggers` argument must be a list
 even if you only have 1 trigger).
-The actual schedule is defined via the `aps_trigger` argument:
+The actual schedule is defined via the `schedule` argument:
 
 ```py hl_lines="1 7-15"
 from apscheduler.triggers.interval import IntervalTrigger
@@ -64,7 +64,7 @@ register_pipeline(
         Trigger(
             id="daily",
             description="Run the pipeline every day",
-            aps_trigger=IntervalTrigger(
+            schedule=IntervalTrigger(
                 days=1,
             ),
         ),
@@ -72,7 +72,7 @@ register_pipeline(
 )
 ```
 
-`aps_trigger` accepts any APS trigger, at the moment the following schedules/APS triggers are available:
+`schedule` accepts any APS trigger, at the moment the following schedules/APS triggers are available:
 
 * [`CronTrigger`](https://apscheduler.readthedocs.io/en/3.x/modules/triggers/cron.html#module-apscheduler.triggers.cron){target=_blank}
 * [`DateTrigger`](https://apscheduler.readthedocs.io/en/3.x/modules/triggers/date.html#module-apscheduler.triggers.date){target=_blank}
@@ -105,7 +105,7 @@ register_pipeline(
         Trigger(
             id="daily",
             description="Get last 5 days of sales data in USD dollars",
-            aps_trigger=IntervalTrigger(
+            schedule=IntervalTrigger(
                 days=1,
             ),
             params={

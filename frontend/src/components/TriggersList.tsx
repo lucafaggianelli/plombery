@@ -44,7 +44,7 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
             >
               <TableCell>{trigger.name}</TableCell>
               <TableCell>
-                <Text>{trigger.aps_trigger}</Text>
+                <Text>{trigger.schedule}</Text>
               </TableCell>
             </TableRow>
           ))}

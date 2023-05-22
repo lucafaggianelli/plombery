@@ -86,7 +86,7 @@ register_pipeline(
             id="daily",
             name="Daily",
             description="Run the pipeline every day",
-            aps_trigger=IntervalTrigger(days=1),
+            schedule=IntervalTrigger(days=1),
         ),
     ],
 )
@@ -149,7 +149,7 @@ Now your `src/app.py` should look like this:
                 id="daily",
                 name="Daily",
                 description="Run the pipeline every day",
-                aps_trigger=IntervalTrigger(days=1),
+                schedule=IntervalTrigger(days=1),
             ),
         ],
     )
