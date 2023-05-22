@@ -1,8 +1,0 @@
-black==23.1.0
-coverage==7.2.3
-flake8==6.0.0
-mkdocs-material==9.1.*
-pytest==7.3.0
-pytest_asyncio==0.21.0
-pytest-env==0.8.1
-uvicorn==0.20.0

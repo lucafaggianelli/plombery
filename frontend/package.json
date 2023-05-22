@@ -1,12 +1,12 @@
 {
   "name": "plombery",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "",
   "license": "MIT",
   "author": {
     "name": "Luca Faggianelli",
     "email": "luca@velvetlab.tech",
-    "url": "https://github.com/lucafaggianelli/plombery"
+    "url": "https://lucafaggianelli.github.io/plombery/"
   },
   "repository": {
     "type": "git",

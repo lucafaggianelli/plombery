@@ -1,1 +1,2 @@
-recursive-include plombery/static *
+recursive-include src/plombery/static *
+include README.md
