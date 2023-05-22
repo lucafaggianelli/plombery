@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel
 
-from mario import register_pipeline, task, Trigger, get_logger
+from plombery import register_pipeline, task, Trigger, get_logger
 
 
 class InputParams(BaseModel):

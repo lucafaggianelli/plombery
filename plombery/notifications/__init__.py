@@ -3,9 +3,9 @@ from typing import List
 from apprise import Apprise
 import apprise
 
-from mario.config import settings
-from mario.database.schemas import PipelineRun
-from mario.schemas import NotificationRule
+from plombery.config import settings
+from plombery.database.schemas import PipelineRun
+from plombery.schemas import NotificationRule
 
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ class NotificationManager:
 
         with apprise.LogCapture(level=apprise.logging.INFO) as output:
             result = await apobj.async_notify(
-                title=f"[MarioPype] Your pipeline {pipeline_run.pipeline_id} {PIPELINE_STATUS_TO_VERB[pipeline_run.status]}",
+                title=f"[Plombery] Your pipeline {pipeline_run.pipeline_id} {PIPELINE_STATUS_TO_VERB[pipeline_run.status]}",
                 body=f"""
     Your pipeline {pipeline_run.pipeline_id} {PIPELINE_STATUS_TO_VERB[pipeline_run.status]}
 

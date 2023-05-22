@@ -1,9 +1,9 @@
 import logging
 
-from mario.logger.formatter import JsonFormatter
-from mario.logger.web_socket_handler import WebSocketHandler
-from mario.orchestrator.data_storage import get_logs_filename
-from mario.pipeline.context import task_context, run_context, pipeline_context
+from plombery.logger.formatter import JsonFormatter
+from plombery.logger.web_socket_handler import WebSocketHandler
+from plombery.orchestrator.data_storage import get_logs_filename
+from plombery.pipeline.context import task_context, run_context, pipeline_context
 
 
 def get_logger() -> logging.Logger:
@@ -29,7 +29,7 @@ def get_logger() -> logging.Logger:
     websocket_handler = WebSocketHandler()
     websocket_handler.setFormatter(json_formatter)
 
-    logger_name = f"mario.{task.id}" if task else f"mario.{pipeline.id}"
+    logger_name = f"plombery.{task.id}" if task else f"plombery.{pipeline.id}"
 
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.DEBUG)

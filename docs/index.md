@@ -3,7 +3,7 @@ hide:
   - toc
 ---
 
-# Mario Pype
+# Plombery
 
 An ⚖️ open source (MIT license) task scheduler for Python with a web UI and a REST API.
 
@@ -20,4 +20,4 @@ If you need to run and monitor recurring python scripts then it's the right tool
 * 📩 Monitor the pipelines and get alerted if something goes wrong
 * 💣 Use the REST API for advanced integrations
 
-![Mario Pype Screen Shot](assets/images/screenshot.png)
+![Plombery Screen Shot](assets/images/screenshot.png)

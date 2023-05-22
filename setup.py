@@ -41,7 +41,7 @@ package_json = read_package_json()
 
 
 setup(
-    name="mario",
+    name="plombery",
     version=package_json["version"],
     description=package_json["description"],
     url=package_json["repository"]["url"],

@@ -4,7 +4,7 @@ from pydantic.json import pydantic_encoder
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from mario.config import settings
+from plombery.config import settings
 
 
 def json_serializer(*args, **kwargs) -> str:

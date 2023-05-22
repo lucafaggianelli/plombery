@@ -6,8 +6,8 @@ from apscheduler.job import Job
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.date import DateTrigger
 
-from mario.constants import MANUAL_TRIGGER_ID
-from mario.orchestrator.executor import Pipeline, run, Trigger
+from plombery.constants import MANUAL_TRIGGER_ID
+from plombery.orchestrator.executor import Pipeline, run, Trigger
 
 
 class _Orchestrator:

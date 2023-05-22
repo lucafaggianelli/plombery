@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from mario.schemas import PipelineRunStatus, TaskRun
+from plombery.schemas import PipelineRunStatus, TaskRun
 
 
 class PipelineRunBase(BaseModel):

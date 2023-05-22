@@ -21,17 +21,17 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-<h3 align="center">Mario Pype</h3>
+<h3 align="center">Plombery</h3>
 
   <p align="center">
     Python task scheduler with a user-friendly web UI
     <br />
-    <a href="https://lucafaggianelli.github.io/mario-pype/"><strong>Official website »</strong></a>
+    <a href="https://lucafaggianelli.github.io/plombery/"><strong>Official website »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/lucafaggianelli/mario-pype/issues">Report Bug</a>
+    <a href="https://github.com/lucafaggianelli/plombery/issues">Report Bug</a>
     ·
-    <a href="https://github.com/lucafaggianelli/mario-pype/issues">Request Feature</a>
+    <a href="https://github.com/lucafaggianelli/plombery/issues">Request Feature</a>
   </p>
 </div>
 
@@ -39,12 +39,12 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-Mario Pype is a simple task scheduler for Python with a web UI and a REST API,
+Plombery is a simple task scheduler for Python with a web UI and a REST API,
 if you need to run and monitor recurring python scripts then it's
 the right tool for you!
 
 <figure>
-  <img src="docs/assets/images/screenshot.png" alt="Mario Pype Screen Shot">
+  <img src="docs/assets/images/screenshot.png" alt="Plombery Screen Shot">
 </figure>
 
 > This project is at its beginning, so it can be shaped and improved with
@@ -80,7 +80,7 @@ When you shouldn't use it:
 <!-- GETTING STARTED -->
 ## 🚀 Getting Started
 
-Check the 👉 [official website](https://lucafaggianelli.github.io/mario-pype/)
+Check the 👉 [official website](https://lucafaggianelli.github.io/plombery/)
 
 ## 🧐 Show me the code
 
@@ -94,7 +94,7 @@ This is how it looks a minimalist pipeline:
 <!-- ROADMAP -->
 ## 🛣 Roadmap
 
-See the [open issues](https://github.com/lucafaggianelli/mario-pype/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/lucafaggianelli/plombery/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -198,7 +198,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Project Link: [https://github.com/lucafaggianelli/mario-pype](https://github.com/lucafaggianelli/mario-pype)
+Project Link: [https://github.com/lucafaggianelli/plombery](https://github.com/lucafaggianelli/plombery)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -207,7 +207,7 @@ Project Link: [https://github.com/lucafaggianelli/mario-pype](https://github.com
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-Mario Pype is built on top of amazing techs:
+Plombery is built on top of amazing techs:
 
 * [FastAPI](https://fastapi.tiangolo.com/)
 * [Pydantic](https://docs.pydantic.dev/)
@@ -223,16 +223,16 @@ Mario Pype is built on top of amazing techs:
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/lucafaggianelli/mario-pype.svg?style=for-the-badge
-[contributors-url]: https://github.com/lucafaggianelli/mario-pype/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/lucafaggianelli/mario-pype.svg?style=for-the-badge
-[forks-url]: https://github.com/lucafaggianelli/mario-pype/network/members
-[stars-shield]: https://img.shields.io/github/stars/lucafaggianelli/mario-pype.svg?style=for-the-badge
-[stars-url]: https://github.com/lucafaggianelli/mario-pype/stargazers
-[issues-shield]: https://img.shields.io/github/issues/lucafaggianelli/mario-pype.svg?style=for-the-badge
-[issues-url]: https://github.com/lucafaggianelli/mario-pype/issues
-[license-shield]: https://img.shields.io/github/license/lucafaggianelli/mario-pype.svg?style=for-the-badge
-[license-url]: https://github.com/lucafaggianelli/mario-pype/blob/master/LICENSE
+[contributors-shield]: https://img.shields.io/github/contributors/lucafaggianelli/plombery.svg?style=for-the-badge
+[contributors-url]: https://github.com/lucafaggianelli/plombery/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/lucafaggianelli/plombery.svg?style=for-the-badge
+[forks-url]: https://github.com/lucafaggianelli/plombery/network/members
+[stars-shield]: https://img.shields.io/github/stars/lucafaggianelli/plombery.svg?style=for-the-badge
+[stars-url]: https://github.com/lucafaggianelli/plombery/stargazers
+[issues-shield]: https://img.shields.io/github/issues/lucafaggianelli/plombery.svg?style=for-the-badge
+[issues-url]: https://github.com/lucafaggianelli/plombery/issues
+[license-shield]: https://img.shields.io/github/license/lucafaggianelli/plombery.svg?style=for-the-badge
+[license-url]: https://github.com/lucafaggianelli/plombery/blob/master/LICENSE
 [product-screenshot]: images/screenshot.png
 [Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
 [Next-url]: https://nextjs.org/

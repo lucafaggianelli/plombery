@@ -11,6 +11,6 @@ export default defineConfig({
   },
   plugins: [react(), splitVendorChunkPlugin()],
   build: {
-    outDir: path.resolve('..', 'mario', 'static'),
+    outDir: path.resolve('..', 'plombery', 'static'),
   },
 })

@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from mario import Mario
-from mario.config import settings, AuthSettings
-from mario.api import api as fastapi_app
-from mario.api.authentication import _needs_auth
+from plombery import Plombery
+from plombery.config import settings, AuthSettings
+from plombery.api import api as fastapi_app
+from plombery.api.authentication import _needs_auth
 
 
 def _bypass_auth():
@@ -20,8 +20,8 @@ def _bypass_auth():
 
 @pytest.fixture
 def app():
-    mario_app = Mario()
-    yield mario_app
+    plombery_app = Plombery()
+    yield plombery_app
 
 
 @pytest.fixture

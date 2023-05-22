@@ -1,7 +1,7 @@
 from contextvars import ContextVar
 
-from mario.database.models import PipelineRun
-from mario.pipeline.pipeline import Pipeline, Task
+from plombery.database.models import PipelineRun
+from plombery.pipeline.pipeline import Pipeline, Task
 
 
 pipeline_context: ContextVar[Pipeline] = ContextVar('pipeline')

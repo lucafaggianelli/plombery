@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from mario.constants import PIPELINE_RUN_LOGS_FILE
+from plombery.constants import PIPELINE_RUN_LOGS_FILE
 
 
 def _get_data_path(pipeline_run_id: int):

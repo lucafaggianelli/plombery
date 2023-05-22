@@ -13,10 +13,10 @@ except ImportError:
 from pydantic import AnyHttpUrl, BaseModel, BaseSettings, HttpUrl, SecretStr
 from pydantic.env_settings import SettingsSourceCallable
 
-from mario.schemas import NotificationRule
+from plombery.schemas import NotificationRule
 
 BASE_SETTINGS_FOLDER = Path()
-SETTINGS_FILE_NAME = "mario.config"
+SETTINGS_FILE_NAME = "plombery.config"
 ENV_VAR_MATCHER = re.compile(r"\$(\w+|\{[^}]*\})")
 
 
@@ -79,7 +79,7 @@ class AuthSettings(BaseModel):
 
 class Settings(BaseSettings):
     auth: Optional[AuthSettings]
-    database_url: str = "sqlite:///./mario.db"
+    database_url: str = "sqlite:///./plombery.db"
     notifications: Optional[List[NotificationRule]]
     server_url: Optional[AnyHttpUrl] = "http://localhost:8000"
     frontend_url: Optional[AnyHttpUrl] = "http://localhost:8000"

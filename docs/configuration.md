@@ -1,4 +1,4 @@
-MarioPype is configurable via environmental variables, a YAML file
+Plombery is configurable via environmental variables, a YAML file
 or even better via a combination of the 2.
 
 !!! info "Why a hybrid configuration?"
@@ -8,11 +8,11 @@ or even better via a combination of the 2.
     configuration should be stored together with the code as they are part
     of the system and some parts of it are secret so you need env vars
 
-Create a configuration file in the root of your project named `mario.config.yaml`
-(or `mario.config.yml` if you prefer) and set the values you need, you should
+Create a configuration file in the root of your project named `plombery.config.yaml`
+(or `plombery.config.yml` if you prefer) and set the values you need, you should
 commit this file to the git repo:
 
-```yaml title="mario.config.yaml"
+```yaml title="plombery.config.yaml"
 frontend_url: https://pipelines.example.com
 
 auth:
@@ -34,7 +34,7 @@ in your shell or in your hosting environment.
 
 !!! tip
 
-    By default, MarioPype will load any `.env` found in your project root.
+    By default, Plombery will load any `.env` found in your project root.
 
 !!! Warning
 
@@ -54,12 +54,12 @@ MSTEAMS_WEBHOOK=msteams://TokenA/TokenB/TokenC/
 
 !!! tip
 
-    If you're running MarioPype locally, in most cases you don't need to change
+    If you're running Plombery locally, in most cases you don't need to change
     these settings
 
 ### `database_url`
 
-The Sqlite DB URI, by default `sqlite:///./mario.db`
+The Sqlite DB URI, by default `sqlite:///./plombery.db`
 
 ### `server_url`
 
@@ -75,13 +75,13 @@ during the frontend development.
 
 ## Notifications
 
-MarioPype can send notifications after a pipeline has run based on the status
+Plombery can send notifications after a pipeline has run based on the status
 of the run itself (success, failure, etc.).
 
 The notifications configuration can be defined in the YAML
 file as a list of [`NotificationRule`](#notificationrule)s:
 
-```yaml title="mario.config.yaml"
+```yaml title="plombery.config.yaml"
 notifications:
   # Send notifications only if the pipelines failed
   - pipeline_status:
@@ -123,13 +123,13 @@ channel, for example:
 * **MS Teams** msteams://TokenA/TokenB/TokenC/
 * **AWS SES** ses://user@domain/AccessKeyID/AccessSecretKey/RegionName/email1/
 
-Behind the scene MarioPype uses [Apprise](https://github.com/caronc/apprise),
+Behind the scene Plombery uses [Apprise](https://github.com/caronc/apprise),
 a library to send notifications to many notification providers, so check their
 docs for a full list of the available channels.
 
 ## Authentication
 
-MarioPype has a buil-in and ready-to-use authentication system
+Plombery has a buil-in and ready-to-use authentication system
 based on OAuth providers, so you can use your corporate auth system
 or Google, Github, etc.
 

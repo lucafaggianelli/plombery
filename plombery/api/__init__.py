@@ -15,21 +15,21 @@ from fastapi import (
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 
-from mario.api.authentication import NeedsAuth, init_auth
-from mario.config import settings
-from mario.constants import MANUAL_TRIGGER_ID
-from mario.pipeline.pipeline import Trigger
-from mario.orchestrator import orchestrator
-from mario.orchestrator.executor import (
+from plombery.api.authentication import NeedsAuth, init_auth
+from plombery.config import settings
+from plombery.constants import MANUAL_TRIGGER_ID
+from plombery.pipeline.pipeline import Trigger
+from plombery.orchestrator import orchestrator
+from plombery.orchestrator.executor import (
     get_pipeline_run_logs,
     get_pipeline_run_data,
     run,
 )
-from mario.database.repository import (
+from plombery.database.repository import (
     list_pipeline_runs,
     get_pipeline_run,
 )
-from mario.websocket import manager
+from plombery.websocket import manager
 from .middlewares import FRONTEND_FOLDER, SPAStaticFiles
 
 

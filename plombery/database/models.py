@@ -6,8 +6,8 @@ import sqlalchemy as sa
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 
-from mario.database.base import Base, engine, SessionLocal
-from mario.schemas import PipelineRunStatus, TaskRun
+from plombery.database.base import Base, engine, SessionLocal
+from plombery.schemas import PipelineRunStatus, TaskRun
 
 
 class PydanticType(sa.types.TypeDecorator):

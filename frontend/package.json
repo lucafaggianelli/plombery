@@ -1,16 +1,16 @@
 {
-  "name": "mario-pype",
+  "name": "plombery",
   "version": "0.2.0",
   "description": "",
   "license": "MIT",
   "author": {
     "name": "Luca Faggianelli",
     "email": "luca@velvetlab.tech",
-    "url": "https://github.com/lucafaggianelli/mario-pype"
+    "url": "https://github.com/lucafaggianelli/plombery"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lucafaggianelli/mario-pype"
+    "url": "https://github.com/lucafaggianelli/plombery"
   },
   "type": "module",
   "scripts": {

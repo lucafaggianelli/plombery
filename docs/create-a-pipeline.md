@@ -27,7 +27,7 @@ Before starting, let's define some naming so there will be no confusion!
 
 ### Create a task
 
-A *Task* is the base block in Mario Pype and it's just a Python function that
+A *Task* is the base block in Plombery and it's just a Python function that
 performs an action, i.e. download some data from an HTTP API, runs a query on a DB, etc.
 
 !!! info
@@ -39,14 +39,14 @@ from datetime import datetime
 from random import randint
 
 from apscheduler.triggers.interval import IntervalTrigger
-from mario import task, get_logger, Trigger, register_pipeline
+from plombery import task, get_logger, Trigger, register_pipeline
 
 
 @task
 async def fetch_raw_sales_data():
     """Fetch latest 50 sales of the day"""
 
-    # using MarioPype logger your logs will be stored
+    # using Plombery logger your logs will be stored
     # and accessible on the web UI
     logger = get_logger()
 
@@ -98,7 +98,7 @@ Finally add this at the bottom of your file to start the app:
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("mario:get_app", reload=True, factory=True)
+    uvicorn.run("plombery:get_app", reload=True, factory=True)
 ```
 
 Now your `src/app.py` should look like this:
@@ -110,14 +110,14 @@ Now your `src/app.py` should look like this:
     from random import randint
 
     from apscheduler.triggers.interval import IntervalTrigger
-    from mario import task, get_logger, Trigger, register_pipeline
+    from plombery import task, get_logger, Trigger, register_pipeline
 
 
     @task
     async def fetch_raw_sales_data():
         """Fetch latest 50 sales of the day"""
 
-        # using MarioPype logger your logs will be stored
+        # using Plombery logger your logs will be stored
         # and accessible on the web UI
         logger = get_logger()
 
@@ -157,13 +157,13 @@ Now your `src/app.py` should look like this:
     if __name__ == "__main__":
         import uvicorn
 
-        uvicorn.run("mario:get_app", reload=True, factory=True)
+        uvicorn.run("plombery:get_app", reload=True, factory=True)
 
     ```
 
 ### Run the app
 
-Mario Pype is based on FastAPI so you can run it as a normal FastAPI app
+Plombery is based on FastAPI so you can run it as a normal FastAPI app
 via `uvicorn` (as in this example) or another ASGI web server.
 
 So install `uvicorn` and run the app:

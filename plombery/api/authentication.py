@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 
-from mario.config import settings
+from plombery.config import settings
 
 
 def init_auth(app: FastAPI):

@@ -19,7 +19,7 @@ _logger.setLevel(logging.INFO)
 _logger.addHandler(logging.StreamHandler())
 
 
-class _Mario:
+class _Plombery:
     def __init__(self) -> None:
         self._apply_settings()
 
@@ -41,13 +41,13 @@ class _Mario:
     def stop(self):
         orchestrator.stop()
 
-    # Wrap FastAPI ASGI interface so the Mario object
+    # Wrap FastAPI ASGI interface so the Plombery object
     # can be served directly by uvicorn
     async def __call__(self, scope, receive, send):
         await app.__call__(scope, receive, send)
 
 
-_app = _Mario()
+_app = _Plombery()
 
 
 def get_app():

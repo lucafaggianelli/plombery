@@ -1,7 +1,7 @@
 import asyncio
 from logging.handlers import QueueHandler
 
-from mario.websocket import manager
+from plombery.websocket import manager
 
 
 class WebSocketHandler(QueueHandler):

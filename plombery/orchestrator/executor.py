@@ -5,21 +5,21 @@ import inspect
 
 from pydantic import BaseModel
 
-from mario.constants import MANUAL_TRIGGER_ID
-from mario.logger import get_logger
-from mario.notifications import notification_manager
-from mario.websocket import manager
-from mario.database.models import PipelineRun
-from mario.database.repository import create_pipeline_run, update_pipeline_run
-from mario.database.schemas import PipelineRunCreate
-from mario.orchestrator.data_storage import (
+from plombery.constants import MANUAL_TRIGGER_ID
+from plombery.logger import get_logger
+from plombery.notifications import notification_manager
+from plombery.websocket import manager
+from plombery.database.models import PipelineRun
+from plombery.database.repository import create_pipeline_run, update_pipeline_run
+from plombery.database.schemas import PipelineRunCreate
+from plombery.orchestrator.data_storage import (
     read_logs_file,
     read_task_run_data,
     store_task_output,
 )
-from mario.pipeline.pipeline import Pipeline, Trigger, Task
-from mario.pipeline.context import pipeline_context, run_context
-from mario.schemas import PipelineRunStatus, TaskRun
+from plombery.pipeline.pipeline import Pipeline, Trigger, Task
+from plombery.pipeline.context import pipeline_context, run_context
+from plombery.schemas import PipelineRunStatus, TaskRun
 
 
 def _run_all_tasks(coros: List[Coroutine]):
