@@ -19,6 +19,9 @@ jobs:
   deploy:
 
     runs-on: ubuntu-latest
+    permissions:
+      # this permission is mandatory for PyPI trusted publishing
+      id-token: write
 
     steps:
     - uses: actions/checkout@v3
