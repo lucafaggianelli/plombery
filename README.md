@@ -43,7 +43,9 @@ Mario Pype is a simple task scheduler for Python with a web UI and a REST API,
 if you need to run and monitor recurring python scripts then it's
 the right tool for you!
 
-![Mario Pype Screen Shot](docs/assets/images/screenshot.png)
+<figure>
+  <img src="docs/assets/images/screenshot.png" alt="Mario Pype Screen Shot">
+</figure>
 
 > This project is at its beginning, so it can be shaped and improved with
   your feedback and help!
@@ -75,154 +77,30 @@ When you shouldn't use it:
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- GETTING STARTED -->
-## Getting Started
+## 🚀 Getting Started
 
 Check the 👉 [official website](https://lucafaggianelli.github.io/mario-pype/)
-for more detailed info!
 
-### Prerequisites
+## 🧐 Show me the code
 
-To run Mario Pype you only need Python (v3.8 or later), if you don't have it installed yet, go
-to the [official Python website](https://www.python.org/downloads/), download it
-and install it.
+This is how it looks a minimalist pipeline:
 
-### Installation
-
-Create and activate a virtual enrivonment in your new project folder,
-for example:
-
-```sh
-python -m venv .venv
-# on Mac/Linux
-source .venv/bin/activate
-# on Win
-.venv/Script/activate
-```
-
-Then install the library:
-
-> Mario Pype is not published yet on pypi.org, that's why you need to install it
-    from git!
-
-```sh
-pip install git+https://github.com/lucafaggianelli/mario-pype
-```
-
-Now you're ready to get started! Create a new folder in your project root with
-a file named `app.py` (or any name you want) in it,
-as in Python files should be in a top-level package.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-### Create your first Pipeline
-
-*Pipelines* are entities that can be scheduled and are composed of 1 or multiple *Tasks*.
-
-A Pipeline is a Python class that contains a list of tasks and eventually a list of triggers,
-so in your `app.py` add this:
-
-```py
-from datetime import datetime
-from random import randint
-
-from apscheduler.triggers.interval import IntervalTrigger
-from mario import task, get_logger, Trigger, register_pipeline
-
-
-register_pipeline(
-    id="sales_pipeline",
-    tasks = [fetch_raw_sales_data],
-    triggers = [
-        Trigger(
-            id="daily",
-            name="Daily",
-            description="Run the pipeline every day",
-            aps_trigger=IntervalTrigger(days=1),
-        )
-    ],
-)
-```
-
-A *Task* is the base block in Mario Pype and it's just a Python function that
-performs an action.
-
-This is the Task `fetch_raw_sales_data` used in the `sales_pipeline` pipeline ... it doesn't do much,
-but it showcase the basics:
-
-```py
-@task
-async def fetch_raw_sales_data(input_data, params=None):
-    logger = get_logger()
-
-    logger.debug("Fetching sales data...")
-
-    sales = [
-        {
-            "price": randint(1, 1000),
-            "store_id": randint(1, 10),
-            "date": datetime.today(),
-            "sku": randint(1, 50),
-        }
-        for _ in range(50)
-    ]
-
-    logger.info("Fetched %s sales data rows", len(sales))
-
-    return sales
-```
-
-### Run Mario Pype
-
-Mario Pype is based on FastAPI so you can run it as a normal FastAPI app via `uvicorn`:
-
-```sh
-uvicorn my_project.app:app --reload
-```
-
-Now open the page http://localhost:8000 in your browser and enjoy!
-
-### Usage from the UI
-
-From the home page at http://localhost:8000 hit the button *Run pipeline*
-then click *Run* in the dialog.
-
-Now close the dialog and click on the pipeline name, then find the run on the right
-and click on its number to view the details
-
-### Configure notifications
-
-You can optionally configure notifications creating the file `mario.config.yaml`
-in the project root:
-
-```yml
-notifications:
-  - pipeline_status:
-      - failed
-      - completed
-    channels:
-      - mailto://myuser:mypass@gmail.com
-```
-
-You can have multiple notifications configs and multiple channels for each config.
-The channel is a URI directly passed to the notifications engine
-[Apprise](https://github.com/caronc/apprise), check their docs for the supported channels.
-
+<figure>
+  <img src="docs/assets/images/minimal-code.png" alt="Minimal code">
+  <figcaption>I know you want to see it!</figcaption>
+</figure>
 
 <!-- ROADMAP -->
-## Roadmap
+## 🛣 Roadmap
 
 See the [open issues](https://github.com/lucafaggianelli/mario-pype/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-
 <!-- CONTRIBUTING -->
-## Contributing
+## 👩‍💻 Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
@@ -280,6 +158,17 @@ run the development server:
 
 ```sh
 yarn dev
+```
+
+### Documentation
+
+The documentation website is based on MkDocs Material, the source code is in the
+`docs/` folder and the config is in the `mkdocs.yml` file.
+
+To run a local dev server, run:
+
+```
+mkdocs serve
 ```
 
 ### Testing

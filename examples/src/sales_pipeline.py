@@ -15,7 +15,7 @@ class InputParams(BaseModel):
 
 
 @task
-async def get_sales_data(params: InputParams):
+async def get_sales_data(params: InputParams) -> pd.DataFrame:
     """Fetch raw sales data by store and SKU"""
 
     logger = get_logger()
@@ -53,7 +53,7 @@ register_pipeline(
             name="Daily",
             description="Run the pipeline every day",
             params=InputParams(some_value=2),
-            aps_trigger=IntervalTrigger(
+            schedule=IntervalTrigger(
                 days=1,
                 start_date=datetime(
                     2023, 1, 1, 22, 30, tzinfo=tz.gettz("Europe/Brussels")

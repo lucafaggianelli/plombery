@@ -38,7 +38,7 @@ class _Orchestrator:
             self.scheduler.add_job(
                 id=job_id,
                 func=run,
-                trigger=trigger.aps_trigger,
+                trigger=trigger.schedule,
                 kwargs=dict(pipeline=pipeline, trigger=trigger),
                 # run once instead of many times if the scheduler determines that the
                 # job should be run more than once in succession

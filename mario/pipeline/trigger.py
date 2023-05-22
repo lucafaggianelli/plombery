@@ -7,7 +7,7 @@ from pydantic import BaseModel
 class Trigger(BaseModel):
     id: str
     name: str
-    aps_trigger: BaseTrigger
+    schedule: BaseTrigger
     description: str = __doc__
     params: dict = None
     paused: bool = False
