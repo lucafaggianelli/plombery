@@ -111,7 +111,7 @@ const TriggerView: React.FC = () => {
           <ListItem>
             <Text>Schedule</Text>
             <Text>
-              <Bold>{trigger.aps_trigger}</Bold>
+              <Bold>{trigger.schedule}</Bold>
             </Text>
           </ListItem>
 

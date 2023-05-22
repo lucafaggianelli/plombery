@@ -1,6 +1,6 @@
 ## Prerequisites
 
-To run Mario Pype you only need Python (v3.8 or later), if you don't have it installed yet, go
+To run Plombery you only need Python (v3.8 or later), if you don't have it installed yet, go
 to the [official Python website](https://www.python.org/downloads/), download it
 and install it.
 
@@ -32,13 +32,8 @@ source .venv/bin/activate
 
 Then install the library:
 
-!!! info
-
-    Mario Pype is not published yet on pypi.org, that's why you need to install it
-    from git!
-
 ```sh
-pip install git+https://github.com/lucafaggianelli/mario-pype
+pip install plombery
 ```
 
 Now you're ready to write your first pipeline!

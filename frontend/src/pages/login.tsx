@@ -7,10 +7,10 @@ const LoginPage: React.FC = () => {
     <div className="h-screen flex justify-center items-center bg-slate-200">
       <Card className="w-auto">
         <div className="w-12 rounded-full mx-auto mb-4">
-          <img src="/mario-pipe-flower.png" alt="Mario Pype logo" />
+          <img src="/mario-pipe-flower.png" alt="Plombery logo" />
         </div>
 
-        <Title className="mb-6">Welcome to Mario Pype</Title>
+        <Title className="mb-6">Welcome to Plombery</Title>
 
         <Button
           onClick={() => {

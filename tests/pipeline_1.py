@@ -1,4 +1,4 @@
-from mario import task, Pipeline, get_logger
+from plombery import task, Pipeline, get_logger
 
 
 @task
@@ -23,7 +23,6 @@ pipeline1_serialized = {
             "id": "pipe_1_task_1",
             "name": "Pipe 1 Task 1",
             "description": None,
-            "params": None,
         }
     ],
     "triggers": [],

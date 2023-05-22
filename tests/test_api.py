@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 import pytest
 
-from mario import Mario
-from mario.api import app
+from plombery import Plombery
+from plombery.api import app
 from .pipeline_1 import pipeline1, pipeline1_serialized
 
 
@@ -10,7 +10,7 @@ client = TestClient(app)
 
 
 @pytest.mark.asyncio
-async def test_api_list_pipelines(app: Mario):
+async def test_api_list_pipelines(app: Plombery):
     app.register_pipeline(pipeline1)
 
     response = client.get("/api/pipelines")
@@ -20,7 +20,7 @@ async def test_api_list_pipelines(app: Mario):
 
 
 @pytest.mark.asyncio
-async def test_api_list_pipelines_with_auth(with_auth, authenticated, app: Mario):
+async def test_api_list_pipelines_with_auth(with_auth, authenticated, app: Plombery):
     app.register_pipeline(pipeline1)
 
     response = client.get("/api/pipelines")
@@ -30,7 +30,7 @@ async def test_api_list_pipelines_with_auth(with_auth, authenticated, app: Mario
 
 
 @pytest.mark.asyncio
-async def test_api_get_pipeline(app: Mario):
+async def test_api_get_pipeline(app: Plombery):
     app.register_pipeline(pipeline1)
 
     response = client.get("/api/pipelines/pipeline1")
@@ -40,7 +40,7 @@ async def test_api_get_pipeline(app: Mario):
 
 
 @pytest.mark.asyncio
-async def test_api_get_pipeline_with_auth(with_auth, authenticated, app: Mario):
+async def test_api_get_pipeline_with_auth(with_auth, authenticated, app: Plombery):
     app.register_pipeline(pipeline1)
 
     response = client.get("/api/pipelines/pipeline1")
@@ -50,7 +50,7 @@ async def test_api_get_pipeline_with_auth(with_auth, authenticated, app: Mario):
 
 
 @pytest.mark.asyncio
-async def test_api_get_pipeline_not_existing(app: Mario):
+async def test_api_get_pipeline_not_existing(app: Plombery):
     app.register_pipeline(pipeline1)
 
     response = client.get("/api/pipelines/not-existing")
@@ -62,7 +62,7 @@ async def test_api_get_pipeline_not_existing(app: Mario):
 
 
 @pytest.mark.asyncio
-async def test_api_with_auth_when_not_authenticated(with_auth, app: Mario):
+async def test_api_with_auth_when_not_authenticated(with_auth, app: Plombery):
     NOT_AUTH_MSG = {"detail": "You must be authenticated to access this API route"}
 
     response = client.get("/api/pipelines")
