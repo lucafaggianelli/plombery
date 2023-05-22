@@ -31,18 +31,17 @@ jobs:
 
     - uses: actions/setup-node@v3
       with:
+        cache-dependency-path: frontend/yarn.lock
         node-version: 18
         cache: 'yarn'
 
     - name: Install frontend dependencies
-      run: |
-        cd frontend
-        yarn
+      working-directory: frontend
+      run: yarn
 
     - name: Build frontend
-      run: |
-        cd frontend
-        yarn build
+      working-directory: frontend
+      run: yarn build
 
     - name: Install py dependencies
       run: |
