@@ -1,1 +1,2 @@
-recursive-include mario/static *
+recursive-include src/plombery/static *
+include README.md

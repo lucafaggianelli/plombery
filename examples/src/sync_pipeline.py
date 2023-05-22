@@ -1,6 +1,6 @@
 import time
 
-from mario import register_pipeline, task
+from plombery import register_pipeline, task
 
 
 @task

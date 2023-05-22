@@ -21,7 +21,7 @@ const HomePage: React.FC = () => {
     <PageLayout
       header={
         <>
-          <Title>Mario Pype</Title>
+          <Title>Plombery</Title>
         </>
       }
     >

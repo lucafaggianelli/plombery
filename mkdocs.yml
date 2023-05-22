@@ -1,8 +1,8 @@
-site_name: Mario Pype
-site_url: https://lucafaggianelli.github.io/mario-pype
+site_name: Plombery
+site_url: https://lucafaggianelli.github.io/plombery
 copyright: Copyright &copy; 2023 Luca Faggianelli
 
-repo_url: https://github.com/lucafaggianelli/mario-pype
+repo_url: https://github.com/lucafaggianelli/plombery
 edit_uri: edit/main/docs/
 
 extra_css:

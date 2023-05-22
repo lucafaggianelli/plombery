@@ -1,4 +1,4 @@
-from mario import task, Pipeline, get_logger
+from plombery import task, Pipeline, get_logger
 
 
 @task
