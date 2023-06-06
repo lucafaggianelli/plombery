@@ -27,8 +27,8 @@ const PipelinesList: React.FC = () => {
       <List>
         {pipelines.map((pipeline) => (
           <ListItem key={pipeline.id}>
-            <div>
-              <Text>
+            <div className="min-w-0">
+              <Text className="truncate">
                 <Bold>
                   <Link to={`/pipelines/${pipeline.id}`}>{pipeline.name}</Link>
                 </Bold>
