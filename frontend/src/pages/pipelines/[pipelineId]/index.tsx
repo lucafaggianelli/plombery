@@ -53,22 +53,25 @@ const PipelineView: React.FC = () => {
   return (
     <PageLayout
       header={
-        <Flex className="items-start">
-          <div>
-            <Flex className="justify-start items-start md:items-center flex-col md:flex-row">
-              <Title>Pipeline {pipeline.name}</Title>
+        <div>
+          <Flex className="items-start">
+            <Flex className="justify-start items-start md:items-center flex-col md:flex-row min-w-0">
+              <Title className="truncate max-w-full">
+                Pipeline {pipeline.name}
+              </Title>
               {pipeline.description && (
-                <Text className="truncate">
+                <Text className="truncate max-w-full">
                   <span className="hidden md:inline mx-2">&middot;</span>
                   {pipeline.description}
                 </Text>
               )}
             </Flex>
-            <Breadcrumbs pipeline={pipeline} />
-          </div>
 
-          <ManualRunDialog pipeline={pipeline} />
-        </Flex>
+            <ManualRunDialog pipeline={pipeline} />
+          </Flex>
+
+          <Breadcrumbs pipeline={pipeline} className="mt-4" />
+        </div>
       }
     >
       <Grid numColsMd={2} numColsLg={3} className="gap-6 mt-6">

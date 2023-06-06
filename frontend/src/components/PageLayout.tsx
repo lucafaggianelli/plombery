@@ -14,7 +14,7 @@ const PageLayout: React.FC<Props> = ({ children, header }) => {
   return (
     <div className="bg-slate-50 p-6 sm:p-10 min-h-screen">
       <Flex className="items-start">
-        {header && <div className="flex-grow">{header}</div>}
+        {header && <div className="flex-grow max-w-full">{header}</div>}
         {isAuthenticated && isAuthenticationEnabled && <UserMenu />}
       </Flex>
 
