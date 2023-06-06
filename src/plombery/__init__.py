@@ -1,5 +1,6 @@
-import logging
 from typing import List, Type
+import logging
+import os
 
 from apscheduler.schedulers.base import SchedulerAlreadyRunningError
 from pydantic import BaseModel
@@ -20,14 +21,14 @@ _logger.setLevel(logging.INFO)
 _logger.addHandler(logging.StreamHandler())
 
 
+if os.getenv("DEBUG_APS"):
+    logging.basicConfig()
+    logging.getLogger("apscheduler").setLevel(logging.DEBUG)
+
+
 class _Plombery:
     def __init__(self) -> None:
         self._apply_settings()
-
-        try:
-            orchestrator.start()
-        except SchedulerAlreadyRunningError:
-            pass
 
     def _apply_settings(self):
         for notification in settings.notifications or []:
@@ -49,6 +50,14 @@ class _Plombery:
 
 
 _app = _Plombery()
+
+
+@app.on_event("startup")
+def on_fastapi_start():
+    try:
+        orchestrator.start()
+    except SchedulerAlreadyRunningError:
+        pass
 
 
 def get_app():
