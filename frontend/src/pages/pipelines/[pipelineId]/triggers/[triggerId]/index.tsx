@@ -79,26 +79,36 @@ const TriggerView: React.FC = () => {
     <Button
       size="xs"
       color="indigo"
+      variant="secondary"
       icon={PlayIcon}
       onClick={() => {
         runPipelineMutation.mutateAsync()
       }}
     >
-      Run trigger
+      Run
     </Button>
   )
 
   return (
     <PageLayout
       header={
-        <Flex className="items-start">
-          <div>
-            <Title>Trigger {trigger.name}</Title>
-            <Breadcrumbs pipeline={pipeline} trigger={trigger} />
-          </div>
+        <div>
+          <Flex className="items-start">
+            <Flex className="justify-start items-start md:items-center flex-col md:flex-row min-w-0">
+              <Title className="truncate max-w-full">Trigger {trigger.name}</Title>
+              {trigger.description && (
+                <Text className="truncate max-w-full">
+                  <span className="hidden md:inline mx-2">&middot;</span>
+                  {trigger.description}
+                </Text>
+              )}
+            </Flex>
 
-          {runTriggerButton}
-        </Flex>
+            {runTriggerButton}
+          </Flex>
+
+          <Breadcrumbs pipeline={pipeline} trigger={trigger} className="mt-4" />
+        </div>
       }
     >
       <Grid numColsMd={2} numColsLg={3} className="gap-6 mt-6">

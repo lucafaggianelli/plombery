@@ -195,7 +195,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
         icon={PlayIcon}
         onClick={() => setOpen(true)}
       >
-        Run pipeline
+        Run
       </Button>
 
       <Dialog

@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
 from typing import Any, Dict, Tuple
+from datetime import datetime, timedelta
 
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.job import Job
@@ -37,6 +37,7 @@ class _Orchestrator:
 
             self.scheduler.add_job(
                 id=job_id,
+                name=job_id,
                 func=run,
                 trigger=trigger.schedule,
                 kwargs=dict(pipeline=pipeline, trigger=trigger),

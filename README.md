@@ -139,8 +139,14 @@ pip install -r requirements-dev.txt
 for development purposes, it's useful to run the example application:
 ```sh
 cd examples/
-export PYTHONPATH=$(pwd)/..
-uvicorn dummy.app:app --reload --reload-dir ..
+
+# Create a venv for the example app
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements
+
+./run.sh
+# or ./run.ps1 on windows
 ```
 
 The React frontend is in the `frontend/` folder, enter the folder
