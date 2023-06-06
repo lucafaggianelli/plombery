@@ -11,3 +11,7 @@ def to_snake_case(name):
 def prettify_name(name: str) -> str:
     """Prettify a string replacing underscores with spaces"""
     return re.sub(r"_+", " ", name).strip()
+
+
+def get_job_id(pipeline_id: str, trigger_id: str) -> str:
+    return f"{pipeline_id}: {trigger_id}"

@@ -18,7 +18,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from plombery.api.authentication import NeedsAuth, init_auth
 from plombery.config import settings
 from plombery.constants import MANUAL_TRIGGER_ID
-from plombery.pipeline.pipeline import Trigger
+from plombery.pipeline.pipeline import Pipeline, Trigger
+from plombery.pipeline._utils import get_job_id
 from plombery.orchestrator import orchestrator
 from plombery.orchestrator.executor import (
     get_pipeline_run_logs,
@@ -61,14 +62,29 @@ app.add_middleware(
 )
 
 
+def _populate_next_fire_time(pipeline: Pipeline) -> None:
+    for trigger in pipeline.triggers:
+        if not trigger.schedule:
+            continue
+
+        trigger.next_fire_time = orchestrator.get_job(
+            pipeline.id, trigger.id
+        ).next_run_time
+
+
 @api.get(
     "/pipelines",
     response_model=None,
     tags=["Pipelines"],
 )
 def list_pipelines(user=NeedsAuth):
+    pipelines = list(orchestrator.pipelines.values())
+
+    for pipeline in pipelines:
+        _populate_next_fire_time(pipeline)
+
     return jsonable_encoder(
-        list(orchestrator.pipelines.values()),
+        pipelines,
         custom_encoder=Trigger.Config.json_encoders,
     )
 
@@ -81,6 +97,8 @@ def list_pipelines(user=NeedsAuth):
 def get_pipeline(pipeline_id: str, user=NeedsAuth):
     if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
         raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
+
+    _populate_next_fire_time(pipeline)
 
     return jsonable_encoder(pipeline, custom_encoder=Trigger.Config.json_encoders)
 
@@ -135,7 +153,7 @@ async def run_pipeline(
     executor.submit_job(
         Job(
             orchestrator.scheduler,
-            id=f"{pipeline.id}: {MANUAL_TRIGGER_ID}",
+            id=get_job_id(pipeline.id, MANUAL_TRIGGER_ID),
             func=run,
             args=[],
             kwargs={"pipeline": pipeline, "params": params},
