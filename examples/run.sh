@@ -1,2 +1,2 @@
-export PYTHONPATH=$(pwd)/..
+export PYTHONPATH=$(pwd)
 python src/app.py

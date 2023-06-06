@@ -1,2 +1,2 @@
-$env:PYTHONPATH="$(pwd)/.."
+$env:PYTHONPATH="$(pwd)"
 python src/app.py
