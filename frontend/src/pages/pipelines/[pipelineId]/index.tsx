@@ -55,11 +55,12 @@ const PipelineView: React.FC = () => {
       header={
         <Flex className="items-start">
           <div>
-            <Flex className="justify-start space-x-2">
+            <Flex className="justify-start items-start md:items-center flex-col md:flex-row">
               <Title>Pipeline {pipeline.name}</Title>
               {pipeline.description && (
                 <Text className="truncate">
-                  &middot; {pipeline.description}
+                  <span className="hidden md:inline mx-2">&middot;</span>
+                  {pipeline.description}
                 </Text>
               )}
             </Flex>
