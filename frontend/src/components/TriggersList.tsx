@@ -1,5 +1,4 @@
 import {
-  Badge,
   Card,
   Table,
   TableBody,
@@ -10,10 +9,10 @@ import {
   Text,
   Title,
 } from '@tremor/react'
+import { formatDistanceToNow } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 
 import { Pipeline } from '@/types'
-import { formatDateTime } from '@/utils'
 
 interface Props {
   pipeline: Pipeline
@@ -31,8 +30,10 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
           <TableRow>
             <TableHeaderCell>Name</TableHeaderCell>
             <TableHeaderCell>Interval</TableHeaderCell>
+            <TableHeaderCell>Next Fire Time</TableHeaderCell>
           </TableRow>
         </TableHead>
+
         <TableBody>
           {pipeline.triggers.map((trigger) => (
             <TableRow
@@ -45,6 +46,12 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
               <TableCell>{trigger.name}</TableCell>
               <TableCell>
                 <Text>{trigger.schedule}</Text>
+              </TableCell>
+              <TableCell>
+                {formatDistanceToNow(pipeline.getNextFireTime()!, {
+                  includeSeconds: true,
+                  addSuffix: true,
+                })}
               </TableCell>
             </TableRow>
           ))}

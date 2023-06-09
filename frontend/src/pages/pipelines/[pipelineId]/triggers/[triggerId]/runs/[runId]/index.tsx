@@ -11,7 +11,7 @@ import StatusBadge from '@/components/StatusBadge'
 import RunsTasksList from '@/components/Tasks'
 import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun, getWebsocketUrl } from '@/repository'
-import { Trigger, WebSocketMessage } from '@/types'
+import { Pipeline, Trigger, WebSocketMessage } from '@/types'
 import { TASKS_COLORS, getTasksColors } from '@/utils'
 
 const RunViewPage = () => {
@@ -39,7 +39,7 @@ const RunViewPage = () => {
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],
     queryFn: () => getPipeline(pipelineId),
-    initialData: { id: '', name: '', description: '', tasks: [], triggers: [] },
+    initialData: new Pipeline('', '', '', [], []),
     enabled: !!pipelineId,
   })
 

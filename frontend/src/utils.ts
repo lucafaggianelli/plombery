@@ -7,7 +7,7 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline'
 import { Color } from '@tremor/react'
-import dayjs from 'dayjs'
+import { format } from 'date-fns'
 
 import { PipelineRunStatus, Task } from './types'
 
@@ -51,7 +51,7 @@ export const getTasksColors = (tasks: Task[]) => {
 }
 
 export const formatDateTime = (date: Date) =>
-  dayjs(date).format('D MMM YYYY HH:mm:ss (Z[Z])')
+  format(date, 'd MMM yyyy HH:mm:ss (XXX)')
 
 export const formatTimestamp = (date: Date) =>
-  dayjs(date).format('HH:mm:ss.SSS')
+  format(date, 'HH:mm:ss.SSS')

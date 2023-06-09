@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 from datetime import datetime, timedelta
 
 from apscheduler.executors.asyncio import AsyncIOExecutor
@@ -8,6 +8,7 @@ from apscheduler.triggers.date import DateTrigger
 
 from plombery.constants import MANUAL_TRIGGER_ID
 from plombery.orchestrator.executor import Pipeline, run, Trigger
+from plombery.pipeline._utils import get_job_id
 
 
 class _Orchestrator:
@@ -28,7 +29,7 @@ class _Orchestrator:
             if trigger.paused:
                 continue
 
-            job_id = f"{pipeline.id}: {trigger.id}"
+            job_id = get_job_id(pipeline.id, trigger.id)
             self._all_triggers[job_id] = (pipeline, trigger)
 
             if self.scheduler.get_job(job_id):
@@ -63,6 +64,9 @@ class _Orchestrator:
     def get_trigger_from_job_id(self, job_id: str):
         return self._all_triggers[job_id][1]
 
+    def get_job(self, pipeline_id, trigger_id) -> Optional[Job]:
+        return self.scheduler.get_job(get_job_id(pipeline_id, trigger_id))
+
     def start(self):
         self.scheduler.start()
 
@@ -80,7 +84,7 @@ async def run_pipeline_now(
     executor.submit_job(
         Job(
             orchestrator.scheduler,
-            id=f"{pipeline.id}: {MANUAL_TRIGGER_ID}",
+            id=get_job_id(pipeline.id, MANUAL_TRIGGER_ID),
             func=run,
             args=[],
             kwargs={"pipeline": pipeline, "trigger": trigger, "params": params},
