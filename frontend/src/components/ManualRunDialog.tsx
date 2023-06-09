@@ -204,12 +204,19 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
         onClose={() => setOpen(false)}
       >
         <form
-          method="dialog"
           onSubmit={(event) => {
+            event.preventDefault()
+
             const params = Object.fromEntries(
               new FormData(event.target as HTMLFormElement).entries()
             )
-            runPipelineMutation.mutateAsync(params)
+
+            try {
+              runPipelineMutation.mutateAsync(params)
+              setOpen(false)
+            } catch (error) {
+              console.error(error)
+            }
           }}
         >
           {query.isLoading ? (
@@ -226,11 +233,17 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
               onClick={() => {
                 setOpen(false)
               }}
+              disabled={runPipelineMutation.isLoading}
             >
               Close
             </Button>
 
-            <Button color="indigo" type="submit">
+            <Button
+              color="indigo"
+              type="submit"
+              icon={PlayIcon}
+              disabled={runPipelineMutation.isLoading}
+            >
               Run
             </Button>
           </Flex>
