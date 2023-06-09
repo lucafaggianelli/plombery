@@ -220,6 +220,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
 
           <Flex className="justify-end space-x-6 mt-6">
             <Button
+              type="button"
               variant="secondary"
               color="indigo"
               onClick={() => {
