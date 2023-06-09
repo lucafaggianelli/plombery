@@ -55,3 +55,11 @@ export const formatDateTime = (date: Date) =>
 
 export const formatTimestamp = (date: Date) =>
   format(date, 'HH:mm:ss.SSS')
+
+export const formatDate = (date: Date) =>
+  format(date, 'd MMM yyyy')
+
+const numberFormatter = new Intl.NumberFormat()
+
+export const formatNumber = (value: number) =>
+  numberFormatter.format(value)
