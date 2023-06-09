@@ -97,7 +97,7 @@ export const runPipeline = (
   pipelineId: string
 ): UseMutationOptions<void, HTTPError, any> => ({
   async mutationFn(params) {
-    client.post({ url: `/pipelines/${pipelineId}/run`, json: params })
+    await client.post({ url: `/pipelines/${pipelineId}/run`, json: params })
   },
 })
 
