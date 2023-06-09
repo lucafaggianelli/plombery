@@ -18,7 +18,7 @@ class PipelineRunBase(BaseModel):
 
 class PipelineRun(PipelineRunBase):
     id: int
-    duration: int
+    duration: float
     tasks_run: List[TaskRun]
 
 

@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Badge,
+  Bold,
   Color,
   Flex,
   Grid,
@@ -19,7 +20,11 @@ import useWebSocket from 'react-use-websocket'
 
 import { getLogs, getWebsocketUrl } from '@/repository'
 import { LogEntry, LogLevel, Pipeline, WebSocketMessage } from '@/types'
-import { formatTimestamp, getTasksColors } from '@/utils'
+import {
+  formatNumber,
+  formatTimestamp,
+  getTasksColors,
+} from '@/utils'
 import TracebackInfoDialog from './TracebackInfoDialog'
 
 interface Props {
@@ -154,14 +159,15 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
               return (
                 <TableRow key={log.id}>
                   <TableCell>
-                    <span className="font-mono text-xs text-slate-500">
-                      {formatTimestamp(log.timestamp)}
-                    </span>
-                    {duration >= 0 && (
-                      <span className="font-mono text-xs text-slate-500 ml-2">
-                        +{duration} ms
-                      </span>
-                    )}
+                    <Text className="font-mono text-xs">
+                      <span>{formatTimestamp(log.timestamp)}</span>
+
+                      {duration >= 0 && (
+                        <span className="text-slate-400 ml-2">
+                          +{formatNumber(duration)} ms
+                        </span>
+                      )}
+                    </Text>
                   </TableCell>
                   <TableCell>
                     <Badge size="xs" color={LOG_LEVELS_COLORS[log.level]}>
