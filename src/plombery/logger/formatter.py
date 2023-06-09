@@ -1,5 +1,6 @@
 import logging
 import json
+from time import gmtime
 
 
 DEFAULT_LOG_ATTRIBUTES = {
@@ -33,6 +34,9 @@ class JsonFormatter(logging.Formatter):
         self.default_time_format = time_format
         self.default_msec_format = msec_format
         self.datefmt = None
+
+        # Store log timestamp in UTC time
+        self.converter = gmtime
 
     def usesTime(self) -> bool:
         """
