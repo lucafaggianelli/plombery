@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { Text, Title, Flex, Card, List, Bold, ListItem } from '@tremor/react'
+import { Text, Title, Card, List, Bold, ListItem } from '@tremor/react'
+import { formatDistanceToNow } from 'date-fns'
 import { Link } from 'react-router-dom'
 import React from 'react'
 
 import { listPipelines } from '@/repository'
 import ManualRunDialog from './ManualRunDialog'
-import TriggersList from './TriggersList'
 
 const PipelinesList: React.FC = () => {
   const query = useQuery({
@@ -26,7 +26,7 @@ const PipelinesList: React.FC = () => {
 
       <List>
         {pipelines.map((pipeline) => (
-          <ListItem key={pipeline.id}>
+          <ListItem key={pipeline.id} className="gap-x-1">
             <div className="min-w-0">
               <Text className="truncate">
                 <Bold>
@@ -37,6 +37,23 @@ const PipelinesList: React.FC = () => {
                 <Text className="truncate">{pipeline.description}</Text>
               )}
             </div>
+
+            {pipeline.hasTrigger() && (
+              <div
+                className="min-w-0"
+                title={pipeline.getNextFireTime()?.toString()}
+              >
+                <Text className="truncate">Next fire time</Text>
+                <Text className="truncate">
+                  <Bold>
+                    {formatDistanceToNow(pipeline.getNextFireTime()!, {
+                      addSuffix: true,
+                      includeSeconds: true,
+                    })}
+                  </Bold>
+                </Text>
+              </div>
+            )}
 
             <ManualRunDialog pipeline={pipeline} />
           </ListItem>

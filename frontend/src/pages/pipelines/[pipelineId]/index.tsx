@@ -24,6 +24,7 @@ import { getPipeline, getPipelineRunUrl, listRuns } from '@/repository'
 import ManualRunDialog from '@/components/ManualRunDialog'
 import TriggersList from '@/components/TriggersList'
 import PageLayout from '@/components/PageLayout'
+import { Pipeline } from '@/types'
 
 const PipelineView: React.FC = () => {
   const urlParams = useParams()
@@ -32,7 +33,7 @@ const PipelineView: React.FC = () => {
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],
     queryFn: () => getPipeline(pipelineId),
-    initialData: { id: '', name: '', description: '', tasks: [], triggers: [] },
+    initialData: new Pipeline('', '', '', [], []),
     enabled: !!pipelineId,
   })
 

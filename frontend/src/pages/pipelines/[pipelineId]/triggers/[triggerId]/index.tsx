@@ -30,8 +30,7 @@ import {
   getTriggerRunUrl,
   runPipelineTrigger,
 } from '@/repository'
-import { formatDateTime } from '@/utils'
-import { Trigger } from '@/types'
+import { Pipeline, Trigger } from '@/types'
 
 const TriggerView: React.FC = () => {
   const urlParams = useParams()
@@ -41,7 +40,7 @@ const TriggerView: React.FC = () => {
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],
     queryFn: () => getPipeline(pipelineId),
-    initialData: { id: '', name: '', description: '', tasks: [], triggers: [] },
+    initialData: new Pipeline('', '', '', [], []),
     enabled: !!pipelineId,
   })
 
