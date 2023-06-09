@@ -40,7 +40,7 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
       <List>
         {pipeline.tasks.map((task, i) => (
           <ListItem key={task.id} className="space-x-4">
-            {run.tasks_run[i] ? (
+            {run.tasks_run && run.tasks_run[i] ? (
               <Icon
                 variant="light"
                 icon={STATUS_ICONS[run.tasks_run[i].status]}
@@ -69,7 +69,7 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
               )}
             </div>
 
-            {run.tasks_run[i]?.has_output && (
+            {run.tasks_run && run.tasks_run[i]?.has_output && (
               <Button
                 variant="light"
                 color="indigo"
