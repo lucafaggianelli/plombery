@@ -1,4 +1,5 @@
 from typing import List
+import datetime
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import parse_obj_as
@@ -50,6 +51,18 @@ class PydanticType(sa.types.TypeDecorator):
         return parse_obj_as(self.pydantic_type, value) if value else None
 
 
+class AwareDateTime(sa.types.TypeDecorator):
+    """
+    Results returned as timezone-aware datetimes (UTC timezone),
+    not naive ones.
+    """
+
+    impl = DateTime
+
+    def process_result_value(self, value, dialect):
+        return value.replace(tzinfo=datetime.timezone.utc)
+
+
 class PipelineRun(Base):
     __tablename__ = "pipeline_runs"
 
@@ -57,9 +70,9 @@ class PipelineRun(Base):
     pipeline_id = Column(String, index=True)
     trigger_id = Column(String)
     status = Column(String)
-    start_time = Column(DateTime)
+    start_time = Column(AwareDateTime)
     duration = Column(Integer, default=0)
-    tasks_run = Column(PydanticType(List[TaskRun]))
+    tasks_run = Column(PydanticType(List[TaskRun]), default=list)
 
 
 Base.metadata.create_all(bind=engine)

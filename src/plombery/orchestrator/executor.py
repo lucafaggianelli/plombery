@@ -1,6 +1,6 @@
 from typing import Callable, Coroutine, List
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 import inspect
 
 from pydantic import BaseModel
@@ -22,6 +22,10 @@ from plombery.pipeline.context import pipeline_context, run_context
 from plombery.schemas import PipelineRunStatus, TaskRun
 
 
+def utcnow():
+    return datetime.now(tz=timezone.utc)
+
+
 def _run_all_tasks(coros: List[Coroutine]):
     tasks = set()
 
@@ -35,7 +39,7 @@ def _run_all_tasks(coros: List[Coroutine]):
 def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger = None):
     pipeline_run = create_pipeline_run(
         PipelineRunCreate(
-            start_time=datetime.now(),
+            start_time=utcnow(),
             pipeline_id=pipeline.id,
             trigger_id=trigger.id if trigger else MANUAL_TRIGGER_ID,
             status="running",
@@ -48,7 +52,7 @@ def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger = None):
 
 
 def _on_pipeline_executed(pipeline_run: PipelineRun, status: PipelineRunStatus):
-    update_pipeline_run(pipeline_run, datetime.now(), status)
+    update_pipeline_run(pipeline_run, utcnow(), status)
 
     _send_pipeline_event(pipeline_run)
 
@@ -106,7 +110,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
         task_run = TaskRun(task_id=task.id)
 
         try:
-            task_start_time = datetime.now()
+            task_start_time = utcnow()
             flowing_data = await _execute_task(task, flowing_data, params)
             task_run.status = PipelineRunStatus.COMPLETED
         except Exception as e:
@@ -115,7 +119,7 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
             task_run.status = PipelineRunStatus.FAILED
         finally:
             task_run.duration = (
-                datetime.now() - task_start_time
+                utcnow() - task_start_time
             ).total_seconds() * 1000
 
             task_run.has_output = store_task_output(
