@@ -10,6 +10,7 @@ import {
   Text,
   Title,
 } from '@tremor/react'
+import { formatDistanceToNow, differenceInDays } from 'date-fns'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import useWebSocket from 'react-use-websocket'
@@ -96,11 +97,12 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
     <Card>
       <Title>Runs</Title>
 
-      <Table>
-        <TableHead>
+      <Table className="overflow-auto max-h-[50vh]">
+        <TableHead className="sticky top-0 bg-white shadow">
           <TableRow>
             <TableHeaderCell className="text-right">#</TableHeaderCell>
             <TableHeaderCell>Status</TableHeaderCell>
+            {!pipelineId && <TableHeaderCell>Pipeline</TableHeaderCell>}
             {!triggerId && <TableHeaderCell>Trigger</TableHeaderCell>}
             <TableHeaderCell>Started at</TableHeaderCell>
             <TableHeaderCell className="text-right">Duration</TableHeaderCell>
@@ -121,6 +123,18 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
               <TableCell>
                 <StatusBadge status={run.status} />
               </TableCell>
+              {!pipelineId && (
+                <TableCell>
+                  <Link
+                    to={`/pipelines/${run.pipeline_id}`}
+                    className="link--arrow"
+                    title="View pipeline details"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {run.pipeline_id}
+                  </Link>
+                </TableCell>
+              )}
               {!triggerId && (
                 <TableCell>
                   <Link
@@ -133,8 +147,15 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
                   </Link>
                 </TableCell>
               )}
-              <TableCell>
-                <Text>{formatDateTime(run.start_time)}</Text>
+              <TableCell title={formatDateTime(run.start_time)}>
+                <Text>
+                  {differenceInDays(new Date(), run.start_time) <= 1
+                    ? formatDistanceToNow(run.start_time, {
+                        addSuffix: true,
+                        includeSeconds: true,
+                      })
+                    : formatDateTime(run.start_time)}
+                </Text>
               </TableCell>
               <TableCell className="text-right">
                 {run.status !== 'running' ? (

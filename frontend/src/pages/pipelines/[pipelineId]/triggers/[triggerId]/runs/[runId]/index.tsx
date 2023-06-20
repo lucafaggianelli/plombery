@@ -1,5 +1,15 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Card, CategoryBar, Flex, Grid, Metric, Text, Title } from '@tremor/react'
+import {
+  Bold,
+  Card,
+  CategoryBar,
+  Flex,
+  Grid,
+  Metric,
+  Text,
+  Title,
+} from '@tremor/react'
+import { addMilliseconds, isSameDay } from 'date-fns'
 import { useParams } from 'react-router-dom'
 import useWebSocket from 'react-use-websocket'
 import { useEffect } from 'react'
@@ -11,8 +21,12 @@ import StatusBadge from '@/components/StatusBadge'
 import RunsTasksList from '@/components/Tasks'
 import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun, getWebsocketUrl } from '@/repository'
-import { Trigger, WebSocketMessage } from '@/types'
-import { TASKS_COLORS, getTasksColors } from '@/utils'
+import { Pipeline, Trigger, WebSocketMessage } from '@/types'
+import {
+  TASKS_COLORS,
+  formatDate,
+  formatTimestamp,
+} from '@/utils'
 
 const RunViewPage = () => {
   const { lastJsonMessage } = useWebSocket(getWebsocketUrl().toString())
@@ -39,7 +53,7 @@ const RunViewPage = () => {
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],
     queryFn: () => getPipeline(pipelineId),
-    initialData: { id: '', name: '', description: '', tasks: [], triggers: [] },
+    initialData: new Pipeline('', '', '', [], []),
     enabled: !!pipelineId,
   })
 
@@ -66,8 +80,15 @@ const RunViewPage = () => {
     return <div>Trigger not found</div>
   }
 
-  const totalTasksDuration = (run.tasks_run || []).reduce((tot, cur) => tot + cur.duration, 0)
-  const tasksRunDurations = (run.tasks_run || []).map(tr => tr.duration / totalTasksDuration * 100)
+  const totalTasksDuration = (run.tasks_run || []).reduce(
+    (tot, cur) => tot + cur.duration,
+    0
+  )
+  const tasksRunDurations = (run.tasks_run || []).map((tr) =>
+    totalTasksDuration ? (tr.duration / totalTasksDuration) * 100 : 0
+  )
+
+  const runEndTime = addMilliseconds(run.start_time, run.duration)
 
   return (
     <PageLayout
@@ -97,6 +118,24 @@ const RunViewPage = () => {
             showLabels={false}
             className="mt-3"
           />
+
+          <Flex alignItems="start" className="mt-2">
+            <div>
+              <Text>
+                <Bold>{formatTimestamp(run.start_time)}</Bold>
+              </Text>
+              <Text className="mt-1">{formatDate(run.start_time)}</Text>
+            </div>
+
+            <div className="text-right">
+              <Text>
+                <Bold>{formatTimestamp(runEndTime)}</Bold>
+              </Text>
+              {!isSameDay(run.start_time, runEndTime) && (
+                <Text>{formatDate(runEndTime)}</Text>
+              )}
+            </div>
+          </Flex>
         </Card>
       </Grid>
 

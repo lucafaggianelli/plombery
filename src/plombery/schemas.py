@@ -1,7 +1,7 @@
 from typing import List, Optional
 from enum import Enum
 
-from pydantic import BaseModel, Field, PositiveInt
+from pydantic import BaseModel, Field, NonNegativeFloat
 
 
 class PipelineRunStatus(str, Enum):
@@ -12,7 +12,7 @@ class PipelineRunStatus(str, Enum):
 
 
 class TaskRun(BaseModel):
-    duration: Optional[PositiveInt]
+    duration: Optional[NonNegativeFloat]
     """Task duration in milliseconds"""
     has_output: bool = False
     """True if the task generated an output"""

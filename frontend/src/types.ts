@@ -18,6 +18,7 @@ export interface Trigger {
   schedule?: string
   paused?: boolean
   params?: any
+  next_fire_time?: Date
 }
 
 export interface Task {
@@ -26,12 +27,30 @@ export interface Task {
   description: string
 }
 
-export interface Pipeline {
-  id: string
-  name: string
-  description: string
-  tasks: Task[]
-  triggers: Trigger[]
+export class Pipeline {
+  constructor(
+    public id: string,
+    public name: string,
+    public description: string,
+    public tasks: Task[],
+    public triggers: Trigger[]
+  ) {}
+
+  hasTrigger(): boolean {
+    return this.triggers.some((trigger) => !!trigger.schedule)
+  }
+
+  getNextFireTime(): Date | undefined {
+    const sortedTriggers = this.triggers
+      .filter((trigger) => !!trigger.next_fire_time)
+      .sort((a, b) => a.next_fire_time!.getTime() - b.next_fire_time!.getTime())
+
+    const earliestTrigger = sortedTriggers[0]
+
+    if (earliestTrigger) {
+      return earliestTrigger.next_fire_time
+    }
+  }
 }
 
 export interface TaskRun {

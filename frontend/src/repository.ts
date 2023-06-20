@@ -30,15 +30,44 @@ export const getWebsocketUrl = () => {
 }
 
 export const listPipelines = async (): Promise<Pipeline[]> => {
-  const pipelines = await client.get<any[]>('/pipelines')
+  const pipelines = await client.get<Pipeline[]>('/pipelines')
 
-  return pipelines as Pipeline[]
+  pipelines.forEach((pipeline) => {
+    pipeline.triggers.forEach((trigger) => {
+      if (trigger.next_fire_time) {
+        trigger.next_fire_time = new Date(trigger.next_fire_time)
+      }
+    })
+  })
+
+  return pipelines.map(
+    (pipeline) =>
+      new Pipeline(
+        pipeline.id,
+        pipeline.name,
+        pipeline.description,
+        pipeline.tasks,
+        pipeline.triggers
+      )
+  )
 }
 
 export const getPipeline = async (pipelineId: string): Promise<Pipeline> => {
-  const pipeline = await client.get(`/pipelines/${pipelineId}`)
+  const pipeline = await client.get<Pipeline>(`/pipelines/${pipelineId}`)
 
-  return pipeline as Pipeline
+  pipeline.triggers.forEach((trigger) => {
+    if (trigger.next_fire_time) {
+      trigger.next_fire_time = new Date(trigger.next_fire_time)
+    }
+  })
+
+  return new Pipeline(
+    pipeline.id,
+    pipeline.name,
+    pipeline.description,
+    pipeline.tasks,
+    pipeline.triggers
+  )
 }
 
 export const getPipelineInputSchema = async (pipelineId: string) => {
@@ -76,6 +105,10 @@ export const getRun = async (runId: number): Promise<PipelineRun> => {
 export const getLogs = async (runId: number): Promise<LogEntry[]> => {
   const rawLogs = await client.get<string>(`/runs/${runId}/logs`)
 
+  if (!rawLogs) {
+    return []
+  }
+
   // Logs data is in JSONL format (1 JSON object per line)
   return rawLogs.split('\n').map((line, i) => {
     const parsed = JSON.parse(line)
@@ -97,7 +130,7 @@ export const runPipeline = (
   pipelineId: string
 ): UseMutationOptions<void, HTTPError, any> => ({
   async mutationFn(params) {
-    client.post({ url: `/pipelines/${pipelineId}/run`, json: params })
+    await client.post({ url: `/pipelines/${pipelineId}/run`, json: params })
   },
 })
 
