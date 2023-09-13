@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Navigate to run page after running manually a pipeline or trigger (#71)
 
+### Fixed
+- Sometimes logs are appended to an existing logs files of previous runs (#131)
+
 ## [0.3.2] - 2023-06-20
 
 ### Added
