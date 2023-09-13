@@ -78,7 +78,7 @@ orchestrator = _Orchestrator()
 
 
 async def run_pipeline_now(
-    pipeline: Pipeline, trigger: Trigger = None, params: Any = None
+    pipeline: Pipeline, trigger: Optional[Trigger] = None, params: Any = None
 ):
     executor: AsyncIOExecutor = orchestrator.scheduler._lookup_executor("default")
     executor.submit_job(

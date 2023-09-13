@@ -13,7 +13,7 @@ class Pipeline(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     params: Optional[Type[BaseModel]] = Field(exclude=True, default=None)
-    triggers: Optional[List[Trigger]] = Field(default_factory=list)
+    triggers: List[Trigger] = Field(default_factory=list)
 
     class Config:
         validate_assignment = True
@@ -28,7 +28,7 @@ class Pipeline(BaseModel):
     @validator("description", always=True)
     def generate_default_description(
         cls, description: str, values: Dict[str, Any]
-    ) -> str:
+    ) -> Optional[str]:
         if not description:
             return cls.__doc__
 

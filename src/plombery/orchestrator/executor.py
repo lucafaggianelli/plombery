@@ -1,4 +1,4 @@
-from typing import Callable, Coroutine, List
+from typing import Callable, Coroutine, List, Optional
 import asyncio
 from datetime import datetime, timezone
 import inspect
@@ -36,7 +36,7 @@ def _run_all_tasks(coros: List[Coroutine]):
         task.add_done_callback(tasks.discard)
 
 
-def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger = None):
+def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
     pipeline_run = create_pipeline_run(
         PipelineRunCreate(
             start_time=utcnow(),
@@ -81,7 +81,7 @@ def _send_pipeline_event(pipeline_run: PipelineRun):
     _run_all_tasks([notify_coro, ws_coro])
 
 
-async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
+async def run(pipeline: Pipeline, trigger: Optional[Trigger] = None, params: Optional[dict] = None):
     print(
         f"Executing pipeline `{pipeline.id}` via trigger `{trigger.id if trigger else MANUAL_TRIGGER_ID}`"
     )
@@ -109,8 +109,9 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
 
         task_run = TaskRun(task_id=task.id)
 
+        task_start_time = utcnow()
+
         try:
-            task_start_time = utcnow()
             flowing_data = await _execute_task(task, flowing_data, params)
             task_run.status = PipelineRunStatus.COMPLETED
         except Exception as e:
@@ -162,7 +163,7 @@ def _has_positional_args(func: Callable) -> bool:
 async def _execute_task(
     task: Task,
     flowing_data,
-    params: BaseModel = None,
+    params: Optional[BaseModel] = None,
 ):
     args = [flowing_data] if _has_positional_args(task.run) else []
     kwargs = {"params": params} if params else {}

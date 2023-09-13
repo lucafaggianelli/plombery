@@ -17,10 +17,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from plombery.api.authentication import NeedsAuth, init_auth
 from plombery.config import settings
-from plombery.constants import MANUAL_TRIGGER_ID
 from plombery.pipeline.pipeline import Pipeline, Trigger
-from plombery.pipeline._utils import get_job_id
-from plombery.orchestrator import orchestrator
+from plombery.orchestrator import orchestrator, run_pipeline_now
 from plombery.orchestrator.executor import (
     get_pipeline_run_logs,
     get_pipeline_run_data,
@@ -67,9 +65,8 @@ def _populate_next_fire_time(pipeline: Pipeline) -> None:
         if not trigger.schedule:
             continue
 
-        trigger.next_fire_time = orchestrator.get_job(
-            pipeline.id, trigger.id
-        ).next_run_time
+        if job := orchestrator.get_job(pipeline.id, trigger.id):
+            trigger.next_fire_time = job.next_run_time
 
 
 @api.get(
@@ -118,13 +115,18 @@ def get_pipeline_input_schema(pipeline_id: str, user=NeedsAuth):
     "/runs",
     tags=["Runs"],
 )
-def list_runs(pipeline_id: str = None, trigger_id: str = None, user=NeedsAuth):
+def list_runs(
+    pipeline_id: Optional[str] = None, trigger_id: Optional[str] = None, user=NeedsAuth
+):
     return list_pipeline_runs(pipeline_id=pipeline_id, trigger_id=trigger_id)
 
 
 @api.get("/runs/{run_id}", tags=["Runs"])
 def get_run(run_id: int, user=NeedsAuth):
-    return get_pipeline_run(run_id)
+    if not (run := get_pipeline_run(run_id)):
+        raise HTTPException(404, f"The pipeline run {run_id} doesn't exist")
+
+    return run
 
 
 @api.get("/runs/{run_id}/logs", tags=["Runs"])
@@ -147,27 +149,16 @@ def get_data(run_id: int, task: str, user=NeedsAuth):
 async def run_pipeline(
     pipeline_id: str, params: Optional[dict] = Body(), user=NeedsAuth
 ):
-    pipeline = orchestrator.get_pipeline(pipeline_id)
+    if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
+        raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
 
-    executor: AsyncIOExecutor = orchestrator.scheduler._lookup_executor("default")
-    executor.submit_job(
-        Job(
-            orchestrator.scheduler,
-            id=get_job_id(pipeline.id, MANUAL_TRIGGER_ID),
-            func=run,
-            args=[],
-            kwargs={"pipeline": pipeline, "params": params},
-            max_instances=1,
-            misfire_grace_time=None,
-            trigger=DateTrigger(),
-        ),
-        [datetime.now()],
-    )
+    await run_pipeline_now(pipeline, None, params)
 
 
 @api.post("/pipelines/{pipeline_id}/triggers/{trigger_id}/run", tags=["Runs"])
 async def run_trigger(pipeline_id: str, trigger_id: str, user=NeedsAuth):
-    pipeline = orchestrator.get_pipeline(pipeline_id)
+    if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
+        raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
 
     triggers = [trigger for trigger in pipeline.triggers if trigger.id == trigger_id]
 

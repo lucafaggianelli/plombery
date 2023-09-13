@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 from plombery.schemas import PipelineRunStatus
@@ -40,7 +40,9 @@ def update_pipeline_run(
     db.commit()
 
 
-def list_pipeline_runs(pipeline_id: str = None, trigger_id: str = None):
+def list_pipeline_runs(
+    pipeline_id: Optional[str] = None, trigger_id: Optional[str] = None
+):
     db = SessionLocal()
     db.expire_on_commit = False
 
@@ -62,10 +64,12 @@ def list_pipeline_runs(pipeline_id: str = None, trigger_id: str = None):
     return pipeline_runs
 
 
-def get_pipeline_run(pipeline_run_id: int):
+def get_pipeline_run(pipeline_run_id: int) -> Optional[models.PipelineRun]:
     db = SessionLocal()
 
-    pipeline_run: models.PipelineRun = db.query(models.PipelineRun).get(pipeline_run_id)
+    pipeline_run: Optional[models.PipelineRun] = db.query(models.PipelineRun).get(
+        pipeline_run_id
+    )
 
     return pipeline_run
 
