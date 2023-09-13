@@ -1,9 +1,5 @@
 from typing import Optional
-from datetime import datetime
 
-from apscheduler.job import Job
-from apscheduler.executors.asyncio import AsyncIOExecutor
-from apscheduler.triggers.date import DateTrigger
 from fastapi import (
     Body,
     FastAPI,
@@ -19,15 +15,8 @@ from plombery.api.authentication import NeedsAuth, init_auth
 from plombery.config import settings
 from plombery.pipeline.pipeline import Pipeline, Trigger
 from plombery.orchestrator import orchestrator, run_pipeline_now
-from plombery.orchestrator.executor import (
-    get_pipeline_run_logs,
-    get_pipeline_run_data,
-    run,
-)
-from plombery.database.repository import (
-    list_pipeline_runs,
-    get_pipeline_run,
-)
+from plombery.orchestrator.executor import get_pipeline_run_logs, get_pipeline_run_data
+from plombery.database.repository import list_pipeline_runs, get_pipeline_run
 from plombery.websocket import manager
 from .middlewares import FRONTEND_FOLDER, SPAStaticFiles
 
@@ -123,10 +112,10 @@ def list_runs(
 
 @api.get("/runs/{run_id}", tags=["Runs"])
 def get_run(run_id: int, user=NeedsAuth):
-    if not (run := get_pipeline_run(run_id)):
+    if not (pipeline_run := get_pipeline_run(run_id)):
         raise HTTPException(404, f"The pipeline run {run_id} doesn't exist")
 
-    return run
+    return pipeline_run
 
 
 @api.get("/runs/{run_id}/logs", tags=["Runs"])
@@ -152,7 +141,7 @@ async def run_pipeline(
     if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
         raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
 
-    await run_pipeline_now(pipeline, None, params)
+    return await run_pipeline_now(pipeline, None, params)
 
 
 @api.post("/pipelines/{pipeline_id}/triggers/{trigger_id}/run", tags=["Runs"])
@@ -167,20 +156,7 @@ async def run_trigger(pipeline_id: str, trigger_id: str, user=NeedsAuth):
 
     trigger = triggers[0]
 
-    executor: AsyncIOExecutor = orchestrator.scheduler._lookup_executor("default")
-    executor.submit_job(
-        Job(
-            orchestrator.scheduler,
-            id=f"{pipeline.id}: {trigger.id}",
-            func=run,
-            args=[],
-            kwargs={"pipeline": pipeline, "trigger": trigger},
-            max_instances=1,
-            misfire_grace_time=None,
-            trigger=DateTrigger(),
-        ),
-        [datetime.now()],
-    )
+    return await run_pipeline_now(pipeline, trigger)
 
 
 @api.websocket("/ws")

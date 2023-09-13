@@ -14,4 +14,9 @@ def prettify_name(name: str) -> str:
 
 
 def get_job_id(pipeline_id: str, trigger_id: str) -> str:
+    """
+    Generate a Job ID for APScheduler, this is used to find back
+    the pipeline and the trigger that are associated with a Job
+    """
+
     return f"{pipeline_id}: {trigger_id}"

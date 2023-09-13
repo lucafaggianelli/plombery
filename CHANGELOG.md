@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+### Added
+- Navigate to run page after running manually a pipeline or trigger (#71)
+
 ## [0.3.2] - 2023-06-20
 
 ### Added
