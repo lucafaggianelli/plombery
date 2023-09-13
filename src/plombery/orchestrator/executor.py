@@ -1,4 +1,4 @@
-from typing import Callable, Coroutine, List
+from typing import Callable, Coroutine, List, Optional
 import asyncio
 from datetime import datetime, timezone
 import inspect
@@ -36,13 +36,13 @@ def _run_all_tasks(coros: List[Coroutine]):
         task.add_done_callback(tasks.discard)
 
 
-def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger = None):
+def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
     pipeline_run = create_pipeline_run(
         PipelineRunCreate(
             start_time=utcnow(),
             pipeline_id=pipeline.id,
             trigger_id=trigger.id if trigger else MANUAL_TRIGGER_ID,
-            status="running",
+            status=PipelineRunStatus.RUNNING,
         )
     )
 
@@ -51,7 +51,7 @@ def _on_pipeline_start(pipeline: Pipeline, trigger: Trigger = None):
     return pipeline_run
 
 
-def _on_pipeline_executed(pipeline_run: PipelineRun, status: PipelineRunStatus):
+def _on_pipeline_status_changed(pipeline_run: PipelineRun, status: PipelineRunStatus):
     update_pipeline_run(pipeline_run, utcnow(), status)
 
     _send_pipeline_event(pipeline_run)
@@ -81,24 +81,43 @@ def _send_pipeline_event(pipeline_run: PipelineRun):
     _run_all_tasks([notify_coro, ws_coro])
 
 
-async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
-    print(
-        f"Executing pipeline `{pipeline.id}` via trigger `{trigger.id if trigger else MANUAL_TRIGGER_ID}`"
-    )
+async def run(
+    pipeline: Pipeline,
+    trigger: Optional[Trigger] = None,
+    params: Optional[dict] = None,
+    pipeline_run: Optional[PipelineRun] = None,
+):
+    """
+    This is the function that actually runs the pipeline, running all its tasks.
 
-    pipeline_run = _on_pipeline_start(pipeline, trigger)
+    `pipeline_run` is typically supplied when the pipeline is run manually,
+        in this case one wants to know immediately the run_id to follow
+        the execution of the pipeline.
+    """
+
+    if pipeline_run:
+        _on_pipeline_status_changed(pipeline_run, PipelineRunStatus.RUNNING)
+    else:
+        pipeline_run = _on_pipeline_start(pipeline, trigger)
+
     pipeline_run.tasks_run = []
 
     pipeline_token = pipeline_context.set(pipeline)
     run_token = run_context.set(pipeline_run)
 
-    input_params = trigger.params if trigger else params
-    params = None
-
     logger = get_logger()
 
+    logger.info(
+        "Executing pipeline `%s` via trigger `%s`",
+        pipeline.id,
+        trigger.id if trigger else MANUAL_TRIGGER_ID,
+    )
+
+    input_params = trigger.params if trigger else params
+    pipeline_params: Optional[BaseModel] = None
+
     if pipeline.params:
-        params = pipeline.params(**(input_params or {}))
+        pipeline_params = pipeline.params(**(input_params or {}))
     elif input_params:
         logger.warning("This pipeline doesn't support input params")
 
@@ -109,18 +128,17 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
 
         task_run = TaskRun(task_id=task.id)
 
+        task_start_time = utcnow()
+
         try:
-            task_start_time = utcnow()
-            flowing_data = await _execute_task(task, flowing_data, params)
+            flowing_data = await _execute_task(task, flowing_data, pipeline_params)
             task_run.status = PipelineRunStatus.COMPLETED
         except Exception as e:
             logger.error(str(e), exc_info=e)
             flowing_data = None
             task_run.status = PipelineRunStatus.FAILED
         finally:
-            task_run.duration = (
-                utcnow() - task_start_time
-            ).total_seconds() * 1000
+            task_run.duration = (utcnow() - task_start_time).total_seconds() * 1000
 
             task_run.has_output = store_task_output(
                 pipeline_run.id, task.id, flowing_data
@@ -130,12 +148,12 @@ async def run(pipeline: Pipeline, trigger: Trigger = None, params: dict = None):
 
             if task_run.status == PipelineRunStatus.FAILED:
                 # A task failed so the entire pipeline failed
-                _on_pipeline_executed(pipeline_run, PipelineRunStatus.FAILED)
+                _on_pipeline_status_changed(pipeline_run, PipelineRunStatus.FAILED)
                 break
 
     else:
         # All task succeeded so the entire pipeline succeeded
-        _on_pipeline_executed(pipeline_run, PipelineRunStatus.COMPLETED)
+        _on_pipeline_status_changed(pipeline_run, PipelineRunStatus.COMPLETED)
 
     pipeline_context.reset(pipeline_token)
     run_context.reset(run_token)
@@ -162,7 +180,7 @@ def _has_positional_args(func: Callable) -> bool:
 async def _execute_task(
     task: Task,
     flowing_data,
-    params: BaseModel = None,
+    params: Optional[BaseModel] = None,
 ):
     args = [flowing_data] if _has_positional_args(task.run) else []
     kwargs = {"params": params} if params else {}

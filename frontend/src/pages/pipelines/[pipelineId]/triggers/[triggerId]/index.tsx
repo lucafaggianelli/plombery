@@ -12,7 +12,7 @@ import {
   Grid,
 } from '@tremor/react'
 import { PlayIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import React from 'react'
 
 import TriggerParamsDialog from '@/components/TriggerParamsDialog'
@@ -33,6 +33,7 @@ import {
 import { Pipeline, Trigger } from '@/types'
 
 const TriggerView: React.FC = () => {
+  const navigate = useNavigate()
   const urlParams = useParams()
   const pipelineId = urlParams.pipelineId as string
   const triggerId = urlParams.triggerId as string
@@ -51,9 +52,9 @@ const TriggerView: React.FC = () => {
     enabled: !!triggerId,
   })
 
-  const runPipelineMutation = useMutation({
-    mutationFn: () => runPipelineTrigger(pipelineId, triggerId),
-  })
+  const runPipelineMutation = useMutation(
+    runPipelineTrigger(pipelineId, triggerId)
+  )
 
   if (runsQuery.isLoading || pipelineQuery.isLoading)
     return <div>Loading...</div>
@@ -81,7 +82,13 @@ const TriggerView: React.FC = () => {
       variant="secondary"
       icon={PlayIcon}
       onClick={() => {
-        runPipelineMutation.mutateAsync()
+        runPipelineMutation.mutateAsync(undefined, {
+          onSuccess(data) {
+            navigate(
+              `/pipelines/${data.pipeline_id}/triggers/${data.trigger_id}/runs/${data.id}`
+            )
+          },
+        })
       }}
     >
       Run
@@ -94,7 +101,9 @@ const TriggerView: React.FC = () => {
         <div>
           <Flex className="items-start">
             <Flex className="justify-start items-start md:items-center flex-col md:flex-row min-w-0">
-              <Title className="truncate max-w-full">Trigger {trigger.name}</Title>
+              <Title className="truncate max-w-full">
+                Trigger {trigger.name}
+              </Title>
               {trigger.description && (
                 <Text className="truncate max-w-full">
                   <span className="hidden md:inline mx-2">&middot;</span>

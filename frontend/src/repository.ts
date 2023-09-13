@@ -128,9 +128,12 @@ export const getPipelineRunUrl = (pipelineId: string) =>
 
 export const runPipeline = (
   pipelineId: string
-): UseMutationOptions<void, HTTPError, any> => ({
+): UseMutationOptions<PipelineRun, HTTPError, any> => ({
   async mutationFn(params) {
-    await client.post({ url: `/pipelines/${pipelineId}/run`, json: params })
+    return await client.post<PipelineRun>({
+      url: `/pipelines/${pipelineId}/run`,
+      json: params,
+    })
   },
 })
 
@@ -143,9 +146,11 @@ export const getTriggerRunUrl = (
     absolute ? BASE_URL : ''
   }/pipelines/${pipelineId}/triggers/${triggerId}/run`
 
-export const runPipelineTrigger = async (
+export const runPipelineTrigger = (
   pipelineId: string,
   triggerId: string
-) => {
-  return await client.post(getTriggerRunUrl(pipelineId, triggerId, false))
-}
+): UseMutationOptions<PipelineRun, HTTPError> => ({
+  async mutationFn() {
+    return await client.post<PipelineRun>(getTriggerRunUrl(pipelineId, triggerId, false))
+  },
+})

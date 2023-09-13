@@ -7,8 +7,12 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.date import DateTrigger
 
 from plombery.constants import MANUAL_TRIGGER_ID
-from plombery.orchestrator.executor import Pipeline, run, Trigger
+from plombery.database.models import PipelineRun
+from plombery.database.repository import create_pipeline_run
+from plombery.database.schemas import PipelineRunCreate
+from plombery.orchestrator.executor import Pipeline, run, Trigger, utcnow
 from plombery.pipeline._utils import get_job_id
+from plombery.schemas import PipelineRunStatus
 
 
 class _Orchestrator:
@@ -78,19 +82,37 @@ orchestrator = _Orchestrator()
 
 
 async def run_pipeline_now(
-    pipeline: Pipeline, trigger: Trigger = None, params: Any = None
-):
+    pipeline: Pipeline, trigger: Optional[Trigger] = None, params: Any = None
+) -> PipelineRun:
+    trigger_id = trigger.id if trigger else MANUAL_TRIGGER_ID
+
+    pipeline_run = create_pipeline_run(
+        PipelineRunCreate(
+            start_time=utcnow(),
+            pipeline_id=pipeline.id,
+            trigger_id=trigger_id,
+            status=PipelineRunStatus.PENDING,
+        )
+    )
+
     executor: AsyncIOExecutor = orchestrator.scheduler._lookup_executor("default")
     executor.submit_job(
         Job(
             orchestrator.scheduler,
-            id=get_job_id(pipeline.id, MANUAL_TRIGGER_ID),
+            id=get_job_id(pipeline.id, trigger_id),
             func=run,
             args=[],
-            kwargs={"pipeline": pipeline, "trigger": trigger, "params": params},
+            kwargs={
+                "pipeline": pipeline,
+                "trigger": trigger,
+                "params": params,
+                "pipeline_run": pipeline_run,
+            },
             max_instances=1,
             misfire_grace_time=None,
             trigger=DateTrigger(),
         ),
         [datetime.now()],
     )
+
+    return pipeline_run

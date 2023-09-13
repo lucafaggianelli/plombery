@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Bold, Button, Flex, Text, TextInput } from '@tremor/react'
 import { JSONSchema7 } from 'json-schema'
 import { createRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { getPipelineInputSchema, runPipeline } from '../repository'
 import { Pipeline } from '../types'
@@ -177,6 +178,7 @@ interface Props {
 
 const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
   const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
 
   const query = useQuery({
     queryKey: ['pipeline-input', pipeline.id],
@@ -204,7 +206,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
         onClose={() => setOpen(false)}
       >
         <form
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault()
 
             const params = Object.fromEntries(
@@ -212,7 +214,13 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
             )
 
             try {
-              runPipelineMutation.mutateAsync(params)
+              runPipelineMutation.mutateAsync(params, {
+                onSuccess(data) {
+                  navigate(
+                    `/pipelines/${data.pipeline_id}/triggers/${data.trigger_id}/runs/${data.id}`
+                  )
+                },
+              })
               setOpen(false)
             } catch (error) {
               console.error(error)
