@@ -108,8 +108,9 @@ async def run(
     logger = get_logger()
 
     logger.info(
-        "Executing pipeline `%s` via trigger `%s`",
+        "Executing pipeline `%s` #%d via trigger `%s`",
         pipeline.id,
+        pipeline_run.id,
         trigger.id if trigger else MANUAL_TRIGGER_ID,
     )
 

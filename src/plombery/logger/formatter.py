@@ -1,6 +1,7 @@
 import logging
 import json
 from time import gmtime
+from typing import Optional
 
 
 DEFAULT_LOG_ATTRIBUTES = {
@@ -23,8 +24,8 @@ class JsonFormatter(logging.Formatter):
     def __init__(
         self,
         pipeline: str,
-        task: str = None,
-        fmt_dict: dict = None,
+        task: Optional[str] = None,
+        fmt_dict: Optional[dict] = None,
         time_format: str = "%Y-%m-%dT%H:%M:%S",
         msec_format: str = "%s.%03dZ",
     ):
