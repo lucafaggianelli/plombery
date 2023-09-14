@@ -137,7 +137,7 @@ const RunViewPage = () => {
 
       <div className="mt-6">
         <Card>
-          <LogViewer pipeline={pipeline} runId={runId} />
+          <LogViewer pipeline={pipeline} run={run} />
         </Card>
       </div>
     </PageLayout>

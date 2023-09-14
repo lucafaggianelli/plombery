@@ -1,4 +1,4 @@
-export type PipelineRunStatus = 'running' | 'completed' | 'failed' | 'cancelled'
+export type PipelineRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR'
 
 export interface LogEntry {

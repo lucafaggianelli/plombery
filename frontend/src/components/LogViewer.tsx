@@ -18,13 +18,13 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { getLogs } from '@/repository'
 import { useSocket } from '@/socket'
-import { LogEntry, LogLevel, Pipeline, WebSocketMessage } from '@/types'
+import { LogEntry, LogLevel, Pipeline, PipelineRun, WebSocketMessage } from '@/types'
 import { formatNumber, formatTimestamp, getTasksColors } from '@/utils'
 import TracebackInfoDialog from './TracebackInfoDialog'
 
 interface Props {
   pipeline: Pipeline
-  runId: number
+  run: PipelineRun
 }
 
 const LOG_LEVELS_COLORS: Record<LogLevel, Color> = {
@@ -39,25 +39,25 @@ interface FilterType {
   tasks: string[]
 }
 
-const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
+const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
   const [filter, setFilter] = useState<FilterType>({ levels: [], tasks: [] })
-  const { lastMessage } = useSocket(`logs.${runId}`)
+  const { lastMessage } = useSocket(`logs.${run.id}`)
   const queryClient = useQueryClient()
 
-  const query = useQuery(getLogs(runId))
+  const query = useQuery(getLogs(run.id))
 
   const onWsMessage = useCallback(
     (message: WebSocketMessage) => {
       const { data } = message
 
-      queryClient.setQueryData<LogEntry[]>(['logs', runId], (oldLogs = []) => {
+      queryClient.setQueryData<LogEntry[]>(['logs', run.id], (oldLogs = []) => {
         const log: LogEntry = JSON.parse(data)
         log.id = oldLogs.length
         log.timestamp = new Date(log.timestamp)
         return [...oldLogs, log]
       })
     },
-    [runId]
+    [run.id]
   )
 
   useEffect(() => {
@@ -86,6 +86,8 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
   })
 
   const tasksColors = getTasksColors(pipeline.tasks)
+
+  const hasLiveLogs = ['running', 'pending'].includes(run.status)
 
   return (
     <>
@@ -124,14 +126,14 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
           </MultiSelectBox>
         </div>
 
-        <Flex justifyContent="end" className="order-first md:order-last">
+        {hasLiveLogs && <Flex justifyContent="end" className="order-first md:order-last">
           <span className="relative flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
           </span>
 
           <Text className="ml-2 opacity-80">Live logs</Text>
-        </Flex>
+        </Flex>}
       </Grid>
 
       <div className="logs-table">
