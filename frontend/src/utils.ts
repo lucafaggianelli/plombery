@@ -1,5 +1,4 @@
 import {
-  ArrowPathIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
   NoSymbolIcon,
@@ -10,6 +9,7 @@ import { Color } from '@tremor/react'
 import { format } from 'date-fns'
 
 import { PipelineRunStatus, Task } from './types'
+import { RunningIcon } from './components/RunningIcon'
 
 type ExtendedStatus = PipelineRunStatus | 'warning' | 'notrun'
 
@@ -26,7 +26,7 @@ export const STATUS_ICONS: Record<ExtendedStatus, React.ElementType<any>> = {
   completed: CheckCircleIcon,
   failed: XCircleIcon,
   cancelled: StopCircleIcon,
-  running: ArrowPathIcon,
+  running: RunningIcon,
   notrun: NoSymbolIcon,
   warning: ExclamationTriangleIcon,
 }
@@ -53,13 +53,10 @@ export const getTasksColors = (tasks: Task[]) => {
 export const formatDateTime = (date: Date) =>
   format(date, 'd MMM yyyy HH:mm:ss (XXX)')
 
-export const formatTimestamp = (date: Date) =>
-  format(date, 'HH:mm:ss.SSS')
+export const formatTimestamp = (date: Date) => format(date, 'HH:mm:ss.SSS')
 
-export const formatDate = (date: Date) =>
-  format(date, 'd MMM yyyy')
+export const formatDate = (date: Date) => format(date, 'd MMM yyyy')
 
 const numberFormatter = new Intl.NumberFormat()
 
-export const formatNumber = (value: number) =>
-  numberFormatter.format(value)
+export const formatNumber = (value: number) => numberFormatter.format(value)
