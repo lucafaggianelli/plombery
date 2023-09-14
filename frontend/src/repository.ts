@@ -1,6 +1,6 @@
 import { UseMutationOptions } from '@tanstack/react-query'
+import ky, { HTTPError, Options } from 'ky'
 
-import { HTTPError, SuperFetch } from './http-client'
 import { LogEntry, Pipeline, PipelineRun } from './types'
 
 const DEFAULT_BASE_URL = import.meta.env.DEV
@@ -8,18 +8,38 @@ const DEFAULT_BASE_URL = import.meta.env.DEV
   : `${window.location.protocol}//${window.location.host}/api`
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 
-const client = new SuperFetch({ baseUrl: BASE_URL })
+const client = ky.create({ prefixUrl: BASE_URL })
 
-export const getApiUrl = () => client.baseUrl
+export const getApiUrl = () => BASE_URL
+
+/**
+ * Helper function to GET a JSON request
+ */
+const get = async <ResponseType = any>(
+  url: string,
+  request?: Omit<Options, 'method'>
+): Promise<ResponseType> => {
+  return (await client.get(url, request)).json<ResponseType>()
+}
+
+/**
+ * Helper function to POST a JSON request
+ */
+const post = async <ResponseType = any>(
+  url: string,
+  request?: Omit<Options, 'method'>
+): Promise<ResponseType> => {
+  return (
+    await client.get(url, { ...request, method: 'post' })
+  ).json<ResponseType>()
+}
 
 export const getCurrentUser = async () => {
-  return await client.get<{ user: any; is_authentication_enabled: boolean }>(
-    '/whoami'
-  )
+  return await get<{ user: any; is_authentication_enabled: boolean }>('whoami')
 }
 
 export const logout = async () => {
-  await client.post('/logout')
+  await post('logout')
 }
 
 export const getWebsocketUrl = () => {
@@ -30,7 +50,7 @@ export const getWebsocketUrl = () => {
 }
 
 export const listPipelines = async (): Promise<Pipeline[]> => {
-  const pipelines = await client.get<Pipeline[]>('/pipelines')
+  const pipelines = await get<Pipeline[]>('pipelines')
 
   pipelines.forEach((pipeline) => {
     pipeline.triggers.forEach((trigger) => {
@@ -53,7 +73,7 @@ export const listPipelines = async (): Promise<Pipeline[]> => {
 }
 
 export const getPipeline = async (pipelineId: string): Promise<Pipeline> => {
-  const pipeline = await client.get<Pipeline>(`/pipelines/${pipelineId}`)
+  const pipeline = await get<Pipeline>(`pipelines/${pipelineId}`)
 
   pipeline.triggers.forEach((trigger) => {
     if (trigger.next_fire_time) {
@@ -71,7 +91,7 @@ export const getPipeline = async (pipelineId: string): Promise<Pipeline> => {
 }
 
 export const getPipelineInputSchema = async (pipelineId: string) => {
-  return await client.get(`/pipelines/${pipelineId}/input-schema`)
+  return await get(`pipelines/${pipelineId}/input-schema`)
 }
 
 export const listRuns = async (
@@ -79,13 +99,12 @@ export const listRuns = async (
   triggerId?: string
 ): Promise<PipelineRun[]> => {
   const params = {
-    pipeline_id: pipelineId,
-    trigger_id: triggerId,
+    pipeline_id: pipelineId ?? '',
+    trigger_id: triggerId ?? '',
   }
 
-  const runs = await client.get<any[]>({
-    url: '/runs',
-    params,
+  const runs = await get<any[]>('runs', {
+    searchParams: params,
   })
 
   runs.forEach((run) => {
@@ -96,14 +115,14 @@ export const listRuns = async (
 }
 
 export const getRun = async (runId: number): Promise<PipelineRun> => {
-  const run = await client.get(`/runs/${runId}`)
+  const run = await get(`runs/${runId}`)
   run.start_time = new Date(run.start_time)
 
   return run as PipelineRun
 }
 
 export const getLogs = async (runId: number): Promise<LogEntry[]> => {
-  const rawLogs = await client.get<string>(`/runs/${runId}/logs`)
+  const rawLogs = await client.get(`runs/${runId}/logs`).text()
 
   if (!rawLogs) {
     return []
@@ -120,7 +139,7 @@ export const getLogs = async (runId: number): Promise<LogEntry[]> => {
 }
 
 export const getRunData = async (runId: number, taskId: string) => {
-  return await client.get(`/runs/${runId}/data/${taskId}`)
+  return await get(`runs/${runId}/data/${taskId}`)
 }
 
 export const getPipelineRunUrl = (pipelineId: string) =>
@@ -130,27 +149,22 @@ export const runPipeline = (
   pipelineId: string
 ): UseMutationOptions<PipelineRun, HTTPError, any> => ({
   async mutationFn(params) {
-    return await client.post<PipelineRun>({
-      url: `/pipelines/${pipelineId}/run`,
+    return await post<PipelineRun>(`pipelines/${pipelineId}/run`, {
       json: params,
     })
   },
 })
 
-export const getTriggerRunUrl = (
-  pipelineId: string,
-  triggerId: string,
-  absolute: boolean = true
-) =>
-  `${
-    absolute ? BASE_URL : ''
-  }/pipelines/${pipelineId}/triggers/${triggerId}/run`
+export const getTriggerRunUrl = (pipelineId: string, triggerId: string) =>
+  `/pipelines/${pipelineId}/triggers/${triggerId}/run`
 
 export const runPipelineTrigger = (
   pipelineId: string,
   triggerId: string
 ): UseMutationOptions<PipelineRun, HTTPError> => ({
   async mutationFn() {
-    return await client.post<PipelineRun>(getTriggerRunUrl(pipelineId, triggerId, false))
+    return await post<PipelineRun>(
+      `pipelines/${pipelineId}/triggers/${triggerId}/run`
+    )
   },
 })

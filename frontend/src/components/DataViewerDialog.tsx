@@ -1,8 +1,8 @@
 import React, { Suspense } from 'react'
 import { Button, Text } from '@tremor/react'
 import { useQuery } from '@tanstack/react-query'
+import { HTTPError } from 'ky'
 
-import { HTTPError } from '@/http-client'
 import { getRunData } from '@/repository'
 import Dialog from './Dialog'
 
