@@ -14,31 +14,16 @@ import { formatDistanceToNow, differenceInDays } from 'date-fns'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
+import { useSocket } from '@/socket'
 import { PipelineRun, WebSocketMessage } from '@/types'
 import { formatDateTime } from '@/utils'
 import StatusBadge from './StatusBadge'
-import { useSocket } from '@/socket'
+import Timer from './Timer'
 
 interface Props {
   pipelineId?: string
   runs: PipelineRun[]
   triggerId?: string
-}
-
-const Timer: React.FC<{ startTime: Date }> = ({ startTime }) => {
-  const [time, setTime] = useState(Date.now() - startTime.getTime())
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(Date.now() - startTime.getTime())
-    }, 500)
-
-    return () => {
-      clearInterval(interval)
-    }
-  })
-
-  return <span>{(time / 1000).toFixed(2)}</span>
 }
 
 const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {

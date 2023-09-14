@@ -18,11 +18,12 @@ import LogViewer from '@/components/LogViewer'
 import PageLayout from '@/components/PageLayout'
 import StatusBadge from '@/components/StatusBadge'
 import RunsTasksList from '@/components/Tasks'
+import Timer from '@/components/Timer'
 import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun } from '@/repository'
+import { useSocket } from '@/socket'
 import { Trigger } from '@/types'
 import { TASKS_COLORS, formatDate, formatTimestamp } from '@/utils'
-import { useSocket } from '@/socket'
 
 const RunViewPage = () => {
   const { lastMessage } = useSocket('run-update')
@@ -97,7 +98,14 @@ const RunViewPage = () => {
           </Flex>
 
           <Flex className="justify-start items-baseline space-x-3 truncate">
-            <Metric>{(run.duration / 1000).toFixed(1)}s</Metric>
+            <Metric>
+              {run.status !== 'running' ? (
+                (run.duration / 1000).toFixed(2)
+              ) : (
+                <Timer startTime={run.start_time} />
+              )}{' '}
+              s
+            </Metric>
           </Flex>
 
           <CategoryBar
