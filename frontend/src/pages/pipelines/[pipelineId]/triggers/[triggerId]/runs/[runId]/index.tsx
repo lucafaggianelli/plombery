@@ -11,7 +11,6 @@ import {
 } from '@tremor/react'
 import { addMilliseconds, isSameDay } from 'date-fns'
 import { useParams } from 'react-router-dom'
-import useWebSocket from 'react-use-websocket'
 import { useEffect } from 'react'
 
 import Breadcrumbs from '@/components/Breadcrumbs'
@@ -20,16 +19,17 @@ import PageLayout from '@/components/PageLayout'
 import StatusBadge from '@/components/StatusBadge'
 import RunsTasksList from '@/components/Tasks'
 import { MANUAL_TRIGGER } from '@/constants'
-import { getPipeline, getRun, getWebsocketUrl } from '@/repository'
-import { Pipeline, Trigger, WebSocketMessage } from '@/types'
+import { getPipeline, getRun } from '@/repository'
+import { Pipeline, Trigger } from '@/types'
 import {
   TASKS_COLORS,
   formatDate,
   formatTimestamp,
 } from '@/utils'
+import { useSocket } from '@/socket'
 
 const RunViewPage = () => {
-  const { lastJsonMessage } = useWebSocket(getWebsocketUrl().toString())
+  const { lastMessage } = useSocket()
   const queryClient = useQueryClient()
   const urlParams = useParams()
   const pipelineId = urlParams.pipelineId as string
@@ -37,18 +37,14 @@ const RunViewPage = () => {
   const runId = parseInt(urlParams.runId as string)
 
   useEffect(() => {
-    if (lastJsonMessage) {
-      const { data, type } = lastJsonMessage as any as WebSocketMessage
-
-      if (type === 'run-update') {
-        queryClient
-          .invalidateQueries({
-            queryKey: ['run', pipelineId, triggerId, runId],
-          })
-          .catch(() => {})
-      }
+    if (lastMessage) {
+      queryClient
+        .invalidateQueries({
+          queryKey: ['run', pipelineId, triggerId, runId],
+        })
+        .catch(() => {})
     }
-  }, [lastJsonMessage, pipelineId])
+  }, [lastMessage, pipelineId])
 
   const pipelineQuery = useQuery({
     queryKey: ['pipeline', pipelineId],

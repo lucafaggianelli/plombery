@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Badge,
-  Bold,
   Color,
   Flex,
   Grid,
@@ -16,9 +15,9 @@ import {
   Text,
 } from '@tremor/react'
 import { useCallback, useEffect, useState } from 'react'
-import useWebSocket from 'react-use-websocket'
 
-import { getLogs, getWebsocketUrl } from '@/repository'
+import { getLogs } from '@/repository'
+import { useSocket } from '@/socket'
 import { LogEntry, LogLevel, Pipeline, WebSocketMessage } from '@/types'
 import {
   formatNumber,
@@ -46,7 +45,7 @@ interface FilterType {
 
 const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
   const [filter, setFilter] = useState<FilterType>({ levels: [], tasks: [] })
-  const { lastJsonMessage } = useWebSocket(getWebsocketUrl().toString())
+  const { lastMessage } = useSocket(`logs.${runId}`)
   const queryClient = useQueryClient()
 
   const query = useQuery({
@@ -58,11 +57,7 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
 
   const onWsMessage = useCallback(
     (message: WebSocketMessage) => {
-      const { data, type } = message
-
-      if (type !== 'logs') {
-        return
-      }
+      const { data } = message
 
       queryClient.setQueryData<LogEntry[]>(['logs', runId], (oldLogs = []) => {
         const log: LogEntry = JSON.parse(data)
@@ -75,10 +70,10 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
   )
 
   useEffect(() => {
-    if (lastJsonMessage) {
-      onWsMessage(lastJsonMessage as any)
+    if (lastMessage) {
+      onWsMessage(lastMessage)
     }
-  }, [lastJsonMessage])
+  }, [lastMessage])
 
   const onFilterChange = useCallback((newFilter: Partial<FilterType>) => {
     setFilter((currentFilter) => ({ ...currentFilter, ...newFilter }))
