@@ -19,11 +19,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { getLogs } from '@/repository'
 import { useSocket } from '@/socket'
 import { LogEntry, LogLevel, Pipeline, WebSocketMessage } from '@/types'
-import {
-  formatNumber,
-  formatTimestamp,
-  getTasksColors,
-} from '@/utils'
+import { formatNumber, formatTimestamp, getTasksColors } from '@/utils'
 import TracebackInfoDialog from './TracebackInfoDialog'
 
 interface Props {
@@ -93,7 +89,7 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
 
   return (
     <>
-      <Grid numColsMd={3} className="gap-6">
+      <Grid numColsMd={3} className="gap-6 items-start">
         <div>
           <Text>Tasks</Text>
 
@@ -127,6 +123,15 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
             ))}
           </MultiSelectBox>
         </div>
+
+        <Flex justifyContent="end" className="order-first md:order-last">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+          </span>
+
+          <Text className="ml-2 opacity-80">Live logs</Text>
+        </Flex>
       </Grid>
 
       <div className="logs-table">
