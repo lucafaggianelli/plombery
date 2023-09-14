@@ -8,15 +8,11 @@ import { listPipelines } from '@/repository'
 import ManualRunDialog from './ManualRunDialog'
 
 const PipelinesList: React.FC = () => {
-  const query = useQuery({
-    queryKey: ['pipelines'],
-    queryFn: listPipelines,
-    initialData: [],
-  })
+  const query = useQuery(listPipelines())
 
   if (query.isLoading) return <div>Loading...</div>
 
-  if (query.error) return <div>An error has occurred</div>
+  if (query.isError) return <div>An error has occurred</div>
 
   const pipelines = query.data
 

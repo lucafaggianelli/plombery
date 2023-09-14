@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - Navigate to run page after running manually a pipeline or trigger (#71)
+- Add `ky` frontend dependency as HTTP fetch library
 
 ### Fixed
 - Sometimes logs are appended to an existing logs files of previous runs (#131)

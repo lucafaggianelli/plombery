@@ -1,7 +1,8 @@
-import { UseMutationOptions } from '@tanstack/react-query'
+import { UseMutationOptions, UseQueryOptions } from '@tanstack/react-query'
 import ky, { HTTPError, Options } from 'ky'
 
-import { LogEntry, Pipeline, PipelineRun } from './types'
+import { LogEntry, Pipeline, PipelineRun, WhoamiResponse } from './types'
+import { JSONSchema7 } from 'json-schema'
 
 const DEFAULT_BASE_URL = import.meta.env.DEV
   ? 'http://localhost:8000/api'
@@ -27,19 +28,9 @@ const get = async <ResponseType = any>(
  */
 const post = async <ResponseType = any>(
   url: string,
-  request?: Omit<Options, 'method'>
+  request?: Options
 ): Promise<ResponseType> => {
-  return (
-    await client.get(url, { ...request, method: 'post' })
-  ).json<ResponseType>()
-}
-
-export const getCurrentUser = async () => {
-  return await get<{ user: any; is_authentication_enabled: boolean }>('whoami')
-}
-
-export const logout = async () => {
-  await post('logout')
+  return (await client.post(url, request)).json<ResponseType>()
 }
 
 export const getWebsocketUrl = () => {
@@ -49,101 +40,161 @@ export const getWebsocketUrl = () => {
   return url
 }
 
-export const listPipelines = async (): Promise<Pipeline[]> => {
-  const pipelines = await get<Pipeline[]>('pipelines')
+export const getPipelineRunUrl = (pipelineId: string) =>
+  `${BASE_URL}/pipelines/${pipelineId}/run`
 
-  pipelines.forEach((pipeline) => {
+export const getTriggerRunUrl = (pipelineId: string, triggerId: string) =>
+  `/pipelines/${pipelineId}/triggers/${triggerId}/run`
+
+export const getCurrentUser = async () => {
+  return await get<WhoamiResponse>('whoami')
+}
+
+export const logout = async () => {
+  await post('logout')
+}
+
+/**
+ * Pipelines
+ */
+
+export const listPipelines = (): UseQueryOptions<Pipeline[], HTTPError> => ({
+  queryKey: ['pipelines'],
+  queryFn: async () => {
+    const pipelines = await get<Pipeline[]>('pipelines')
+
+    pipelines.forEach((pipeline) => {
+      pipeline.triggers.forEach((trigger) => {
+        if (trigger.next_fire_time) {
+          trigger.next_fire_time = new Date(trigger.next_fire_time)
+        }
+      })
+    })
+
+    return pipelines.map(
+      (pipeline) =>
+        new Pipeline(
+          pipeline.id,
+          pipeline.name,
+          pipeline.description,
+          pipeline.tasks,
+          pipeline.triggers
+        )
+    )
+  },
+  initialData: [],
+})
+
+export const getPipeline = (
+  pipelineId: string
+): UseQueryOptions<Pipeline, HTTPError> => ({
+  queryKey: ['pipeline', pipelineId],
+  queryFn: async () => {
+    const pipeline = await get<Pipeline>(`pipelines/${pipelineId}`)
+
     pipeline.triggers.forEach((trigger) => {
       if (trigger.next_fire_time) {
         trigger.next_fire_time = new Date(trigger.next_fire_time)
       }
     })
-  })
 
-  return pipelines.map(
-    (pipeline) =>
-      new Pipeline(
-        pipeline.id,
-        pipeline.name,
-        pipeline.description,
-        pipeline.tasks,
-        pipeline.triggers
-      )
-  )
-}
+    return new Pipeline(
+      pipeline.id,
+      pipeline.name,
+      pipeline.description,
+      pipeline.tasks,
+      pipeline.triggers
+    )
+  },
+  initialData: new Pipeline('', '', '', [], []),
+  enabled: !!pipelineId,
+})
 
-export const getPipeline = async (pipelineId: string): Promise<Pipeline> => {
-  const pipeline = await get<Pipeline>(`pipelines/${pipelineId}`)
+export const getPipelineInputSchema = (
+  pipelineId: string
+): UseQueryOptions<JSONSchema7, HTTPError> => ({
+  queryKey: ['pipeline-input', pipelineId],
+  queryFn: async () => {
+    return await get(`pipelines/${pipelineId}/input-schema`)
+  },
+})
 
-  pipeline.triggers.forEach((trigger) => {
-    if (trigger.next_fire_time) {
-      trigger.next_fire_time = new Date(trigger.next_fire_time)
-    }
-  })
+/**
+ * Runs
+ */
 
-  return new Pipeline(
-    pipeline.id,
-    pipeline.name,
-    pipeline.description,
-    pipeline.tasks,
-    pipeline.triggers
-  )
-}
-
-export const getPipelineInputSchema = async (pipelineId: string) => {
-  return await get(`pipelines/${pipelineId}/input-schema`)
-}
-
-export const listRuns = async (
+export const listRuns = (
   pipelineId?: string,
   triggerId?: string
-): Promise<PipelineRun[]> => {
-  const params = {
-    pipeline_id: pipelineId ?? '',
-    trigger_id: triggerId ?? '',
-  }
+): UseQueryOptions<PipelineRun[]> => ({
+  queryKey: ['runs', pipelineId, triggerId],
+  queryFn: async () => {
+    const params = {
+      pipeline_id: pipelineId ?? '',
+      trigger_id: triggerId ?? '',
+    }
 
-  const runs = await get<any[]>('runs', {
-    searchParams: params,
-  })
+    const runs = await get<any[]>('runs', {
+      searchParams: params,
+    })
 
-  runs.forEach((run) => {
+    runs.forEach((run) => {
+      run.start_time = new Date(run.start_time)
+    })
+
+    return runs as PipelineRun[]
+  },
+  initialData: [],
+})
+
+export const getRun = (
+  pipelineId: string,
+  triggerId: string,
+  runId: number
+): UseQueryOptions<PipelineRun, HTTPError> => ({
+  queryKey: ['runs', pipelineId, triggerId, runId],
+  queryFn: async () => {
+    const run = await get(`runs/${runId}`)
     run.start_time = new Date(run.start_time)
-  })
 
-  return runs as PipelineRun[]
-}
+    return run as PipelineRun
+  },
+  enabled: !!(pipelineId && triggerId && runId),
+})
 
-export const getRun = async (runId: number): Promise<PipelineRun> => {
-  const run = await get(`runs/${runId}`)
-  run.start_time = new Date(run.start_time)
+export const getLogs = (
+  runId: number
+): UseQueryOptions<LogEntry[], HTTPError> => ({
+  queryKey: ['logs', runId],
+  queryFn: async () => {
+    const rawLogs = await client.get(`runs/${runId}/logs`).text()
 
-  return run as PipelineRun
-}
+    if (!rawLogs) {
+      return []
+    }
 
-export const getLogs = async (runId: number): Promise<LogEntry[]> => {
-  const rawLogs = await client.get(`runs/${runId}/logs`).text()
+    // Logs data is in JSONL format (1 JSON object per line)
+    return rawLogs.split('\n').map((line, i) => {
+      const parsed = JSON.parse(line)
+      // Add a unique id to be used as key for React
+      parsed.id = i
+      parsed.timestamp = new Date(parsed.timestamp)
+      return parsed
+    })
+  },
+  enabled: !!runId,
+  initialData: [],
+})
 
-  if (!rawLogs) {
-    return []
-  }
-
-  // Logs data is in JSONL format (1 JSON object per line)
-  return rawLogs.split('\n').map((line, i) => {
-    const parsed = JSON.parse(line)
-    // Add a unique id to be used as key for React
-    parsed.id = i
-    parsed.timestamp = new Date(parsed.timestamp)
-    return parsed
-  })
-}
-
-export const getRunData = async (runId: number, taskId: string) => {
-  return await get(`runs/${runId}/data/${taskId}`)
-}
-
-export const getPipelineRunUrl = (pipelineId: string) =>
-  `${BASE_URL}/pipelines/${pipelineId}/run`
+export const getRunData = (
+  runId: number,
+  taskId: string
+): UseQueryOptions<any, HTTPError> => ({
+  queryKey: ['getRunData', { runId, taskId }],
+  queryFn: async () => {
+    return await get(`runs/${runId}/data/${taskId}`)
+  },
+})
 
 export const runPipeline = (
   pipelineId: string
@@ -154,9 +205,6 @@ export const runPipeline = (
     })
   },
 })
-
-export const getTriggerRunUrl = (pipelineId: string, triggerId: string) =>
-  `/pipelines/${pipelineId}/triggers/${triggerId}/run`
 
 export const runPipelineTrigger = (
   pipelineId: string,

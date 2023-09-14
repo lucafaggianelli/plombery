@@ -74,3 +74,8 @@ export interface WebSocketMessage {
   type: 'logs' | 'run-update'
   data: any
 }
+
+export interface WhoamiResponse {
+  user: any
+  is_authentication_enabled: boolean
+}

@@ -48,12 +48,7 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
   const { lastMessage } = useSocket(`logs.${runId}`)
   const queryClient = useQueryClient()
 
-  const query = useQuery({
-    queryKey: ['logs', runId],
-    queryFn: () => getLogs(runId),
-    enabled: !!runId,
-    initialData: [],
-  })
+  const query = useQuery(getLogs(runId))
 
   const onWsMessage = useCallback(
     (message: WebSocketMessage) => {

@@ -20,16 +20,12 @@ import StatusBadge from '@/components/StatusBadge'
 import RunsTasksList from '@/components/Tasks'
 import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun } from '@/repository'
-import { Pipeline, Trigger } from '@/types'
-import {
-  TASKS_COLORS,
-  formatDate,
-  formatTimestamp,
-} from '@/utils'
+import { Trigger } from '@/types'
+import { TASKS_COLORS, formatDate, formatTimestamp } from '@/utils'
 import { useSocket } from '@/socket'
 
 const RunViewPage = () => {
-  const { lastMessage } = useSocket()
+  const { lastMessage } = useSocket('run-update')
   const queryClient = useQueryClient()
   const urlParams = useParams()
   const pipelineId = urlParams.pipelineId as string
@@ -38,26 +34,22 @@ const RunViewPage = () => {
 
   useEffect(() => {
     if (lastMessage) {
-      queryClient
-        .invalidateQueries({
-          queryKey: ['run', pipelineId, triggerId, runId],
-        })
-        .catch(() => {})
+      queryClient.invalidateQueries({
+        queryKey: getRun(pipelineId, triggerId, runId).queryKey,
+      })
     }
   }, [lastMessage, pipelineId])
 
-  const pipelineQuery = useQuery({
-    queryKey: ['pipeline', pipelineId],
-    queryFn: () => getPipeline(pipelineId),
-    initialData: new Pipeline('', '', '', [], []),
-    enabled: !!pipelineId,
-  })
+  const pipelineQuery = useQuery(getPipeline(pipelineId))
+  const runQuery = useQuery(getRun(pipelineId, triggerId, runId))
 
-  const runQuery = useQuery({
-    queryKey: ['run', pipelineId, triggerId, runId],
-    queryFn: () => getRun(runId),
-    enabled: !!(pipelineId && triggerId && runId),
-  })
+  if (pipelineQuery.isLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (pipelineQuery.isError) {
+    return <div>Error</div>
+  }
 
   const pipeline = pipelineQuery.data
 

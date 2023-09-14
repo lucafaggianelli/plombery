@@ -24,29 +24,18 @@ import { getPipeline, getPipelineRunUrl, listRuns } from '@/repository'
 import ManualRunDialog from '@/components/ManualRunDialog'
 import TriggersList from '@/components/TriggersList'
 import PageLayout from '@/components/PageLayout'
-import { Pipeline } from '@/types'
 
 const PipelineView: React.FC = () => {
   const urlParams = useParams()
   const pipelineId = urlParams.pipelineId as string
 
-  const pipelineQuery = useQuery({
-    queryKey: ['pipeline', pipelineId],
-    queryFn: () => getPipeline(pipelineId),
-    initialData: new Pipeline('', '', '', [], []),
-    enabled: !!pipelineId,
-  })
-
-  const runsQuery = useQuery({
-    queryKey: ['runs', pipelineId, undefined],
-    queryFn: () => listRuns(pipelineId),
-    initialData: [],
-  })
+  const pipelineQuery = useQuery(getPipeline(pipelineId))
+  const runsQuery = useQuery(listRuns(pipelineId))
 
   if (runsQuery.isLoading || pipelineQuery.isLoading)
     return <div>Loading...</div>
 
-  if (runsQuery.error || pipelineQuery.error)
+  if (runsQuery.isError || pipelineQuery.isError)
     return <div>An error has occurred</div>
 
   const pipeline = pipelineQuery.data

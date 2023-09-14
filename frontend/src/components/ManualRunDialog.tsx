@@ -181,8 +181,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
   const navigate = useNavigate()
 
   const query = useQuery({
-    queryKey: ['pipeline-input', pipeline.id],
-    queryFn: () => getPipelineInputSchema(pipeline.id),
+    ...getPipelineInputSchema(pipeline.id),
     enabled: open,
   })
 
@@ -229,6 +228,8 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
         >
           {query.isLoading ? (
             'Loading...'
+          ) : query.isError ? (
+            'Error'
           ) : (
             <div style={{ width: 350 }}>{schemaToForm(query.data)}</div>
           )}
