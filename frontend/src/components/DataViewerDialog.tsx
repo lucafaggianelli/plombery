@@ -2,7 +2,6 @@ import React, { Suspense } from 'react'
 import { Button, Text } from '@tremor/react'
 import { useQuery } from '@tanstack/react-query'
 
-import { HTTPError } from '@/http-client'
 import { getRunData } from '@/repository'
 import Dialog from './Dialog'
 
@@ -21,9 +20,8 @@ const DataViewerDialog: React.FC<Props> = ({
   open,
   onClose,
 }) => {
-  const query = useQuery<any, HTTPError>({
-    queryKey: ['getRunData', { runId, taskId }],
-    queryFn: () => getRunData(runId, taskId),
+  const query = useQuery({
+    ...getRunData(runId, taskId),
     enabled: open,
   })
 

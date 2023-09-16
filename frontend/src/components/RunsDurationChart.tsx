@@ -19,7 +19,7 @@ const RunsDurationChart: React.FC<Props> = ({ runs }) => {
   return (
     <Card>
       <Flex className="items-start">
-        <Text>Duration</Text>
+        <Text>Duration (AVG)</Text>
       </Flex>
 
       <Flex className="justify-start items-baseline space-x-3 truncate">

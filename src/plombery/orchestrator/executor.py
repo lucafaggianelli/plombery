@@ -1,4 +1,4 @@
-from typing import Callable, Coroutine, List, Optional
+from typing import Callable, Optional
 import asyncio
 from datetime import datetime, timezone
 import inspect
@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from plombery.constants import MANUAL_TRIGGER_ID
 from plombery.logger import get_logger
 from plombery.notifications import notification_manager
+from plombery.utils import run_all_coroutines
 from plombery.websocket import manager
 from plombery.database.models import PipelineRun
 from plombery.database.repository import create_pipeline_run, update_pipeline_run
@@ -24,17 +25,6 @@ from plombery.schemas import PipelineRunStatus, TaskRun
 
 def utcnow():
     return datetime.now(tz=timezone.utc)
-
-
-def _run_all_tasks(coros: List[Coroutine]):
-    tasks = set()
-
-    for coro in coros:
-        task = asyncio.create_task(coro)
-
-        tasks.add(task)
-        task.add_done_callback(tasks.discard)
-
 
 def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
     pipeline_run = create_pipeline_run(
@@ -69,16 +59,16 @@ def _send_pipeline_event(pipeline_run: PipelineRun):
         duration=pipeline_run.duration,
     )
 
-    ws_coro = manager.broadcast(
-        type="run-update",
-        data=dict(
+    ws_coro = manager.emit(
+        "run-update",
+        dict(
             run=run,
             pipeline=pipeline_run.pipeline_id,
             trigger=pipeline_run.trigger_id,
         ),
     )
 
-    _run_all_tasks([notify_coro, ws_coro])
+    run_all_coroutines([notify_coro, ws_coro])
 
 
 async def run(

@@ -26,7 +26,7 @@ def get_logger() -> logging.Logger:
     json_handler = logging.FileHandler(filename)
     json_handler.setFormatter(json_formatter)
 
-    websocket_handler = WebSocketHandler()
+    websocket_handler = WebSocketHandler(pipeline_run.id)
     websocket_handler.setFormatter(json_formatter)
 
     # Create a logger that's unique for each pipeline run

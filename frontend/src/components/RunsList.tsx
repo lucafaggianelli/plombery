@@ -13,12 +13,12 @@ import {
 import { formatDistanceToNow, differenceInDays } from 'date-fns'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import useWebSocket from 'react-use-websocket'
 
+import { useSocket } from '@/socket'
 import { PipelineRun, WebSocketMessage } from '@/types'
 import { formatDateTime } from '@/utils'
 import StatusBadge from './StatusBadge'
-import { getWebsocketUrl } from '@/repository'
+import Timer from './Timer'
 
 interface Props {
   pipelineId?: string
@@ -26,35 +26,15 @@ interface Props {
   triggerId?: string
 }
 
-const Timer: React.FC<{ startTime: Date }> = ({ startTime }) => {
-  const [time, setTime] = useState(Date.now() - startTime.getTime())
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(Date.now() - startTime.getTime())
-    }, 500)
-
-    return () => {
-      clearInterval(interval)
-    }
-  })
-
-  return <span>{(time / 1000).toFixed(2)}</span>
-}
-
 const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
   const [runs, setRuns] = useState(_runs)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const { lastJsonMessage } = useWebSocket(getWebsocketUrl().toString())
+  const { lastMessage } = useSocket('run-update')
 
   const onWsMessage = useCallback(
     (message: WebSocketMessage) => {
       const { data, type } = message
-
-      if (type !== 'run-update') {
-        return
-      }
 
       data.run.start_time = new Date(data.run.start_time)
       data.run.trigger_id = data.trigger
@@ -82,10 +62,10 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
   )
 
   useEffect(() => {
-    if (lastJsonMessage) {
-      onWsMessage(lastJsonMessage as any)
+    if (lastMessage) {
+      onWsMessage(lastMessage)
     }
-  }, [lastJsonMessage])
+  }, [lastMessage])
 
   useEffect(() => {
     if (_runs.length) {

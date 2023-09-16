@@ -1,4 +1,4 @@
-import { Grid, Text, Title } from '@tremor/react'
+import { Grid, Title } from '@tremor/react'
 
 import PageLayout from '@/components/PageLayout'
 import PipelinesList from '@/components/PipelinesList'
@@ -7,15 +7,11 @@ import { useQuery } from '@tanstack/react-query'
 import { listRuns } from '@/repository'
 
 const HomePage: React.FC = () => {
-  const runsQuery = useQuery({
-    queryKey: ['runs', undefined, undefined],
-    queryFn: () => listRuns(),
-    initialData: [],
-  })
+  const runsQuery = useQuery(listRuns())
 
   if (runsQuery.isLoading) return <div>Loading...</div>
 
-  if (runsQuery.error) return <div>An error has occurred</div>
+  if (runsQuery.isError) return <div>An error has occurred</div>
 
   return (
     <PageLayout

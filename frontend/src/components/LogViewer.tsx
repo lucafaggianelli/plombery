@@ -1,10 +1,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Badge,
-  Bold,
   Color,
   Flex,
   Grid,
+  Icon,
   MultiSelectBox,
   MultiSelectBoxItem,
   Table,
@@ -15,22 +15,32 @@ import {
   TableRow,
   Text,
 } from '@tremor/react'
-import { useCallback, useEffect, useState } from 'react'
-import useWebSocket from 'react-use-websocket'
+import { createRef, useCallback, useEffect, useState } from 'react'
 
-import { getLogs, getWebsocketUrl } from '@/repository'
-import { LogEntry, LogLevel, Pipeline, WebSocketMessage } from '@/types'
+import { getLogs } from '@/repository'
+import { useSocket } from '@/socket'
 import {
-  formatNumber,
-  formatTimestamp,
-  getTasksColors,
-} from '@/utils'
+  LogEntry,
+  LogLevel,
+  Pipeline,
+  PipelineRun,
+  WebSocketMessage,
+} from '@/types'
+import { formatNumber, formatTimestamp, getTasksColors } from '@/utils'
 import TracebackInfoDialog from './TracebackInfoDialog'
+import { BarsArrowDownIcon } from '@heroicons/react/24/outline'
 
 interface Props {
   pipeline: Pipeline
-  runId: number
+  run: PipelineRun
 }
+
+/**
+ * If the user scrolls to the bottom and arrives
+ * that close to the bottom then the scroll lock is
+ * activated.
+ */
+const SCROLL_LOCK_THRESHOLD = 30
 
 const LOG_LEVELS_COLORS: Record<LogLevel, Color> = {
   DEBUG: 'slate',
@@ -44,41 +54,78 @@ interface FilterType {
   tasks: string[]
 }
 
-const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
+const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
   const [filter, setFilter] = useState<FilterType>({ levels: [], tasks: [] })
-  const { lastJsonMessage } = useWebSocket(getWebsocketUrl().toString())
+  const [scrollToBottom, setScrollToBottom] = useState(true)
+  const { lastMessage } = useSocket(`logs.${run.id}`)
   const queryClient = useQueryClient()
 
-  const query = useQuery({
-    queryKey: ['logs', runId],
-    queryFn: () => getLogs(runId),
-    enabled: !!runId,
-    initialData: [],
-  })
+  const logsBottomRef = createRef<HTMLTableRowElement>()
+  const tableRef = createRef<HTMLTableElement>()
+
+  const query = useQuery(getLogs(run.id))
 
   const onWsMessage = useCallback(
     (message: WebSocketMessage) => {
-      const { data, type } = message
+      const { data } = message
 
-      if (type !== 'logs') {
-        return
-      }
-
-      queryClient.setQueryData<LogEntry[]>(['logs', runId], (oldLogs = []) => {
+      queryClient.setQueryData<LogEntry[]>(['logs', run.id], (oldLogs = []) => {
         const log: LogEntry = JSON.parse(data)
         log.id = oldLogs.length
         log.timestamp = new Date(log.timestamp)
         return [...oldLogs, log]
       })
     },
-    [runId]
+    [run.id]
+  )
+
+  const onMouseScroll = useCallback(
+    (e: Event) => {
+      const element = tableRef.current?.parentElement
+      if (!element) {
+        return
+      }
+
+      const event = e as WheelEvent
+
+      // Add deltaY as the scrollTop doesn't include it at this point
+      let scrollBottom = Math.max(
+        element.scrollTop + element.clientHeight + event.deltaY,
+        0
+      )
+
+      scrollBottom = Math.min(scrollBottom, element.scrollHeight)
+
+      const userScrolledToBottom =
+        element.scrollHeight - scrollBottom < SCROLL_LOCK_THRESHOLD
+
+      setScrollToBottom(userScrolledToBottom)
+    },
+    [tableRef]
   )
 
   useEffect(() => {
-    if (lastJsonMessage) {
-      onWsMessage(lastJsonMessage as any)
+    tableRef.current?.parentElement?.addEventListener('wheel', onMouseScroll)
+
+    return () => {
+      tableRef.current?.parentElement?.removeEventListener(
+        'wheel',
+        onMouseScroll
+      )
     }
-  }, [lastJsonMessage])
+  }, [tableRef])
+
+  useEffect(() => {
+    if (scrollToBottom) {
+      logsBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  })
+
+  useEffect(() => {
+    if (lastMessage) {
+      onWsMessage(lastMessage)
+    }
+  }, [lastMessage])
 
   const onFilterChange = useCallback((newFilter: Partial<FilterType>) => {
     setFilter((currentFilter) => ({ ...currentFilter, ...newFilter }))
@@ -101,9 +148,11 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
 
   const tasksColors = getTasksColors(pipeline.tasks)
 
+  const hasLiveLogs = ['running', 'pending'].includes(run.status)
+
   return (
-    <>
-      <Grid numColsMd={3} className="gap-6">
+    <Flex flexDirection="col" alignItems="stretch" style={{ maxHeight: 600 }}>
+      <Grid numColsMd={3} className="gap-6 items-start">
         <div>
           <Text>Tasks</Text>
 
@@ -137,65 +186,89 @@ const LogViewer: React.FC<Props> = ({ pipeline, runId }) => {
             ))}
           </MultiSelectBox>
         </div>
+
+        {hasLiveLogs && (
+          <Flex justifyContent="end" className="order-first md:order-last">
+            <Icon
+              icon={BarsArrowDownIcon}
+              variant="light"
+              color={scrollToBottom ? 'indigo' : 'gray'}
+              tooltip="Automatically scroll to the latest logs. Click to toggle"
+              className="mr-4"
+              style={{
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                setScrollToBottom(!scrollToBottom)
+              }}
+            />
+
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+            </span>
+
+            <Text className="ml-2 opacity-80">Live logs</Text>
+          </Flex>
+        )}
       </Grid>
 
-      <div className="logs-table">
-        <Table className="mt-6">
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell>Time</TableHeaderCell>
-              <TableHeaderCell>Level</TableHeaderCell>
-              <TableHeaderCell>Task</TableHeaderCell>
-              <TableHeaderCell>Message</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {logs.map((log, i) => {
-              const duration =
-                i !== 0
-                  ? log.timestamp.getTime() - logs[i - 1].timestamp.getTime()
-                  : -1
+      <Table className="mt-6 logs-table flex-grow" ref={tableRef}>
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell className="bg-white">Time</TableHeaderCell>
+            <TableHeaderCell className="bg-white">Level</TableHeaderCell>
+            <TableHeaderCell className="bg-white">Task</TableHeaderCell>
+            <TableHeaderCell className="bg-white">Message</TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {logs.map((log, i) => {
+            const duration =
+              i !== 0
+                ? log.timestamp.getTime() - logs[i - 1].timestamp.getTime()
+                : -1
 
-              return (
-                <TableRow key={log.id}>
-                  <TableCell>
-                    <Text className="font-mono text-xs">
-                      <span>{formatTimestamp(log.timestamp)}</span>
+            return (
+              <TableRow key={log.id}>
+                <TableCell>
+                  <Text className="font-mono text-xs">
+                    <span>{formatTimestamp(log.timestamp)}</span>
 
-                      {duration >= 0 && (
-                        <span className="text-slate-400 ml-2">
-                          +{formatNumber(duration)} ms
-                        </span>
-                      )}
-                    </Text>
-                  </TableCell>
-                  <TableCell>
-                    <Badge size="xs" color={LOG_LEVELS_COLORS[log.level]}>
-                      {log.level}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Flex>
-                      <div
-                        className={`h-2 w-2 mr-2 rounded-full ${
-                          tasksColors[log.task]
-                        }`}
-                      />
-                      {log.task}
-                    </Flex>
-                  </TableCell>
-                  <TableCell>
-                    <Text>{log.message}</Text>
+                    {duration >= 0 && (
+                      <span className="text-slate-400 ml-2">
+                        +{formatNumber(duration)} ms
+                      </span>
+                    )}
+                  </Text>
+                </TableCell>
+                <TableCell>
+                  <Badge size="xs" color={LOG_LEVELS_COLORS[log.level]}>
+                    {log.level}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Flex>
+                    <div
+                      className={`h-2 w-2 mr-2 rounded-full ${
+                        tasksColors[log.task]
+                      }`}
+                    />
+                    {log.task}
+                  </Flex>
+                </TableCell>
+                <TableCell className="w-full">
+                  <Text>{log.message}</Text>
 
-                    {log.exc_info && <TracebackInfoDialog logEntry={log} />}
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </div>
-    </>
+                  {log.exc_info && <TracebackInfoDialog logEntry={log} />}
+                </TableCell>
+              </TableRow>
+            )
+          })}
+          <tr ref={logsBottomRef} />
+        </TableBody>
+      </Table>
+    </Flex>
   )
 }
 

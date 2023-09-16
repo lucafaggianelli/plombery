@@ -1,3 +1,4 @@
+from logging import getLogger
 from typing import Optional
 
 from fastapi import (
@@ -20,6 +21,8 @@ from plombery.database.repository import list_pipeline_runs, get_pipeline_run
 from plombery.websocket import manager
 from .middlewares import FRONTEND_FOLDER, SPAStaticFiles
 
+
+logger = getLogger(__name__)
 
 app = FastAPI()
 
@@ -165,8 +168,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         while True:
-            data = await websocket.receive_text()
-            await manager.send_personal_message(f"You wrote: {data}", websocket)
+            await manager.handle_messages(websocket)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 

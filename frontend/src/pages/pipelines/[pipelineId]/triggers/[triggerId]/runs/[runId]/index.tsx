@@ -11,7 +11,6 @@ import {
 } from '@tremor/react'
 import { addMilliseconds, isSameDay } from 'date-fns'
 import { useParams } from 'react-router-dom'
-import useWebSocket from 'react-use-websocket'
 import { useEffect } from 'react'
 
 import Breadcrumbs from '@/components/Breadcrumbs'
@@ -19,17 +18,15 @@ import LogViewer from '@/components/LogViewer'
 import PageLayout from '@/components/PageLayout'
 import StatusBadge from '@/components/StatusBadge'
 import RunsTasksList from '@/components/Tasks'
+import Timer from '@/components/Timer'
 import { MANUAL_TRIGGER } from '@/constants'
-import { getPipeline, getRun, getWebsocketUrl } from '@/repository'
-import { Pipeline, Trigger, WebSocketMessage } from '@/types'
-import {
-  TASKS_COLORS,
-  formatDate,
-  formatTimestamp,
-} from '@/utils'
+import { getPipeline, getRun } from '@/repository'
+import { useSocket } from '@/socket'
+import { Trigger } from '@/types'
+import { TASKS_COLORS, formatDate, formatTimestamp } from '@/utils'
 
 const RunViewPage = () => {
-  const { lastJsonMessage } = useWebSocket(getWebsocketUrl().toString())
+  const { lastMessage } = useSocket('run-update')
   const queryClient = useQueryClient()
   const urlParams = useParams()
   const pipelineId = urlParams.pipelineId as string
@@ -37,31 +34,23 @@ const RunViewPage = () => {
   const runId = parseInt(urlParams.runId as string)
 
   useEffect(() => {
-    if (lastJsonMessage) {
-      const { data, type } = lastJsonMessage as any as WebSocketMessage
-
-      if (type === 'run-update') {
-        queryClient
-          .invalidateQueries({
-            queryKey: ['run', pipelineId, triggerId, runId],
-          })
-          .catch(() => {})
-      }
+    if (lastMessage) {
+      queryClient.invalidateQueries({
+        queryKey: getRun(pipelineId, triggerId, runId).queryKey,
+      })
     }
-  }, [lastJsonMessage, pipelineId])
+  }, [lastMessage, pipelineId])
 
-  const pipelineQuery = useQuery({
-    queryKey: ['pipeline', pipelineId],
-    queryFn: () => getPipeline(pipelineId),
-    initialData: new Pipeline('', '', '', [], []),
-    enabled: !!pipelineId,
-  })
+  const pipelineQuery = useQuery(getPipeline(pipelineId))
+  const runQuery = useQuery(getRun(pipelineId, triggerId, runId))
 
-  const runQuery = useQuery({
-    queryKey: ['run', pipelineId, triggerId, runId],
-    queryFn: () => getRun(runId),
-    enabled: !!(pipelineId && triggerId && runId),
-  })
+  if (pipelineQuery.isLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (pipelineQuery.isError) {
+    return <div>Error</div>
+  }
 
   const pipeline = pipelineQuery.data
 
@@ -109,7 +98,14 @@ const RunViewPage = () => {
           </Flex>
 
           <Flex className="justify-start items-baseline space-x-3 truncate">
-            <Metric>{(run.duration / 1000).toFixed(1)}s</Metric>
+            <Metric>
+              {run.status !== 'running' ? (
+                (run.duration / 1000).toFixed(2)
+              ) : (
+                <Timer startTime={run.start_time} />
+              )}{' '}
+              s
+            </Metric>
           </Flex>
 
           <CategoryBar
@@ -141,7 +137,7 @@ const RunViewPage = () => {
 
       <div className="mt-6">
         <Card>
-          <LogViewer pipeline={pipeline} runId={runId} />
+          <LogViewer pipeline={pipeline} run={run} />
         </Card>
       </div>
     </PageLayout>

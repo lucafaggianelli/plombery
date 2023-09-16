@@ -1,4 +1,4 @@
-export type PipelineRunStatus = 'running' | 'completed' | 'failed' | 'cancelled'
+export type PipelineRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR'
 
 export interface LogEntry {
@@ -73,4 +73,9 @@ export interface PipelineRun {
 export interface WebSocketMessage {
   type: 'logs' | 'run-update'
   data: any
+}
+
+export interface WhoamiResponse {
+  user: any
+  is_authentication_enabled: boolean
 }

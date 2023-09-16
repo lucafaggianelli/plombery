@@ -8,9 +8,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - Navigate to run page after running manually a pipeline or trigger (#71)
+- Add `ky` frontend dependency as HTTP fetch library
+- Spin the running icon in the status badge
+- Add a live logs indicator to the logs viewer
+- Add duration timer to run page
+- Automatic scroll lock for the log stream
 
 ### Fixed
 - Sometimes logs are appended to an existing logs files of previous runs (#131)
+- During a pipeline run, logs are streamed to any pipeline run page bug (#130)
 
 ## [0.3.2] - 2023-06-20
 

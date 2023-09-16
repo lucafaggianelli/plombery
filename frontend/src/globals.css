@@ -19,7 +19,3 @@ a.link--arrow:hover::after {
     opacity: 1;
     transform: translateX(5px);
 }
-
-.logs-table table td:last-child {
-    width: 100%;
-}

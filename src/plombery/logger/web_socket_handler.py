@@ -5,8 +5,10 @@ from plombery.websocket import manager
 
 
 class WebSocketHandler(QueueHandler):
-    def __init__(self) -> None:
+    def __init__(self, run_id: int) -> None:
         super().__init__(manager)
 
+        self.run_id = run_id
+
     def enqueue(self, record):
-        asyncio.create_task(manager.broadcast("logs", record.message))
+        asyncio.create_task(manager.emit(f"logs.{self.run_id}", record.message))
