@@ -11,23 +11,23 @@ import { format, addMinutes } from 'date-fns'
 import { PipelineRunStatus, Task } from './types'
 import { RunningIcon } from './components/RunningIcon'
 
-type ExtendedStatus = PipelineRunStatus | 'warning' | 'notrun'
+type ExtendedStatus = PipelineRunStatus | 'warning'
 
 export const STATUS_COLORS: Record<ExtendedStatus, Color> = {
+  pending: 'slate',
   completed: 'emerald',
   failed: 'rose',
   cancelled: 'slate',
   running: 'blue',
-  notrun: 'slate',
   warning: 'amber',
 }
 
 export const STATUS_ICONS: Record<ExtendedStatus, React.ElementType<any>> = {
+  pending: NoSymbolIcon,
   completed: CheckCircleIcon,
   failed: XCircleIcon,
   cancelled: StopCircleIcon,
   running: RunningIcon,
-  notrun: NoSymbolIcon,
   warning: ExclamationTriangleIcon,
 }
 

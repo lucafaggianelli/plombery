@@ -49,8 +49,8 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
             ) : (
               <Icon
                 variant="light"
-                icon={STATUS_ICONS.notrun}
-                color={STATUS_COLORS.notrun}
+                icon={STATUS_ICONS.pending}
+                color={STATUS_COLORS.pending}
               />
             )}
             <div className="truncate flex-grow">
