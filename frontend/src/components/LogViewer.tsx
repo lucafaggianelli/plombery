@@ -157,7 +157,7 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
           <Text>Tasks</Text>
 
           <MultiSelect
-            className="mt-1"
+            className="mt-1 z-20"
             onValueChange={(tasks) => {
               onFilterChange({ tasks })
             }}
@@ -174,7 +174,7 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
           <Text>Log level</Text>
 
           <MultiSelect
-            className="mt-1"
+            className="mt-1 z-20"
             onValueChange={(levels) => {
               onFilterChange({ levels })
             }}
