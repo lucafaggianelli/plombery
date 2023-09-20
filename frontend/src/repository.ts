@@ -9,7 +9,7 @@ const DEFAULT_BASE_URL = import.meta.env.DEV
   : `${window.location.protocol}//${window.location.host}/api`
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 
-const client = ky.create({ prefixUrl: BASE_URL })
+const client = ky.create({ prefixUrl: BASE_URL, credentials: 'include' })
 
 export const getApiUrl = () => BASE_URL
 
