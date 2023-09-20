@@ -6,7 +6,7 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline'
 import { Color } from '@tremor/react'
-import { format } from 'date-fns'
+import { format, addMinutes } from 'date-fns'
 
 import { PipelineRunStatus, Task } from './types'
 import { RunningIcon } from './components/RunningIcon'
@@ -50,10 +50,23 @@ export const getTasksColors = (tasks: Task[]) => {
   )
 }
 
-export const formatDateTime = (date: Date) =>
-  format(date, 'd MMM yyyy HH:mm:ss (XXX)')
+export const formatDateTime = (date: Date, utc: boolean = false): string => {
+  if (utc) {
+    const finalDate = addMinutes(date, date.getTimezoneOffset())
+    return format(finalDate, 'd MMM yyyy HH:mm:ss') + ' (UTC)'
+  } else {
+    return format(date, 'd MMM yyyy HH:mm:ss (XXX)')
+  }
+}
 
-export const formatTimestamp = (date: Date) => format(date, 'HH:mm:ss.SSS')
+export const formatTime = (date: Date, utc: boolean = false) => {
+  if (utc) {
+    const finalDate = addMinutes(date, date.getTimezoneOffset())
+    return format(finalDate, 'HH:mm:ss.SSS') + ' (UTC)'
+  } else {
+    return format(date, 'HH:mm:ss.SSS')
+  }
+}
 
 export const formatDate = (date: Date) => format(date, 'd MMM yyyy')
 

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add a live logs indicator to the logs viewer
 - Add duration timer to run page
 - Automatic scroll lock for the log stream
+- Show UTC datetime when hovering a datetime
 
 ### Fixed
 - Sometimes logs are appended to an existing logs files of previous runs (#131)

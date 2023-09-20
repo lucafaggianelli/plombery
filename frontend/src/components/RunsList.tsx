@@ -127,7 +127,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
                   </Link>
                 </TableCell>
               )}
-              <TableCell title={formatDateTime(run.start_time)}>
+              <TableCell title={formatDateTime(run.start_time, true)}>
                 <Text>
                   {differenceInDays(new Date(), run.start_time) <= 1
                     ? formatDistanceToNow(run.start_time, {

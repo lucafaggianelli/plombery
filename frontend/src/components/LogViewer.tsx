@@ -26,7 +26,7 @@ import {
   PipelineRun,
   WebSocketMessage,
 } from '@/types'
-import { formatNumber, formatTimestamp, getTasksColors } from '@/utils'
+import { formatNumber, formatTime, getTasksColors } from '@/utils'
 import TracebackInfoDialog from './TracebackInfoDialog'
 import { BarsArrowDownIcon } from '@heroicons/react/24/outline'
 
@@ -233,7 +233,9 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
               <TableRow key={log.id}>
                 <TableCell>
                   <Text className="font-mono text-xs">
-                    <span>{formatTimestamp(log.timestamp)}</span>
+                    <span title={formatTime(log.timestamp, true)}>
+                      {formatTime(log.timestamp)}
+                    </span>
 
                     {duration >= 0 && (
                       <span className="text-slate-400 ml-2">
