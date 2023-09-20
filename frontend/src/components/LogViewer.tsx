@@ -60,7 +60,6 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
   const { lastMessage } = useSocket(`logs.${run.id}`)
   const queryClient = useQueryClient()
 
-  const logsBottomRef = createRef<HTMLTableRowElement>()
   const tableRef = createRef<HTMLTableElement>()
 
   const query = useQuery(getLogs(run.id))
@@ -117,7 +116,8 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
 
   useEffect(() => {
     if (scrollToBottom) {
-      logsBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+      const element = tableRef.current?.parentElement
+      element?.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
     }
   })
 
@@ -265,7 +265,6 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
               </TableRow>
             )
           })}
-          <tr ref={logsBottomRef} />
         </TableBody>
       </Table>
     </Flex>
