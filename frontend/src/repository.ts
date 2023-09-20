@@ -44,7 +44,7 @@ export const getPipelineRunUrl = (pipelineId: string) =>
   `${BASE_URL}/pipelines/${pipelineId}/run`
 
 export const getTriggerRunUrl = (pipelineId: string, triggerId: string) =>
-  `/pipelines/${pipelineId}/triggers/${triggerId}/run`
+  `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/run`
 
 export const getCurrentUser = async () => {
   return await get<WhoamiResponse>('whoami')
