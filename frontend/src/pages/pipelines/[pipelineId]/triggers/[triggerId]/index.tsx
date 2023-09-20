@@ -112,7 +112,7 @@ const TriggerView: React.FC = () => {
         </div>
       }
     >
-      <Grid numColsMd={2} numColsLg={3} className="gap-6 mt-6">
+      <Grid numItemsMd={2} numItemsLg={3} className="gap-6 mt-6">
         <Card className="flex flex-col h-full">
           <Title>{trigger.name}</Title>
           <Subtitle>{trigger.description}</Subtitle>

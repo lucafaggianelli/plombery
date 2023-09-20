@@ -5,8 +5,8 @@ import {
   Flex,
   Grid,
   Icon,
-  MultiSelectBox,
-  MultiSelectBoxItem,
+  MultiSelect,
+  MultiSelectItem,
   Table,
   TableBody,
   TableCell,
@@ -152,39 +152,37 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
 
   return (
     <Flex flexDirection="col" alignItems="stretch" style={{ maxHeight: 600 }}>
-      <Grid numColsMd={3} className="gap-6 items-start">
+      <Grid numItemsMd={3} className="gap-6 items-start">
         <div>
           <Text>Tasks</Text>
 
-          <MultiSelectBox
+          <MultiSelect
             className="mt-1"
             onValueChange={(tasks) => {
               onFilterChange({ tasks })
             }}
           >
             {pipeline.tasks.map((task) => (
-              <MultiSelectBoxItem
-                text={task.name}
-                value={task.id}
-                key={task.id}
-              />
+              <MultiSelectItem value={task.id} key={task.id}>
+                {task.name}
+              </MultiSelectItem>
             ))}
-          </MultiSelectBox>
+          </MultiSelect>
         </div>
 
         <div>
           <Text>Log level</Text>
 
-          <MultiSelectBox
+          <MultiSelect
             className="mt-1"
             onValueChange={(levels) => {
               onFilterChange({ levels })
             }}
           >
             {Object.keys(LOG_LEVELS_COLORS).map((level) => (
-              <MultiSelectBoxItem text={level} value={level} key={level} />
+              <MultiSelectItem value={level} key={level} />
             ))}
-          </MultiSelectBox>
+          </MultiSelect>
         </div>
 
         {hasLiveLogs && (

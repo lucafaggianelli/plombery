@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fix link arrow decoration in scrolling containers
 - Fix table sticky headers
 
+### Changed
+- Migrate tremor to v3
+- Update frontend deps
+
 ## [0.3.2] - 2023-06-20
 
 ### Added

@@ -88,7 +88,7 @@ const RunViewPage = () => {
         </>
       }
     >
-      <Grid numColsMd={3} className="gap-6 mt-6">
+      <Grid numItemsMd={3} className="gap-6 mt-6">
         <RunsTasksList pipeline={pipeline} run={run} />
 
         <Card>
@@ -109,7 +109,7 @@ const RunViewPage = () => {
           </Flex>
 
           <CategoryBar
-            categoryPercentageValues={tasksRunDurations}
+            values={tasksRunDurations}
             colors={TASKS_COLORS}
             showLabels={false}
             className="mt-3"

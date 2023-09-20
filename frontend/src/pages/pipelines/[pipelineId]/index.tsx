@@ -64,7 +64,7 @@ const PipelineView: React.FC = () => {
         </div>
       }
     >
-      <Grid numColsMd={2} numColsLg={3} className="gap-6 mt-6">
+      <Grid numItemsMd={2} numItemsLg={3} className="gap-6 mt-6">
         <Card className="flex flex-col h-full">
           <Title>Tasks</Title>
 
@@ -120,10 +120,10 @@ const PipelineView: React.FC = () => {
       </Grid>
 
       <Grid
-        numCols={1}
-        numColsSm={1}
-        numColsMd={1}
-        numColsLg={2}
+        numItems={1}
+        numItemsSm={1}
+        numItemsMd={1}
+        numItemsLg={2}
         className="gap-6 mt-6"
       >
         <Col>
