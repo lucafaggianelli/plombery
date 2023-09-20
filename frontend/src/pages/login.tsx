@@ -4,7 +4,7 @@ import { getApiUrl } from '@/repository'
 
 const LoginPage: React.FC = () => {
   return (
-    <div className="bg-tremor-background dark:bg-slate-950 h-screen flex justify-center items-center">
+    <div className="bg-tremor-100 dark:bg-slate-950 h-screen flex justify-center items-center">
       <Card className="w-auto">
         <div className="w-12 rounded-full mx-auto mb-4">
           <img src="/mario-pipe-flower.png" alt="Plombery logo" />

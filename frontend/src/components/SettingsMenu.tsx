@@ -81,7 +81,7 @@ const SettingsMenu: React.FC<Props> = () => {
     <Popover placement="bottom-start">
       <PopoverTrigger>
         <div
-          className="flex justify-center items-center font-medium dark:bg-dark-tremor-background dark:ring-dark-tremor-ring ring-1 ring-slate-200 text-indigo-500 rounded-full hover:ring-2 hover:ring-indigo-400 dark:hover:ring-indigo-700 transition-shadow"
+          className="flex justify-center items-center font-medium dark:bg-dark-tremor-background dark:ring-dark-tremor-ring ring-1 ring-slate-300 text-indigo-500 rounded-full hover:ring-2 hover:ring-indigo-400 dark:hover:ring-indigo-700 transition-shadow"
           style={{ width: 34, height: 34 }}
         >
           {dialogTrigger}
