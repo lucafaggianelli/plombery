@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Sometimes logs are appended to an existing logs files of previous runs (#131)
 - During a pipeline run, logs are streamed to any pipeline run page bug (#130)
 - Fix link arrow decoration in scrolling containers
+- Fix table sticky headers
 
 ## [0.3.2] - 2023-06-20
 

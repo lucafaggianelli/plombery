@@ -213,8 +213,8 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
         )}
       </Grid>
 
-      <Table className="mt-6 logs-table flex-grow" ref={tableRef}>
-        <TableHead>
+      <Table className="mt-6 flex-grow" ref={tableRef}>
+        <TableHead className="sticky top-0 bg-white shadow z-10">
           <TableRow>
             <TableHeaderCell className="bg-white">Time</TableHeaderCell>
             <TableHeaderCell className="bg-white">Level</TableHeaderCell>

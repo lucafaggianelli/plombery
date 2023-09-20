@@ -26,7 +26,7 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
       <Title>Triggers</Title>
 
       <Table>
-        <TableHead>
+        <TableHead className="sticky top-0 bg-white shadow z-10">
           <TableRow>
             <TableHeaderCell>Name</TableHeaderCell>
             <TableHeaderCell>Interval</TableHeaderCell>

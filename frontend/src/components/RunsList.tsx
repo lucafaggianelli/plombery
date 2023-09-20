@@ -78,7 +78,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
       <Title>Runs</Title>
 
       <Table className="overflow-auto max-h-[50vh]">
-        <TableHead className="sticky top-0 bg-white shadow">
+        <TableHead className="sticky top-0 bg-white shadow z-10">
           <TableRow>
             <TableHeaderCell className="text-right">#</TableHeaderCell>
             <TableHeaderCell>Status</TableHeaderCell>
