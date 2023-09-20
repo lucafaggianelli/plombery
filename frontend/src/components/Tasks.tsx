@@ -7,6 +7,7 @@ import {
   Icon,
   List,
   ListItem,
+  Subtitle,
   Text,
   Title,
 } from '@tremor/react'
@@ -60,9 +61,9 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
                     tasksColors[task.id]
                   }`}
                 />
-                <Text className="truncate">
-                  <Bold>{task.name}</Bold>
-                </Text>
+                <Subtitle className="truncate text-base text-tremor-content-emphasis dark:text-dark-tremor-content-emphasis">
+                  {task.name}
+                </Subtitle>
               </Flex>
               {task.description && (
                 <Text className="truncate">{task.description}</Text>

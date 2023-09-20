@@ -1,6 +1,6 @@
 import { PlayIcon } from '@heroicons/react/24/outline'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Bold, Button, Flex, Text, TextInput } from '@tremor/react'
+import { Bold, Button, Flex, NumberInput, Text, TextInput } from '@tremor/react'
 import { JSONSchema7 } from 'json-schema'
 import { createRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -118,13 +118,11 @@ const schemaToForm = (schema: JSONSchema7) => {
         return (
           <div key={key}>
             <Text>{label}</Text>
-            <input
+            <NumberInput
               name={key}
-              type="number"
               min={minimum}
               max={maximum}
               defaultValue={defaultValue}
-              className="border-gray-300 rounded-md border shadow-sm px-4 py-2 text-sm font-medium invalid:border-rose-500 mt-2"
               style={{ textAlign: 'end', width: '100%' }}
               required={required}
             />

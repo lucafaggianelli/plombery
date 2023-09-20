@@ -26,7 +26,7 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
       <Title>Triggers</Title>
 
       <Table>
-        <TableHead className="sticky top-0 bg-white shadow z-10">
+        <TableHead className="sticky top-0 bg-tremor-background dark:bg-dark-tremor-background shadow dark:shadow-tremor-dropdown z-10">
           <TableRow>
             <TableHeaderCell>Name</TableHeaderCell>
             <TableHeaderCell>Interval</TableHeaderCell>
@@ -38,7 +38,7 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
           {pipeline.triggers.map((trigger) => (
             <TableRow
               key={trigger.id}
-              className="cursor-pointer hover:bg-slate-50 transition-colors"
+              className="cursor-pointer hover:bg-slate-50 dark:hover:bg-dark-tremor-background-subtle transition-colors"
               onClick={() =>
                 navigate(`/pipelines/${pipeline.id}/triggers/${trigger.id}`)
               }
