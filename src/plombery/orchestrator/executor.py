@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Callable, Optional
 import asyncio
 from datetime import datetime, timezone
@@ -25,6 +26,7 @@ from plombery.schemas import PipelineRunStatus, TaskRun
 
 def utcnow():
     return datetime.now(tz=timezone.utc)
+
 
 def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
     pipeline_run = create_pipeline_run(
@@ -150,7 +152,13 @@ async def run(
     run_context.reset(run_token)
 
 
-def _has_positional_args(func: Callable) -> bool:
+@dataclass
+class TaskFunctionSignature:
+    has_positional_args: bool = False
+    has_params_arg: bool = False
+
+
+def check_task_signature(func: Callable) -> TaskFunctionSignature:
     """
     Check if a function signature declares positional args.
 
@@ -158,14 +166,18 @@ def _has_positional_args(func: Callable) -> bool:
     accepts data inputs from another task
     """
 
+    result = TaskFunctionSignature()
+
     for name, parameter in inspect.signature(func).parameters.items():
         if (
             parameter.kind == inspect.Parameter.POSITIONAL_ONLY
             or inspect.Parameter.VAR_POSITIONAL
         ) and name != "params":
-            return True
+            result.has_positional_args = True
+        elif parameter.VAR_KEYWORD or (parameter.KEYWORD_ONLY and name == "params"):
+            result.has_params_arg = True
 
-    return False
+    return result
 
 
 async def _execute_task(
@@ -173,8 +185,10 @@ async def _execute_task(
     flowing_data,
     params: Optional[BaseModel] = None,
 ):
-    args = [flowing_data] if _has_positional_args(task.run) else []
-    kwargs = {"params": params} if params else {}
+    result = check_task_signature(task.run)
+
+    args = [flowing_data] if result.has_positional_args else []
+    kwargs = {"params": params} if params and result.has_params_arg else {}
 
     if asyncio.iscoroutinefunction(task.run):
         result = await task.run(*args, **kwargs)
