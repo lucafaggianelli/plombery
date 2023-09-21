@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fix link arrow decoration in scrolling containers
 - Fix table sticky headers
 - Show absolute URL in trigger run hook (#82)
+- Re-implement dialog to fix several bugs (#81)
 
 ### Changed
 - Migrate tremor to v3

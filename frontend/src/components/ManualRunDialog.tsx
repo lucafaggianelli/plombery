@@ -200,6 +200,30 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
       <Dialog
         isOpen={open}
         title={`Run ${pipeline.name} manually`}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              color="indigo"
+              onClick={() => {
+                setOpen(false)
+              }}
+              disabled={runPipelineMutation.isLoading}
+            >
+              Close
+            </Button>
+
+            <Button
+              color="indigo"
+              type="submit"
+              icon={PlayIcon}
+              disabled={runPipelineMutation.isLoading}
+            >
+              Run
+            </Button>
+          </>
+        }
         onClose={() => setOpen(false)}
       >
         <form
@@ -231,29 +255,6 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
           ) : (
             <div style={{ width: 350 }}>{schemaToForm(query.data)}</div>
           )}
-
-          <Flex className="justify-end space-x-6 mt-6">
-            <Button
-              type="button"
-              variant="secondary"
-              color="indigo"
-              onClick={() => {
-                setOpen(false)
-              }}
-              disabled={runPipelineMutation.isLoading}
-            >
-              Close
-            </Button>
-
-            <Button
-              color="indigo"
-              type="submit"
-              icon={PlayIcon}
-              disabled={runPipelineMutation.isLoading}
-            >
-              Run
-            </Button>
-          </Flex>
         </form>
       </Dialog>
     </>
