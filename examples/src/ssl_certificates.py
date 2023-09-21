@@ -7,12 +7,13 @@ from plombery import register_pipeline
 from plombery.logger import get_logger
 from plombery.pipeline import task
 from plombery.pipeline.trigger import Trigger
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 EXPIRATION_WARNING_THRESHOLD = 30
 hostnames = [
     "google.com",
+    "velvetlab.tech",
 ]
 
 
@@ -48,7 +49,9 @@ def get_certificate_info(hostname):
 
 
 class InputParams(BaseModel):
-    hostname: str
+    hostname: str = Field(
+        description="The hostname without any scheme, i.e. google.com"
+    )
 
 
 @task
@@ -65,16 +68,20 @@ async def check_certificate_expiration(params: InputParams):
     expires_in = expiration - now
 
     if expires_in.days < EXPIRATION_WARNING_THRESHOLD:
-        logger.warning(f"Attention, the certificate expires in {expires_in.days} days")
+        raise Exception(f"Attention, the certificate expires in {expires_in.days} days")
 
-    logger.info(f"{params.hostname} {expiration}")
+    logger.info(
+        f"All good, the certificate expires in {expires_in.days} days on the {expiration}"
+    )
 
 
 register_pipeline(
-    id="check-ssl-certificates",
+    id="check_ssl_certificate",
+    name="Check SSL certificate",
     description="""Check if the SSL certificate of a website has expired""",
     tasks=[check_certificate_expiration],
     triggers=[
+        # Create 1 trigger per each host to check
         Trigger(
             id=f"check-{host}",
             name=host,
