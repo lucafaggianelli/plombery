@@ -32,7 +32,6 @@ app.mount("/api", api)
 init_auth(api)
 
 origins = [
-    settings.server_url,
     settings.frontend_url,
 ]
 

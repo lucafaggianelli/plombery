@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 a {
-    @apply hover:text-indigo-500 hover:decoration-indigo-500 decoration-slate-200 underline underline-offset-2;
+    @apply hover:text-indigo-500 hover:decoration-indigo-500 decoration-inherit underline underline-offset-2;
     transition: text-decoration .3s cubic-bezier(0.22, 0.61, 0.36, 1);
+    position: relative;
 }
 
 a.link--arrow::after {

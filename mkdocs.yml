@@ -61,16 +61,20 @@ markdown_extensions:
   - md_in_html
   - pymdownx.details
   - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path:
+        - "."
 
 nav:
   - Welcome: index.md
   - Get Started:
     - Install: get-started.md
     - Your first pipeline: create-a-pipeline.md
-    - A better pipeline: a-better-pipeline.md
   - Docs:
     - Pipelines: pipelines.md
     - Tasks: tasks.md
     - Triggers: triggers.md
     - Configuration: configuration.md
     - Deployment: deployment.md
+  - Recipes:
+    - SSL Certificate Check: recipes/certificates-expiration.md

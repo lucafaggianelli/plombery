@@ -10,6 +10,7 @@ import {
   List,
   Bold,
   Grid,
+  TextInput,
 } from '@tremor/react'
 import { useParams } from 'react-router-dom'
 import React from 'react'
@@ -31,6 +32,10 @@ const PipelineView: React.FC = () => {
 
   const pipelineQuery = useQuery(getPipeline(pipelineId))
   const runsQuery = useQuery(listRuns(pipelineId))
+
+  const CopyUrlButton = () => (
+    <CopyButton content={getPipelineRunUrl(pipelineId)} className="ml-2.5" />
+  )
 
   if (runsQuery.isLoading || pipelineQuery.isLoading)
     return <div>Loading...</div>
@@ -64,7 +69,7 @@ const PipelineView: React.FC = () => {
         </div>
       }
     >
-      <Grid numColsMd={2} numColsLg={3} className="gap-6 mt-6">
+      <Grid numItemsMd={2} numItemsLg={3} className="gap-6 mt-6">
         <Card className="flex flex-col h-full">
           <Title>Tasks</Title>
 
@@ -85,8 +90,8 @@ const PipelineView: React.FC = () => {
 
           <div style={{ flexGrow: 1 }} />
 
-          <ListItem>
-            <Flex className="justify-start">
+          <Flex className="gap-8">
+            <Flex className="justify-start w-auto flex-shrink-0">
               <Text>Run URL</Text>
 
               <Icon
@@ -97,18 +102,14 @@ const PipelineView: React.FC = () => {
               />
             </Flex>
 
-            <Flex className="justify-end">
-              <div
-                className="bg-slate-100 border-slate-300 rounded border text-slate-500 text-xs truncate px-1 py-0.5 mr-2"
-                style={{ maxWidth: 200 }}
-                title={getPipelineRunUrl(pipelineId)}
-              >
-                {getPipelineRunUrl(pipelineId)}
-              </div>
-
-              <CopyButton content={getPipelineRunUrl(pipelineId)} />
-            </Flex>
-          </ListItem>
+            <TextInput
+              title={getPipelineRunUrl(pipelineId)}
+              value={getPipelineRunUrl(pipelineId)}
+              readOnly
+              icon={CopyUrlButton}
+              className="flex-grow"
+            />
+          </Flex>
         </Card>
 
         <RunsStatusChart
@@ -120,10 +121,10 @@ const PipelineView: React.FC = () => {
       </Grid>
 
       <Grid
-        numCols={1}
-        numColsSm={1}
-        numColsMd={1}
-        numColsLg={2}
+        numItems={1}
+        numItemsSm={1}
+        numItemsMd={1}
+        numItemsLg={2}
         className="gap-6 mt-6"
       >
         <Col>

@@ -13,10 +13,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add a live logs indicator to the logs viewer
 - Add duration timer to run page
 - Automatic scroll lock for the log stream
+- Show UTC datetime when hovering a datetime
+- Implement Dark mode and theme switcher
+- Create a settings menu (#157)
+- (docs): added recipe SSL certificate check
+- (docs): document pipelines and tasks (#110)
 
 ### Fixed
 - Sometimes logs are appended to an existing logs files of previous runs (#131)
 - During a pipeline run, logs are streamed to any pipeline run page bug (#130)
+- Fix link arrow decoration in scrolling containers
+- Fix table sticky headers
+- Show absolute URL in trigger run hook (#82)
+- Re-implement dialog to fix several bugs (#81)
+
+### Changed
+- Migrate tremor to v3
+- Update frontend deps
 
 ## [0.3.2] - 2023-06-20
 

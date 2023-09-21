@@ -1,11 +1,6 @@
 import { Card, Flex, Subtitle, Title } from '@tremor/react'
-import {
-  createRef,
-  MouseEventHandler,
-  PropsWithChildren,
-  ReactNode,
-  useEffect,
-} from 'react'
+import { Dialog as HUDialog, Transition } from '@headlessui/react'
+import { Fragment, PropsWithChildren, ReactNode } from 'react'
 
 interface Props extends PropsWithChildren {
   footer?: ReactNode
@@ -21,65 +16,60 @@ interface Props extends PropsWithChildren {
 const Dialog: React.FC<Props> = ({
   children,
   footer,
-  isOpen: open,
-  maxHeight,
-  maxWidth = '600px',
-  minWidth = '350px',
+  isOpen,
   subtitle,
   title,
   onClose,
 }) => {
-  const dialog = createRef<HTMLDialogElement>()
-
-  useEffect(() => {
-    if (open) {
-      dialog.current?.showModal()
-    } else {
-      dialog.current?.close()
-    }
-  }, [open])
-
-  const closeDialogOnBackdropClick: MouseEventHandler<HTMLDialogElement> = (
-    event
-  ) => {
-    var rect = dialog.current!.getBoundingClientRect()
-    var isInDialog =
-      rect.top <= event.clientY &&
-      event.clientY <= rect.top + rect.height &&
-      rect.left <= event.clientX &&
-      event.clientX <= rect.left + rect.width
-
-    if (!isInDialog) {
-      if (onClose) {
-        onClose()
-      } else {
-        dialog.current?.close()
-      }
-    }
-  }
-
   return (
-    <dialog
-      ref={dialog}
-      style={{
-        padding: 0,
-        background: 'transparent',
-        overflow: 'visible',
-        maxHeight,
-        maxWidth,
-        minWidth,
-      }}
-      onClick={closeDialogOnBackdropClick}
-    >
-      <Card>
-        {title && <Title>{title}</Title>}
-        {subtitle && <Subtitle>{subtitle}</Subtitle>}
+    <Transition show={isOpen} as={Fragment}>
+      <HUDialog onClose={onClose} className="relative z-50">
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div
+            className="fixed inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-sm"
+            aria-hidden="true"
+          />
+        </Transition.Child>
 
-        <div className={(title || subtitle) && 'mt-6'}>{children}</div>
+        <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 translate-y-1/3"
+            enterTo="opacity-100 translate-y-0"
+            leave="ease-in duration-300"
+            leaveFrom="opacity-100 translate-y-0"
+            leaveTo="opacity-0 -translate-y-1/3"
+          >
+            <HUDialog.Panel>
+              <Card>
+                {title && (
+                  <HUDialog.Title>
+                    <Title>{title}</Title>
+                  </HUDialog.Title>
+                )}
 
-        {footer && <Flex className="justify-end space-x-6 mt-6">{footer}</Flex>}
-      </Card>
-    </dialog>
+                {subtitle && <Subtitle>{subtitle}</Subtitle>}
+
+                <div className={(title || subtitle) && 'mt-6'}>{children}</div>
+
+                {footer && (
+                  <Flex className="justify-end space-x-6 mt-6">{footer}</Flex>
+                )}
+              </Card>
+            </HUDialog.Panel>
+          </Transition.Child>
+        </div>
+      </HUDialog>
+    </Transition>
   )
 }
 
