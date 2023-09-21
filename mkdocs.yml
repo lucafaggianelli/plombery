@@ -67,7 +67,6 @@ nav:
   - Get Started:
     - Install: get-started.md
     - Your first pipeline: create-a-pipeline.md
-    - A better pipeline: a-better-pipeline.md
   - Docs:
     - Pipelines: pipelines.md
     - Tasks: tasks.md
