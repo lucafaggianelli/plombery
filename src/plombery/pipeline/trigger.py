@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional, Union
 
 from apscheduler.triggers.base import BaseTrigger
 from pydantic import BaseModel
@@ -8,10 +9,10 @@ class Trigger(BaseModel):
     id: str
     name: str
     schedule: BaseTrigger
-    description: str = __doc__
-    params: dict = None
+    description: Optional[str] = __doc__
+    params: Optional[Union[dict, BaseModel]] = None
     paused: bool = False
-    next_fire_time: datetime = None
+    next_fire_time: Optional[datetime] = None
 
     class Config:
         arbitrary_types_allowed = True
