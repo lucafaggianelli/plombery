@@ -26,6 +26,12 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.urls]
+homepage = "https://lucafaggianelli.github.io/plombery/"
+documentation = "https://lucafaggianelli.github.io/plombery/"
+repository = "https://github.com/lucafaggianelli/plombery"
+changelog = "https://github.com/lucafaggianelli/plombery/blob/main/CHANGELOG.md"
+
 [project.optional-dependencies]
 dev = [
   "black==23.1.0",
