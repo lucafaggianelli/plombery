@@ -6,10 +6,11 @@ import { Button } from '@tremor/react'
 import { useRef, useState } from 'react'
 
 interface Props {
+  className?: string
   content: string
 }
 
-const CopyButton: React.FC<Props> = ({ content }) => {
+const CopyButton: React.FC<Props> = ({ className, content }) => {
   const [isCopied, setCopied] = useState(false)
   const timeout = useRef<ReturnType<typeof setTimeout>>()
 
@@ -19,6 +20,8 @@ const CopyButton: React.FC<Props> = ({ content }) => {
       color="indigo"
       size="sm"
       icon={isCopied ? ClipboardDocumentCheckIcon : ClipboardDocumentIcon}
+      tooltip="Click to copy"
+      className={className}
       onClick={() => {
         navigator.clipboard.writeText(content)
 

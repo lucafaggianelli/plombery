@@ -5,8 +5,8 @@ import {
   Flex,
   Grid,
   Icon,
-  MultiSelectBox,
-  MultiSelectBoxItem,
+  MultiSelect,
+  MultiSelectItem,
   Table,
   TableBody,
   TableCell,
@@ -26,7 +26,7 @@ import {
   PipelineRun,
   WebSocketMessage,
 } from '@/types'
-import { formatNumber, formatTimestamp, getTasksColors } from '@/utils'
+import { formatNumber, formatTime, getTasksColors } from '@/utils'
 import TracebackInfoDialog from './TracebackInfoDialog'
 import { BarsArrowDownIcon } from '@heroicons/react/24/outline'
 
@@ -60,7 +60,6 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
   const { lastMessage } = useSocket(`logs.${run.id}`)
   const queryClient = useQueryClient()
 
-  const logsBottomRef = createRef<HTMLTableRowElement>()
   const tableRef = createRef<HTMLTableElement>()
 
   const query = useQuery(getLogs(run.id))
@@ -117,7 +116,8 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
 
   useEffect(() => {
     if (scrollToBottom) {
-      logsBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+      const element = tableRef.current?.parentElement
+      element?.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
     }
   })
 
@@ -152,39 +152,37 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
 
   return (
     <Flex flexDirection="col" alignItems="stretch" style={{ maxHeight: 600 }}>
-      <Grid numColsMd={3} className="gap-6 items-start">
+      <Grid numItemsMd={3} className="gap-6 items-start">
         <div>
           <Text>Tasks</Text>
 
-          <MultiSelectBox
-            className="mt-1"
+          <MultiSelect
+            className="mt-1 z-20"
             onValueChange={(tasks) => {
               onFilterChange({ tasks })
             }}
           >
             {pipeline.tasks.map((task) => (
-              <MultiSelectBoxItem
-                text={task.name}
-                value={task.id}
-                key={task.id}
-              />
+              <MultiSelectItem value={task.id} key={task.id}>
+                {task.name}
+              </MultiSelectItem>
             ))}
-          </MultiSelectBox>
+          </MultiSelect>
         </div>
 
         <div>
           <Text>Log level</Text>
 
-          <MultiSelectBox
-            className="mt-1"
+          <MultiSelect
+            className="mt-1 z-20"
             onValueChange={(levels) => {
               onFilterChange({ levels })
             }}
           >
             {Object.keys(LOG_LEVELS_COLORS).map((level) => (
-              <MultiSelectBoxItem text={level} value={level} key={level} />
+              <MultiSelectItem value={level} key={level} />
             ))}
-          </MultiSelectBox>
+          </MultiSelect>
         </div>
 
         {hasLiveLogs && (
@@ -213,13 +211,13 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
         )}
       </Grid>
 
-      <Table className="mt-6 logs-table flex-grow" ref={tableRef}>
-        <TableHead>
+      <Table className="mt-6 flex-grow" ref={tableRef}>
+        <TableHead className="sticky top-0 bg-tremor-background dark:bg-dark-tremor-background shadow dark:shadow-tremor-dropdown z-10">
           <TableRow>
-            <TableHeaderCell className="bg-white">Time</TableHeaderCell>
-            <TableHeaderCell className="bg-white">Level</TableHeaderCell>
-            <TableHeaderCell className="bg-white">Task</TableHeaderCell>
-            <TableHeaderCell className="bg-white">Message</TableHeaderCell>
+            <TableHeaderCell>Time</TableHeaderCell>
+            <TableHeaderCell>Level</TableHeaderCell>
+            <TableHeaderCell>Task</TableHeaderCell>
+            <TableHeaderCell>Message</TableHeaderCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -233,7 +231,9 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
               <TableRow key={log.id}>
                 <TableCell>
                   <Text className="font-mono text-xs">
-                    <span>{formatTimestamp(log.timestamp)}</span>
+                    <span title={formatTime(log.timestamp, true)}>
+                      {formatTime(log.timestamp)}
+                    </span>
 
                     {duration >= 0 && (
                       <span className="text-slate-400 ml-2">
@@ -265,7 +265,6 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
               </TableRow>
             )
           })}
-          <tr ref={logsBottomRef} />
         </TableBody>
       </Table>
     </Flex>

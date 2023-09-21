@@ -1,6 +1,6 @@
 import { PlayIcon } from '@heroicons/react/24/outline'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Bold, Button, Flex, Text, TextInput } from '@tremor/react'
+import { Bold, Button, Flex, NumberInput, Text, TextInput } from '@tremor/react'
 import { JSONSchema7 } from 'json-schema'
 import { createRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -118,13 +118,11 @@ const schemaToForm = (schema: JSONSchema7) => {
         return (
           <div key={key}>
             <Text>{label}</Text>
-            <input
+            <NumberInput
               name={key}
-              type="number"
               min={minimum}
               max={maximum}
               defaultValue={defaultValue}
-              className="border-gray-300 rounded-md border shadow-sm px-4 py-2 text-sm font-medium invalid:border-rose-500 mt-2"
               style={{ textAlign: 'end', width: '100%' }}
               required={required}
             />
@@ -202,6 +200,30 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
       <Dialog
         isOpen={open}
         title={`Run ${pipeline.name} manually`}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              color="indigo"
+              onClick={() => {
+                setOpen(false)
+              }}
+              disabled={runPipelineMutation.isLoading}
+            >
+              Close
+            </Button>
+
+            <Button
+              color="indigo"
+              type="submit"
+              icon={PlayIcon}
+              disabled={runPipelineMutation.isLoading}
+            >
+              Run
+            </Button>
+          </>
+        }
         onClose={() => setOpen(false)}
       >
         <form
@@ -233,29 +255,6 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
           ) : (
             <div style={{ width: 350 }}>{schemaToForm(query.data)}</div>
           )}
-
-          <Flex className="justify-end space-x-6 mt-6">
-            <Button
-              type="button"
-              variant="secondary"
-              color="indigo"
-              onClick={() => {
-                setOpen(false)
-              }}
-              disabled={runPipelineMutation.isLoading}
-            >
-              Close
-            </Button>
-
-            <Button
-              color="indigo"
-              type="submit"
-              icon={PlayIcon}
-              disabled={runPipelineMutation.isLoading}
-            >
-              Run
-            </Button>
-          </Flex>
         </form>
       </Dialog>
     </>

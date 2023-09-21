@@ -19,11 +19,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@handsontable/react": "^12.3.1",
+    "@handsontable/react": "^13.1.0",
     "@heroicons/react": "^2.0.16",
     "@tanstack/react-query": "^4.26.1",
-    "@tremor/react": "^2.0.2",
-    "handsontable": "^12.3.1",
+    "@tremor/react": "^3.7.9",
+    "handsontable": "^13.1.0",
     "ky": "^1.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -32,14 +32,14 @@
   },
   "devDependencies": {
     "@types/json-schema": "^7.0.11",
-    "@types/node": "^18.14.6",
+    "@types/node": "^20.6.3",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
-    "@vitejs/plugin-react": "^3.1.0",
+    "@vitejs/plugin-react": "^4.0.4",
     "autoprefixer": "^10.4.13",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.7",
-    "typescript": "^4.9.3",
+    "typescript": "^5.2.2",
     "vite": "^4.1.0"
   }
 }
