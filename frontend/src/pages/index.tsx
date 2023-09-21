@@ -21,7 +21,7 @@ const HomePage: React.FC = () => {
         </>
       }
     >
-      <Grid numColsMd={2} className="gap-6 mt-6">
+      <Grid numItemsMd={2} className="gap-6 mt-6">
         <PipelinesList />
 
         {runsQuery.isLoading ? (

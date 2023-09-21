@@ -10,6 +10,7 @@ import {
   Flex,
   Icon,
   Grid,
+  TextInput,
 } from '@tremor/react'
 import { PlayIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -47,6 +48,13 @@ const TriggerView: React.FC = () => {
 
   const runPipelineMutation = useMutation(
     runPipelineTrigger(pipelineId, triggerId)
+  )
+
+  const CopyUrlButton = () => (
+    <CopyButton
+      content={getTriggerRunUrl(pipelineId, triggerId)}
+      className="ml-2.5"
+    />
   )
 
   if (runsQuery.isLoading || pipelineQuery.isLoading)
@@ -112,7 +120,7 @@ const TriggerView: React.FC = () => {
         </div>
       }
     >
-      <Grid numColsMd={2} numColsLg={3} className="gap-6 mt-6">
+      <Grid numItemsMd={2} numItemsLg={3} className="gap-6 mt-6">
         <Card className="flex flex-col h-full">
           <Title>{trigger.name}</Title>
           <Subtitle>{trigger.description}</Subtitle>
@@ -137,30 +145,26 @@ const TriggerView: React.FC = () => {
             )}
           </ListItem>
 
-          <ListItem>
-            <Flex className="justify-start">
+          <Flex className="gap-8">
+            <Flex className="justify-start w-auto flex-shrink-0">
               <Text>Run URL</Text>
 
               <Icon
                 size="sm"
                 color="slate"
                 icon={QuestionMarkCircleIcon}
-                tooltip="URL to run the trigger programmatically via an HTTP POST request"
+                tooltip="URL to run the pipeline programmatically via an HTTP POST request"
               />
             </Flex>
 
-            <Flex className="justify-end">
-              <div
-                className="bg-slate-100 border-slate-300 rounded border text-slate-500 text-xs truncate px-1 py-0.5 mr-2"
-                style={{ maxWidth: 200 }}
-                title={getTriggerRunUrl(pipelineId, triggerId)}
-              >
-                {getTriggerRunUrl(pipelineId, triggerId)}
-              </div>
-
-              <CopyButton content={getTriggerRunUrl(pipelineId, triggerId)} />
-            </Flex>
-          </ListItem>
+            <TextInput
+              title={getTriggerRunUrl(pipelineId, triggerId)}
+              value={getTriggerRunUrl(pipelineId, triggerId)}
+              readOnly
+              icon={CopyUrlButton}
+              className="flex-grow"
+            />
+          </Flex>
         </Card>
 
         <RunsStatusChart

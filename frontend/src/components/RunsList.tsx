@@ -78,7 +78,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
       <Title>Runs</Title>
 
       <Table className="overflow-auto max-h-[50vh]">
-        <TableHead className="sticky top-0 bg-white shadow">
+        <TableHead className="sticky top-0 bg-tremor-background dark:bg-dark-tremor-background shadow dark:shadow-tremor-dropdown z-10">
           <TableRow>
             <TableHeaderCell className="text-right">#</TableHeaderCell>
             <TableHeaderCell>Status</TableHeaderCell>
@@ -92,7 +92,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
           {runs.map((run) => (
             <TableRow
               key={run.id}
-              className="cursor-pointer hover:bg-slate-50 transition-colors"
+              className="cursor-pointer hover:bg-slate-50 dark:hover:bg-dark-tremor-background-subtle transition-colors"
               onClick={() =>
                 navigate(
                   `/pipelines/${run.pipeline_id}/triggers/${run.trigger_id}/runs/${run.id}`
@@ -127,7 +127,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
                   </Link>
                 </TableCell>
               )}
-              <TableCell title={formatDateTime(run.start_time)}>
+              <TableCell title={formatDateTime(run.start_time, true)}>
                 <Text>
                   {differenceInDays(new Date(), run.start_time) <= 1
                     ? formatDistanceToNow(run.start_time, {
