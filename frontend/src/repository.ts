@@ -201,22 +201,16 @@ export const getRunData = (
 })
 
 export const runPipeline = (
-  pipelineId: string
-): UseMutationOptions<PipelineRun, HTTPError, any> => ({
-  async mutationFn(params) {
-    return await post<PipelineRun>(`pipelines/${pipelineId}/run`, {
-      json: params,
-    })
-  },
-})
-
-export const runPipelineTrigger = (
   pipelineId: string,
-  triggerId: string
-): UseMutationOptions<PipelineRun, HTTPError> => ({
-  async mutationFn() {
-    return await post<PipelineRun>(
-      `pipelines/${pipelineId}/triggers/${triggerId}/run`
-    )
+  triggerId?: string
+): UseMutationOptions<PipelineRun, HTTPError, Record<string, any> | void> => ({
+  async mutationFn(params) {
+    return await post<PipelineRun>('runs/', {
+      json: {
+        pipeline_id: pipelineId,
+        trigger_id: triggerId,
+        params,
+      },
+    })
   },
 })

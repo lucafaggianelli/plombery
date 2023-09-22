@@ -29,7 +29,7 @@ import {
   getPipeline,
   listRuns,
   getTriggerRunUrl,
-  runPipelineTrigger,
+  runPipeline,
 } from '@/repository'
 import { Trigger } from '@/types'
 
@@ -46,9 +46,14 @@ const TriggerView: React.FC = () => {
     enabled: !!triggerId,
   })
 
-  const runPipelineMutation = useMutation(
-    runPipelineTrigger(pipelineId, triggerId)
-  )
+  const runPipelineMutation = useMutation({
+    ...runPipeline(pipelineId, triggerId),
+    onSuccess(data) {
+      navigate(
+        `/pipelines/${data.pipeline_id}/triggers/${data.trigger_id}/runs/${data.id}`
+      )
+    },
+  })
 
   const CopyUrlButton = () => (
     <CopyButton
@@ -83,13 +88,7 @@ const TriggerView: React.FC = () => {
       variant="secondary"
       icon={PlayIcon}
       onClick={() => {
-        runPipelineMutation.mutateAsync(undefined, {
-          onSuccess(data) {
-            navigate(
-              `/pipelines/${data.pipeline_id}/triggers/${data.trigger_id}/runs/${data.id}`
-            )
-          },
-        })
+        runPipelineMutation.mutateAsync()
       }}
     >
       Run
