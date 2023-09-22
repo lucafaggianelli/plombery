@@ -55,7 +55,7 @@ def get_run_data(run_id: int, task: str):
 
 class PipelineRunInput(BaseModel):
     pipeline_id: str
-    trigger_id: Optional[str]
+    trigger_id: Optional[str] = None
     params: Optional[Dict[str, Any]] = None
 
 

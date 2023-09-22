@@ -211,13 +211,10 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
             )
 
             try {
-              runPipelineMutation.mutateAsync(params, {
-                onSuccess(data) {
-                  navigate(
-                    `/pipelines/${data.pipeline_id}/triggers/${data.trigger_id}/runs/${data.id}`
-                  )
-                },
-              })
+              const data = await runPipelineMutation.mutateAsync(params)
+              navigate(
+                `/pipelines/${data.pipeline_id}/triggers/${data.trigger_id}/runs/${data.id}`
+              )
               setOpen(false)
             } catch (error) {
               console.error(error)
