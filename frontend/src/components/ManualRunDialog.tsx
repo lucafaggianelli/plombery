@@ -62,8 +62,8 @@ const schemaToForm = (schema: JSONSchema7) => {
     const required = schema.required?.includes(key)
 
     if (['number', 'integer'].includes(value_type)) {
-      const minimum = value.minimum || value.exclusiveMinimum
-      const maximum = value.maximum || value.exclusiveMaximum
+      const minimum = value.minimum ?? value.exclusiveMinimum
+      const maximum = value.maximum ?? value.exclusiveMaximum
 
       if (minimum !== undefined && maximum !== undefined) {
         const output = createRef<HTMLOutputElement>()
@@ -200,30 +200,6 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
       <Dialog
         isOpen={open}
         title={`Run ${pipeline.name} manually`}
-        footer={
-          <>
-            <Button
-              type="button"
-              variant="secondary"
-              color="indigo"
-              onClick={() => {
-                setOpen(false)
-              }}
-              disabled={runPipelineMutation.isLoading}
-            >
-              Close
-            </Button>
-
-            <Button
-              color="indigo"
-              type="submit"
-              icon={PlayIcon}
-              disabled={runPipelineMutation.isLoading}
-            >
-              Run
-            </Button>
-          </>
-        }
         onClose={() => setOpen(false)}
       >
         <form
@@ -255,6 +231,29 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
           ) : (
             <div style={{ width: 350 }}>{schemaToForm(query.data)}</div>
           )}
+
+          <Flex className="justify-end space-x-6 mt-6">
+            <Button
+              type="button"
+              variant="secondary"
+              color="indigo"
+              onClick={() => {
+                setOpen(false)
+              }}
+              disabled={runPipelineMutation.isLoading}
+            >
+              Close
+            </Button>
+
+            <Button
+              color="indigo"
+              type="submit"
+              icon={PlayIcon}
+              disabled={runPipelineMutation.isLoading}
+            >
+              Run
+            </Button>
+          </Flex>
         </form>
       </Dialog>
     </>
