@@ -32,7 +32,7 @@ EnvVarLoader.add_implicit_resolver("!env", ENV_VAR_MATCHER, None)
 EnvVarLoader.add_constructor("!env", path_constructor)
 
 
-SUPPORTED_CONFIG_FILES: Tuple[Tuple[str, str]] = (
+SUPPORTED_CONFIG_FILES: Tuple[Tuple[str, str], ...] = (
     ("yaml", "yaml"),
     ("yml", "yaml"),
 )
@@ -78,11 +78,11 @@ class AuthSettings(BaseModel):
 
 
 class Settings(BaseSettings):
-    auth: Optional[AuthSettings]
+    auth: Optional[AuthSettings] = None
     database_url: str = "sqlite:///./plombery.db"
-    notifications: Optional[List[NotificationRule]]
-    server_url: Optional[AnyHttpUrl] = "http://localhost:8000"
-    frontend_url: Optional[AnyHttpUrl] = "http://localhost:8000"
+    notifications: Optional[List[NotificationRule]] = None
+    server_url: AnyHttpUrl = "http://localhost:8000"
+    frontend_url: AnyHttpUrl = "http://localhost:8000"
 
     class Config:
         env_file = BASE_SETTINGS_FOLDER / ".env"

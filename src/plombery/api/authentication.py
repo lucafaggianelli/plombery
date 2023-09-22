@@ -1,24 +1,29 @@
 from authlib.integrations.starlette_client import OAuth
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 
 from plombery.config import settings
 
 
-def init_auth(app: FastAPI):
+def init_auth(app: FastAPI) -> APIRouter:
+    router = APIRouter(
+        prefix="/auth",
+        tags=["Authentication"],
+    )
+
     if not settings.auth:
         # If authentication is not enabled, register a
         # dummy endpoint to return an empty user
 
-        @app.get("/whoami")
+        @router.get("/whoami")
         async def get_current_user_no_auth(request: Request):
             return {
                 "user": None,
                 "is_authentication_enabled": False,
             }
 
-        return
+        return router
 
     app.add_middleware(SessionMiddleware, secret_key=settings.auth.secret_key.get_secret_value())
 
@@ -34,16 +39,16 @@ def init_auth(app: FastAPI):
         client_kwargs=settings.auth.client_kwargs,
     )
 
-    @app.get("/login")
+    @router.get("/login")
     async def login(request: Request):
         redirect_uri = request.url_for("auth_redirect")
         return await oauth.default.authorize_redirect(request, redirect_uri)
 
-    @app.post("/logout")
+    @router.post("/logout")
     async def logout(request: Request):
         request.session.pop("user", None)
 
-    @app.get("/whoami")
+    @router.get("/whoami")
     async def get_current_user(request: Request):
         user = request.session.get("user")
 
@@ -52,7 +57,7 @@ def init_auth(app: FastAPI):
             "is_authentication_enabled": True,
         }
 
-    @app.get("/redirect")
+    @router.get("/redirect")
     async def auth_redirect(request: Request):
         token = await oauth.default.authorize_access_token(request)
         user = token["userinfo"]
@@ -61,6 +66,8 @@ def init_auth(app: FastAPI):
             request.session["user"] = dict(user)
 
         return RedirectResponse(url=settings.frontend_url)
+
+    return router
 
 
 async def _needs_auth(request: Request):

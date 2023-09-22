@@ -1,9 +1,9 @@
-from typing import List, Type
+from typing import List, Optional, Type
 import logging
 import os
 
 from apscheduler.schedulers.base import SchedulerAlreadyRunningError
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .api import app
 from .config import settings
@@ -67,10 +67,10 @@ def get_app():
 def register_pipeline(
     id: str,
     tasks: List[Task],
-    name: str = None,
-    description: str = None,
-    params: Type[BaseModel] = None,
-    triggers: List[Trigger] = None,
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+    params: Optional[Type[BaseModel]] = None,
+    triggers: Optional[List[Trigger]] = None,
 ):
     pipeline = Pipeline(
         id=id,
@@ -78,7 +78,7 @@ def register_pipeline(
         name=name,
         description=description,
         params=params,
-        triggers=triggers,
+        triggers=triggers or [],
     )
 
     _app.register_pipeline(pipeline)
