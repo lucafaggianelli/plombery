@@ -62,8 +62,8 @@ const schemaToForm = (schema: JSONSchema7) => {
     const required = schema.required?.includes(key)
 
     if (['number', 'integer'].includes(value_type)) {
-      const minimum = value.minimum || value.exclusiveMinimum
-      const maximum = value.maximum || value.exclusiveMaximum
+      const minimum = value.minimum ?? value.exclusiveMinimum
+      const maximum = value.maximum ?? value.exclusiveMaximum
 
       if (minimum !== undefined && maximum !== undefined) {
         const output = createRef<HTMLOutputElement>()
@@ -200,8 +200,36 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
       <Dialog
         isOpen={open}
         title={`Run ${pipeline.name} manually`}
-        footer={
-          <>
+        onClose={() => setOpen(false)}
+      >
+        <form
+          onSubmit={async (event) => {
+            event.preventDefault()
+
+            const params = Object.fromEntries(
+              new FormData(event.target as HTMLFormElement).entries()
+            )
+
+            try {
+              const data = await runPipelineMutation.mutateAsync(params)
+              navigate(
+                `/pipelines/${data.pipeline_id}/triggers/${data.trigger_id}/runs/${data.id}`
+              )
+              setOpen(false)
+            } catch (error) {
+              console.error(error)
+            }
+          }}
+        >
+          {query.isLoading ? (
+            'Loading...'
+          ) : query.isError ? (
+            'Error'
+          ) : (
+            <div style={{ width: 350 }}>{schemaToForm(query.data)}</div>
+          )}
+
+          <Flex className="justify-end space-x-6 mt-6">
             <Button
               type="button"
               variant="secondary"
@@ -222,39 +250,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
             >
               Run
             </Button>
-          </>
-        }
-        onClose={() => setOpen(false)}
-      >
-        <form
-          onSubmit={async (event) => {
-            event.preventDefault()
-
-            const params = Object.fromEntries(
-              new FormData(event.target as HTMLFormElement).entries()
-            )
-
-            try {
-              runPipelineMutation.mutateAsync(params, {
-                onSuccess(data) {
-                  navigate(
-                    `/pipelines/${data.pipeline_id}/triggers/${data.trigger_id}/runs/${data.id}`
-                  )
-                },
-              })
-              setOpen(false)
-            } catch (error) {
-              console.error(error)
-            }
-          }}
-        >
-          {query.isLoading ? (
-            'Loading...'
-          ) : query.isError ? (
-            'Error'
-          ) : (
-            <div style={{ width: 350 }}>{schemaToForm(query.data)}</div>
-          )}
+          </Flex>
         </form>
       </Dialog>
     </>

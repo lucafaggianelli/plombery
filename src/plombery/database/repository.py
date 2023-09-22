@@ -12,7 +12,7 @@ def create_pipeline_run(data: PipelineRunCreate):
     db = SessionLocal()
     db.expire_on_commit = False
 
-    created_model = models.PipelineRun(**data.dict())
+    created_model = models.PipelineRun(**data.model_dump())
     db.add(created_model)
     db.commit()
     db.refresh(created_model)

@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, List, Optional, Type
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, model_validator
 
 from .task import Task
 from .trigger import Trigger
@@ -10,7 +10,7 @@ from ._utils import prettify_name
 class Pipeline(BaseModel):
     id: str
     tasks: List[Task]
-    name: Optional[str] = None
+    name: Optional[str]
     description: Optional[str] = None
     params: Optional[Type[BaseModel]] = Field(exclude=True, default=None)
     triggers: List[Trigger] = Field(default_factory=list)
@@ -18,22 +18,14 @@ class Pipeline(BaseModel):
     class Config:
         validate_assignment = True
 
-    @validator("name", always=True)
-    def generate_default_name(cls, name: str, values: Dict[str, Any]) -> str:
-        if not name:
-            return prettify_name(values["id"]).title()
+    @model_validator(mode="before")
+    @classmethod
+    def generate_default_name(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if not data.get("name", None):
+                data["name"] = prettify_name(data["id"]).title()
 
-        return name
+            if not data.get("description", None):
+                data["description"] = cls.__doc__
 
-    @validator("description", always=True)
-    def generate_default_description(
-        cls, description: str, values: Dict[str, Any]
-    ) -> Optional[str]:
-        if not description:
-            return cls.__doc__
-
-        return description
-
-    @validator("triggers", pre=True, always=True)
-    def set_name(cls, triggers):
-        return triggers or []
+        return data

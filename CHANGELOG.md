@@ -30,6 +30,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Migrate tremor to v3
 - Update frontend deps
+- (breaking) updated FastAPI to v0.103 (#144)
+- updated authlib for compatibility with fastapi
+- (internal): refactored FastAPI backend (#159)
+- (breaking): auth redirect url is now `/auth/redirect`
+- (breaking): all auth endpoints are prefixed with `/auth`
+- (breaking): `pipelines/`, `runs/` and `ws/` endpoints now have trailing slashes
+- (breaking): updated pydantic to v2
+- (breaking): `Trigger.params` accepts a `BaseModel` instance, not a dict
 
 ## [0.3.2] - 2023-06-20
 

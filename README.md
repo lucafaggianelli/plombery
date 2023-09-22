@@ -251,5 +251,5 @@ Plombery is built on top of amazing techs:
 [TypeScript-url]: https://www.typescriptlang.org/
 [pypi-shield]: https://img.shields.io/pypi/v/plombery.svg?style=for-the-badge
 [pypi-url]: https://pypi.python.org/pypi/plombery
-[CodeClimate-shield]: https://codeclimate.com/github/cloudfoundry/membrane.png?style=for-the-badge
-[CodeClimate-url]: https://codeclimate.com/github/cloudfoundry/membrane
+[CodeClimate-shield]: https://codeclimate.com/github/lucafaggianelli/plombery.png?style=for-the-badge
+[CodeClimate-url]: https://codeclimate.com/github/lucafaggianelli/plombery
