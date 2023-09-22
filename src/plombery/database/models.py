@@ -61,7 +61,7 @@ class AwareDateTime(sa.types.TypeDecorator):
 
     impl = DateTime
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: datetime.datetime, dialect):
         return value.replace(tzinfo=datetime.timezone.utc)
 
 
@@ -83,7 +83,9 @@ Base.metadata.create_all(bind=engine)
 def _mark_cancelled_runs():
     db = SessionLocal()
 
-    db.query(PipelineRun).filter(PipelineRun.status == PipelineRunStatus.RUNNING.value).update(
+    db.query(PipelineRun).filter(
+        PipelineRun.status == PipelineRunStatus.RUNNING.value
+    ).update(
         dict(
             status=PipelineRunStatus.CANCELLED.value,
         )
