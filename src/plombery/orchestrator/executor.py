@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Any, Callable, Dict, Optional
 import asyncio
 from datetime import datetime, timezone
 import inspect
@@ -25,6 +25,7 @@ from plombery.schemas import PipelineRunStatus, TaskRun
 
 def utcnow():
     return datetime.now(tz=timezone.utc)
+
 
 def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
     pipeline_run = create_pipeline_run(
@@ -74,7 +75,7 @@ def _send_pipeline_event(pipeline_run: PipelineRun):
 async def run(
     pipeline: Pipeline,
     trigger: Optional[Trigger] = None,
-    params: Optional[dict] = None,
+    params: Optional[Dict[str, Any]] = None,
     pipeline_run: Optional[PipelineRun] = None,
 ):
     """
@@ -104,12 +105,13 @@ async def run(
         trigger.id if trigger else MANUAL_TRIGGER_ID,
     )
 
-    input_params = trigger.params if trigger else params
     pipeline_params: Optional[BaseModel] = None
 
     if pipeline.params:
-        pipeline_params = pipeline.params(**(input_params or {}))
-    elif input_params:
+        pipeline_params = (
+            trigger.params if trigger else pipeline.params(**(params or {}))
+        )
+    elif (trigger and trigger.params) or params:
         logger.warning("This pipeline doesn't support input params")
 
     flowing_data = None

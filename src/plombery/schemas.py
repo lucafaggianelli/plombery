@@ -13,11 +13,11 @@ class PipelineRunStatus(str, Enum):
 
 
 class TaskRun(BaseModel):
-    duration: Optional[NonNegativeFloat]
+    duration: Optional[NonNegativeFloat] = 0
     """Task duration in milliseconds"""
     has_output: bool = False
     """True if the task generated an output"""
-    status: Optional[PipelineRunStatus]
+    status: Optional[PipelineRunStatus] = PipelineRunStatus.PENDING
     task_id: str
 
     class Config:

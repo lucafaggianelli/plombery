@@ -1,6 +1,6 @@
 import json
 
-from pydantic.json import pydantic_encoder
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -8,7 +8,7 @@ from plombery.config import settings
 
 
 def json_serializer(*args, **kwargs) -> str:
-    return json.dumps(*args, default=pydantic_encoder, **kwargs)
+    return json.dumps(*args, default=jsonable_encoder, **kwargs)
 
 
 engine = create_engine(
