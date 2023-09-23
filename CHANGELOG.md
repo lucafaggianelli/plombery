@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fix table sticky headers
 - Show absolute URL in trigger run hook (#82)
 - Re-implement dialog to fix several bugs (#81)
+- Validate parameters in pipeline run endpoint
 
 ### Changed
 - Migrate tremor to v3

@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from plombery.api.authentication import NeedsAuth
 from plombery.database.schemas import PipelineRun
@@ -80,4 +80,13 @@ async def run_pipeline(body: PipelineRunInput) -> PipelineRun:
 
         return await run_pipeline_now(pipeline, trigger)
     else:
+        if pipeline.params:
+            try:
+                pipeline.params.model_validate(body.params)
+            except ValidationError as exc:
+                raise HTTPException(
+                    status_code=422,
+                    detail=exc.errors(),
+                )
+
         return await run_pipeline_now(pipeline, params=body.params)

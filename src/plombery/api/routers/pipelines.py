@@ -50,4 +50,4 @@ def get_pipeline_input_schema(pipeline_id: str):
     if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
         raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
 
-    return pipeline.params.schema() if pipeline.params else dict()
+    return pipeline.params.model_json_schema() if pipeline.params else dict()
