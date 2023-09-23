@@ -33,7 +33,7 @@ const renderers: Record<FieldType, (field: FieldDefinition) => JSX.Element> = {
           id={field.name}
           name={field.name}
           type="checkbox"
-          checked={field.defaultValue === 'true'}
+          defaultChecked={field.defaultValue === 'true'}
           className="w-4 h-4 accent-indigo-500 bg-tremor-background rounded dark:bg-dark-tremor-background cursor-pointer"
         />
 
