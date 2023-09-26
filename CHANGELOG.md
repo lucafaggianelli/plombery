@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Create a settings menu (#157)
 - (docs): added recipe SSL certificate check
 - (docs): document pipelines and tasks (#110)
+- Improve manual run form
 
 ### Fixed
 - Sometimes logs are appended to an existing logs files of previous runs (#131)
@@ -26,6 +27,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fix table sticky headers
 - Show absolute URL in trigger run hook (#82)
 - Re-implement dialog to fix several bugs (#81)
+- Validate parameters in pipeline run endpoint
 
 ### Changed
 - Migrate tremor to v3
