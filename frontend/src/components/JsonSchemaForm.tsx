@@ -1,5 +1,6 @@
 import {
   Flex,
+  Icon,
   NumberInput,
   Select,
   SelectItem,
@@ -9,6 +10,7 @@ import {
 import { JSONSchema7, JSONSchema7TypeName } from 'json-schema'
 import { useCallback, useState } from 'react'
 import RangeSlider from './RangeSlider'
+import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 
 interface Props {
   schema: JSONSchema7
@@ -145,7 +147,11 @@ const JsonSchemaForm: React.FC<Props> = ({ schema }) => {
   const properties = schema.properties
 
   if (!properties) {
-    return <Text className="mt-4">This pipeline has no input parameters, but you can still run it!</Text>
+    return (
+      <Text className="mt-4">
+        This pipeline has no input parameters, but you can still run it!
+      </Text>
+    )
   }
 
   const inputFields = Object.entries(properties).map(([key, _value]) => {
@@ -155,6 +161,7 @@ const JsonSchemaForm: React.FC<Props> = ({ schema }) => {
 
     let value = _value
     let defaultValue: string | undefined
+    const label = value.title || key
 
     if (_value.allOf) {
       const multi_values = _value.allOf[0] as JSONSchema7
@@ -175,7 +182,6 @@ const JsonSchemaForm: React.FC<Props> = ({ schema }) => {
       defaultValue = value.default?.toString()
     }
 
-    const label = value.title || key
     const type =
       (value.enum
         ? 'enum'
@@ -195,7 +201,20 @@ const JsonSchemaForm: React.FC<Props> = ({ schema }) => {
 
     return (
       <div key={key}>
-        <Text className="mb-2">{label}</Text>
+        <Flex className="justify-between">
+          <Text className="mb-2">
+            {label}
+            {required && ' *'}
+          </Text>
+
+          {value.description && (
+            <Icon
+              icon={QuestionMarkCircleIcon}
+              tooltip={value.description}
+              color="neutral"
+            />
+          )}
+        </Flex>
         {component}
       </div>
     )
