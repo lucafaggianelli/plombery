@@ -229,6 +229,17 @@ Plombery is built on top of amazing techs:
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Star History
+
+<a href="https://star-history.com/#lucafaggianelli/plombery&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=lucafaggianelli/plombery&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=lucafaggianelli/plombery&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=lucafaggianelli/plombery&type=Date" />
+  </picture>
+</a>
+
+
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
