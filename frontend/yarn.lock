@@ -1419,10 +1419,10 @@ react-transition-group@^4.4.5:
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
 
-react-use-websocket@^4.3.1:
-  version "4.4.0"
-  resolved "https://registry.yarnpkg.com/react-use-websocket/-/react-use-websocket-4.4.0.tgz#6cb53197ce6abe4c6902bec74ca2ed0b935c3887"
-  integrity sha512-V48JEPMwTUp31oXxBZYTk27aHOHwTeYEhCOb2uPXwcnzolMkLacesRdu4TmEuN5QeuKRenEjCBMVKPsB98aaDg==
+react-use-websocket@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/react-use-websocket/-/react-use-websocket-4.5.0.tgz#8e3a18c51328522876bfea28661521292d6f210a"
+  integrity sha512-oxYVLWM3Lv0InCfjW7hG/Hk0hkE0P1SiLd5/I3d5x0W4riAnDUkD4VEu7qNVAqxNjBF3nU7k0jLMOetLXpwfsA==
 
 react@^18.2.0:
   version "18.2.0"
