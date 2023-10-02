@@ -37,21 +37,23 @@ def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
         )
     )
 
-    _send_pipeline_event(pipeline_run)
+    _send_pipeline_event(pipeline, pipeline_run)
 
     return pipeline_run
 
 
-def _on_pipeline_status_changed(pipeline_run: PipelineRun, status: PipelineRunStatus):
+def _on_pipeline_status_changed(
+    pipeline: Pipeline, pipeline_run: PipelineRun, status: PipelineRunStatus
+):
     update_pipeline_run(pipeline_run, utcnow(), status)
 
-    _send_pipeline_event(pipeline_run)
+    _send_pipeline_event(pipeline, pipeline_run)
 
     return pipeline_run
 
 
-def _send_pipeline_event(pipeline_run: PipelineRun):
-    notify_coro = notification_manager.notify(pipeline_run)
+def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
+    notify_coro = notification_manager.notify(pipeline, pipeline_run)
 
     run = dict(
         id=pipeline_run.id,
@@ -87,7 +89,7 @@ async def run(
     """
 
     if pipeline_run:
-        _on_pipeline_status_changed(pipeline_run, PipelineRunStatus.RUNNING)
+        _on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.RUNNING)
     else:
         pipeline_run = _on_pipeline_start(pipeline, trigger)
 
@@ -141,12 +143,12 @@ async def run(
 
             if task_run.status == PipelineRunStatus.FAILED:
                 # A task failed so the entire pipeline failed
-                _on_pipeline_status_changed(pipeline_run, PipelineRunStatus.FAILED)
+                _on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.FAILED)
                 break
 
     else:
         # All task succeeded so the entire pipeline succeeded
-        _on_pipeline_status_changed(pipeline_run, PipelineRunStatus.COMPLETED)
+        _on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.COMPLETED)
 
     pipeline_context.reset(pipeline_token)
     run_context.reset(run_token)
