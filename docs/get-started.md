@@ -56,3 +56,9 @@ to:
 - Click on the green **Code** button on the top right
 - Choose the **Codespaces** tab
 - Click on *create new codespace from main* or reuse an existing one
+- A new page will open at `github.dev`, wait for the environment build
+- Once your codespace is ready you'll see an interface similar to VSCode
+- Some commands will be run in the terminal to build the frontend etc., wait for their completion
+- If everything went well, Plombery home page will be open in a new browser tab
+- Changes in the Python code will be immediately reflected in the web page, like if you were developing
+  on your laptop
