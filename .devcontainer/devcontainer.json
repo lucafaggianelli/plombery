@@ -30,7 +30,7 @@
   },
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "cd examples && pip3 install -r requirements.txt",
+  "postCreateCommand": "cd examples && pip3 install -r requirements.txt && cd ../frontend && yarn && yarn build",
 
   "postAttachCommand": "cd examples && PYTHONPATH=$(pwd) python src/app.py"
 
