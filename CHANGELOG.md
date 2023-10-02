@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Improve manual run form
 - (docs): add codespaces config to run demo
 - Add `allowed_origins` configuration to explicitly set CORS headers
+- Add HTML template for email notifications (#52)
 
 ### Fixed
 - Sometimes logs are appended to an existing logs files of previous runs (#131)
