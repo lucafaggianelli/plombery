@@ -1,6 +1,6 @@
 ---
 title: "Pipeline @{{ pipeline_name }} @{{ pipeline_status }}"
-preheader: "Please confirm your email address in order to activate your account."
+preheader: "Your pipeline @{{ pipeline_name }} @{{ pipeline_status }}!"
 bodyClass: bg-slate-50
 ---
 
@@ -9,25 +9,19 @@ bodyClass: bg-slate-50
     <table align="center">
       <tr>
         <td class="w-[552px] max-w-full">
-          <div class="my-12 sm:my-8 text-center">
-            <a href="https://maizzle.com">
-              <img src="images/maizzle.png" width="70" alt="Maizzle">
-            </a>
-          </div>
-
-          <table class="w-full">
+          <table class="w-full mt-12">
             <tr>
-              <td class="p-12 sm:px-6 text-base text-slate-700 bg-white rounded shadow-sm">
-                <h1 class="m-0 mb-6 text-2xl sm:leading-8 text-black font-semibold">
+              <td
+                class="p-12 sm:px-6 text-base text-slate-700 bg-white rounded shadow-sm"
+              >
+                <h1
+                  class="m-0 mb-6 text-2xl sm:leading-8 text-black font-semibold"
+                >
                   Hello,
                 </h1>
 
                 <p class="m-0 leading-6">
                   Your pipeline @{{ pipeline_name }} @{{ pipeline_status }}!
-
-                  <br>
-                  <br>
-                  For more info:
                 </p>
 
                 <x-spacer height="24px" />
@@ -40,8 +34,8 @@ bodyClass: bg-slate-50
 
                 <p class="m-0 text-sm text-slate-400">
                   <em>
-                    If you don't want to receive these emails, change
-                    the notifications settings in your plombery config file.
+                    If you don't want to receive these emails, change the
+                    notifications settings in your plombery.config.yml file.
                   </em>
                 </p>
               </td>
@@ -51,18 +45,24 @@ bodyClass: bg-slate-50
             </tr>
             <tr>
               <td class="text-center text-slate-600 text-xs px-6">
-                <p class="m-0 mb-4 uppercase">
-                  Powered by Plombery
-                </p>
+                <p class="m-0 mb-2">Powered by Plombery</p>
 
                 <p class="m-0 italic">
-                  Quickly build HTML emails with utility-first CSS
+                  Python task scheduler with a user-friendly web UI
                 </p>
 
                 <p class="cursor-default">
-                  <a href="https://lucafaggianelli.github.io/mario-pype/" class="text-indigo-700 [text-decoration:none] hover:![text-decoration:underline]">Docs</a>
+                  <a
+                    href="https://lucafaggianelli.github.io/plombery/?utm_source=notifications&utm_medium=email&utm_campaign=pipeline_notifications"
+                    class="text-indigo-700 [text-decoration:none] hover:![text-decoration:underline]"
+                    >Docs</a
+                  >
                   &bull;
-                  <a href="https://github.com/lucafaggianelli/mario-pype" class="text-indigo-700 [text-decoration:none] hover:![text-decoration:underline]">Github</a>
+                  <a
+                    href="https://github.com/lucafaggianelli/plombery??utm_source=notifications&utm_medium=email&utm_campaign=pipeline_notifications"
+                    class="text-indigo-700 [text-decoration:none] hover:![text-decoration:underline]"
+                    >Github</a
+                  >
                 </p>
               </td>
             </tr>

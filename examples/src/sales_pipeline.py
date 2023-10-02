@@ -36,7 +36,7 @@ async def get_sales_data(params: InputParams) -> pd.DataFrame:
 
     logger.info("Pipeline called with some_value=%d", params.pick_a_number)
 
-    for i in range(10):
+    for i in range(params.iterations):
         await sleep(1 + np.random.random() / 2)
         logger.debug("Iteration %d", i)
 

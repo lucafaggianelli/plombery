@@ -13,7 +13,7 @@ module.exports = {
   build: {
     templates: {
       destination: {
-        path: '../mario/notifications/email_templates',
+        path: '../src/plombery/notifications/email_templates',
       },
     },
   },
