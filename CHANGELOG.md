@@ -13,11 +13,39 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add a live logs indicator to the logs viewer
 - Add duration timer to run page
 - Automatic scroll lock for the log stream
+- Show UTC datetime when hovering a datetime
+- Implement Dark mode and theme switcher
+- Create a settings menu (#157)
+- (docs): added recipe SSL certificate check
+- (docs): document pipelines and tasks (#110)
+- Improve manual run form
+- (docs): add codespaces config to run demo
+- Add `allowed_origins` configuration to explicitly set CORS headers
+- Add HTML template for email notifications (#52)
 
 ### Fixed
 - Sometimes logs are appended to an existing logs files of previous runs (#131)
 - During a pipeline run, logs are streamed to any pipeline run page bug (#130)
 - Check task function signature before calling it (#154)
+- Fix link arrow decoration in scrolling containers
+- Fix table sticky headers
+- Show absolute URL in trigger run hook (#82)
+- Re-implement dialog to fix several bugs (#81)
+- Validate parameters in pipeline run endpoint
+- Derive correct WebSocket scheme from the HTTP URL scheme
+
+### Changed
+- Migrate tremor to v3
+- Update frontend deps
+- (breaking) updated FastAPI to v0.103 (#144)
+- updated authlib for compatibility with fastapi
+- (internal): refactored FastAPI backend (#159)
+- (breaking): auth redirect url is now `/auth/redirect`
+- (breaking): all auth endpoints are prefixed with `/auth`
+- (breaking): `pipelines/`, `runs/` and `ws/` endpoints now have trailing slashes
+- (breaking): updated pydantic to v2
+- (breaking): `Trigger.params` accepts a `BaseModel` instance, not a dict
+- (breaking): By default CORS headers allow_origins is set to `*`
 
 ## [0.3.2] - 2023-06-20
 

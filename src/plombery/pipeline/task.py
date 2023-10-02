@@ -1,19 +1,23 @@
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Optional
 
-from pydantic import BaseModel, validator, Field
+from pydantic import BaseModel, model_validator, Field
 
 from ._utils import prettify_name
 
 
 class Task(BaseModel):
     id: str
-    run: Callable = Field(exclude=True)
-    name: str = None
-    description: str = None
+    run: Callable = Field(
+        exclude=True,
+    )
+    name: Optional[str]
+    description: Optional[str] = None
 
-    @validator("name", always=True)
-    def generate_default_name(cls, name: str, values: Dict[str, Any]) -> str:
-        if not name:
-            return prettify_name(values["id"]).title()
+    @model_validator(mode="before")
+    @classmethod
+    def generate_default_name(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if not data.get("name", None):
+                data["name"] = prettify_name(data["id"]).title()
 
-        return name
+        return data

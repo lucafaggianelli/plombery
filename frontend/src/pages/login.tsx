@@ -4,7 +4,7 @@ import { getApiUrl } from '@/repository'
 
 const LoginPage: React.FC = () => {
   return (
-    <div className="h-screen flex justify-center items-center bg-slate-200">
+    <div className="bg-slate-100 dark:bg-slate-950 h-screen flex justify-center items-center">
       <Card className="w-auto">
         <div className="w-12 rounded-full mx-auto mb-4">
           <img src="/mario-pipe-flower.png" alt="Plombery logo" />
@@ -14,7 +14,7 @@ const LoginPage: React.FC = () => {
 
         <Button
           onClick={() => {
-            location.href = `${getApiUrl()}/login`
+            location.href = `${getApiUrl()}/auth/login`
           }}
           size="lg"
           color="indigo"

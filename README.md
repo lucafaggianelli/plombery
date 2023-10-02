@@ -1,6 +1,6 @@
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a name="readme-top"></a>
 
+<a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -10,13 +10,14 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
-
-
+[![PyPI Version][pypi-shield]][pypi-url]
+[![Code Climate][CodeClimate-shield]][CodeClimate-url]
 
 <!-- PROJECT LOGO -->
 <br />
@@ -29,14 +30,14 @@
     <a href="https://lucafaggianelli.github.io/plombery/"><strong>Official website »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/lucafaggianelli/plombery/issues">Report Bug</a>
+    <a href="https://github.com/lucafaggianelli/plombery">GitHub</a>
     ·
-    <a href="https://github.com/lucafaggianelli/plombery/issues">Request Feature</a>
+    <a href="https://github.com/lucafaggianelli/plombery/issues">Report Bug</a>
   </p>
 </div>
 
-
 <!-- ABOUT THE PROJECT -->
+
 ## About The Project
 
 Plombery is a simple task scheduler for Python with a web UI and a REST API,
@@ -44,62 +45,89 @@ if you need to run and monitor recurring python scripts then it's
 the right tool for you!
 
 <figure>
-  <img src="docs/assets/images/screenshot.png" alt="Plombery Screen Shot">
+  <img src="https://github.com/lucafaggianelli/plombery/raw/main/docs/assets/images/screenshot.png" alt="Plombery Screen Shot">
 </figure>
 
 > This project is at its beginning, so it can be shaped and improved with
-  your feedback and help!
-  If you like it, star it 🌟! If you want a feature or find a bug, open an issue.
+> your feedback and help!
+> If you like it, star it 🌟! If you want a feature or find a bug, open an issue.
 
 ## Features
-* ⏰ Task scheduling based on [APScheduler](https://github.com/agronholm/apscheduler) (supports Interval, Cron and Date triggers)
-* 💻 Built-in Web interface, no HTML/JS/CSS coding required
-* 👩‍💻🐍 Pipelines and tasks are defined in pure Python
-* 🎛️ Pipelines can be parametrized via [Pydantic](https://docs.pydantic.dev/)
-* 👉 Pipelines can be run manually from the web UI
-* 🔐 Secured via OAuth2
-* 🔍 Debug each run exploring logs and output data
-* 📩 Monitor the pipelines and get alerted if something goes wrong
-* 💣 Use the REST API for advanced integrations
+
+- ⏰ Task scheduling based on [APScheduler](https://github.com/agronholm/apscheduler) (supports Interval, Cron and Date triggers)
+- 💻 Built-in Web interface, no HTML/JS/CSS coding required
+- 👩‍💻🐍 Pipelines and tasks are defined in pure Python
+- 🎛️ Pipelines can be parametrized via [Pydantic](https://docs.pydantic.dev/)
+- 👉 Pipelines can be run manually from the web UI
+- 🔐 Secured via OAuth2
+- 🔍 Debug each run exploring logs and output data
+- 📩 Monitor the pipelines and get alerted if something goes wrong
+- 💣 Use the REST API for advanced integrations
 
 When you shouldn't use it:
+
 - you need a lot of scalability and you want to run on a distributed system
 - you want a no-code tool or you don't want to use Python
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 ### Built With
 
-* [![Python][Python]][Python-url]
-* [![TypeScript][TypeScript]][TypeScript-url]
-* [![React][React.js]][React-url]
+[![Python][Python]][Python-url]
+[![TypeScript][TypeScript]][TypeScript-url]
+[![React][React.js]][React-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
+
 ## 🚀 Getting Started
 
 Check the 👉 [official website](https://lucafaggianelli.github.io/plombery/)
+to get started with Plombery.
+
+## 🎮 Try on GitHub Codespaces
+
+Try Plombery with some demo pipelines on GitHub Codespaces:
+
+<figure align="center">
+  <img src="https://github.com/lucafaggianelli/plombery/raw/main/docs/assets/images/codespaces.png" alt="Get Started on Codespaces">
+</figure>
+
+Codespaces are development environments that run in the cloud so you
+can run a project without cloning it, installing deps etc, here's an how
+to:
+
+- Go to the the [lucafaggianelli/plombery](https://github.com/lucafaggianelli/plombery) GitHub page
+- Click on the green **Code** button on the top right
+- Choose the **Codespaces** tab
+- Click on *create new codespace from main* or reuse an existing one
+- A new page will open at `github.dev`, wait for the environment build
+- Once your codespace is ready you'll see an interface similar to VSCode
+- Some commands will be run in the terminal to build the frontend etc., wait for their completion
+- If everything went well, Plombery home page will be open in a new browser tab
+- Changes in the Python code will be immediately reflected in the web page, like if you were developing
+  on your laptop
 
 ## 🧐 Show me the code
 
 This is how it looks a minimalist pipeline:
 
-<figure>
-  <img src="docs/assets/images/minimal-code.png" alt="Minimal code">
+<figure align="center">
+  <img src="https://github.com/lucafaggianelli/plombery/raw/main/docs/assets/images/minimal-code.png" alt="Minimal code" width="80%">
   <figcaption>I know you want to see it!</figcaption>
 </figure>
 
 <!-- ROADMAP -->
+
 ## 🛣 Roadmap
 
 See the [open issues](https://github.com/lucafaggianelli/plombery/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- CONTRIBUTING -->
+
 ## 👩‍💻 Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
@@ -137,6 +165,7 @@ pip install -r requirements-dev.txt
 ```
 
 for development purposes, it's useful to run the example application:
+
 ```sh
 cd examples/
 
@@ -193,42 +222,51 @@ coverage report -m
 ```
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
+
 ## Contact
 
 Project Link: [https://github.com/lucafaggianelli/plombery](https://github.com/lucafaggianelli/plombery)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
 Plombery is built on top of amazing techs:
 
-* [FastAPI](https://fastapi.tiangolo.com/)
-* [Pydantic](https://docs.pydantic.dev/)
-* [APScheduler](https://apscheduler.readthedocs.io/)
-* [Apprise](https://github.com/caronc/apprise)
-* [React](https://react.dev/)
-* [Vite](https://vitejs.dev/)
-* [Tremor](https://www.tremor.so/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [Pydantic](https://docs.pydantic.dev/)
+- [APScheduler](https://apscheduler.readthedocs.io/)
+- [Apprise](https://github.com/caronc/apprise)
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [Tremor](https://www.tremor.so/)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Star History
+
+<a href="https://star-history.com/#lucafaggianelli/plombery&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=lucafaggianelli/plombery&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=lucafaggianelli/plombery&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=lucafaggianelli/plombery&type=Date" />
+  </picture>
+</a>
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/lucafaggianelli/plombery.svg?style=for-the-badge
 [contributors-url]: https://github.com/lucafaggianelli/plombery/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/lucafaggianelli/plombery.svg?style=for-the-badge
@@ -240,11 +278,13 @@ Plombery is built on top of amazing techs:
 [license-shield]: https://img.shields.io/github/license/lucafaggianelli/plombery.svg?style=for-the-badge
 [license-url]: https://github.com/lucafaggianelli/plombery/blob/master/LICENSE
 [product-screenshot]: images/screenshot.png
-[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
-[Next-url]: https://nextjs.org/
 [React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
 [React-url]: https://reactjs.org/
 [Python]: https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=yellow
 [Python-url]: https://www.python.org/
 [TypeScript]: https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white
 [TypeScript-url]: https://www.typescriptlang.org/
+[pypi-shield]: https://img.shields.io/pypi/v/plombery.svg?style=for-the-badge
+[pypi-url]: https://pypi.python.org/pypi/plombery
+[CodeClimate-shield]: https://codeclimate.com/github/lucafaggianelli/plombery.png?style=for-the-badge
+[CodeClimate-url]: https://codeclimate.com/github/lucafaggianelli/plombery

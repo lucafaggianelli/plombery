@@ -1,4 +1,4 @@
-import { Grid, Title } from '@tremor/react'
+import { Col, Grid, Title } from '@tremor/react'
 
 import PageLayout from '@/components/PageLayout'
 import PipelinesList from '@/components/PipelinesList'
@@ -21,16 +21,20 @@ const HomePage: React.FC = () => {
         </>
       }
     >
-      <Grid numColsMd={2} className="gap-6 mt-6">
-        <PipelinesList />
+      <Grid numItemsMd={2} className="gap-6 mt-6">
+        <Col>
+          <PipelinesList />
+        </Col>
 
-        {runsQuery.isLoading ? (
-          'Loading...'
-        ) : runsQuery.isError ? (
-          'Error loading runs'
-        ) : (
-          <RunsList runs={runsQuery.data} />
-        )}
+        <Col>
+          {runsQuery.isLoading ? (
+            'Loading...'
+          ) : runsQuery.isError ? (
+            'Error loading runs'
+          ) : (
+            <RunsList runs={runsQuery.data} />
+          )}
+        </Col>
       </Grid>
     </PageLayout>
   )

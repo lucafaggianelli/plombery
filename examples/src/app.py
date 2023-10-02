@@ -1,10 +1,12 @@
+#!/usr/bin/python3
+
 """
 Run via the run.sh or run.ps1 script
 """
 
 from plombery import get_app  # noqa: F401
 
-from src import sales_pipeline, sync_pipeline  # noqa: F401
+from src import sales_pipeline, sync_pipeline, ssl_certificates  # noqa: F401
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Any, Callable, Dict, Optional
 import asyncio
 from datetime import datetime, timezone
 import inspect
@@ -38,21 +38,23 @@ def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
         )
     )
 
-    _send_pipeline_event(pipeline_run)
+    _send_pipeline_event(pipeline, pipeline_run)
 
     return pipeline_run
 
 
-def _on_pipeline_status_changed(pipeline_run: PipelineRun, status: PipelineRunStatus):
+def _on_pipeline_status_changed(
+    pipeline: Pipeline, pipeline_run: PipelineRun, status: PipelineRunStatus
+):
     update_pipeline_run(pipeline_run, utcnow(), status)
 
-    _send_pipeline_event(pipeline_run)
+    _send_pipeline_event(pipeline, pipeline_run)
 
     return pipeline_run
 
 
-def _send_pipeline_event(pipeline_run: PipelineRun):
-    notify_coro = notification_manager.notify(pipeline_run)
+def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
+    notify_coro = notification_manager.notify(pipeline, pipeline_run)
 
     run = dict(
         id=pipeline_run.id,
@@ -76,7 +78,7 @@ def _send_pipeline_event(pipeline_run: PipelineRun):
 async def run(
     pipeline: Pipeline,
     trigger: Optional[Trigger] = None,
-    params: Optional[dict] = None,
+    params: Optional[Dict[str, Any]] = None,
     pipeline_run: Optional[PipelineRun] = None,
 ):
     """
@@ -88,7 +90,7 @@ async def run(
     """
 
     if pipeline_run:
-        _on_pipeline_status_changed(pipeline_run, PipelineRunStatus.RUNNING)
+        _on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.RUNNING)
     else:
         pipeline_run = _on_pipeline_start(pipeline, trigger)
 
@@ -106,12 +108,13 @@ async def run(
         trigger.id if trigger else MANUAL_TRIGGER_ID,
     )
 
-    input_params = trigger.params if trigger else params
     pipeline_params: Optional[BaseModel] = None
 
     if pipeline.params:
-        pipeline_params = pipeline.params(**(input_params or {}))
-    elif input_params:
+        pipeline_params = (
+            trigger.params if trigger else pipeline.params(**(params or {}))
+        )
+    elif (trigger and trigger.params) or params:
         logger.warning("This pipeline doesn't support input params")
 
     flowing_data = None
@@ -141,12 +144,12 @@ async def run(
 
             if task_run.status == PipelineRunStatus.FAILED:
                 # A task failed so the entire pipeline failed
-                _on_pipeline_status_changed(pipeline_run, PipelineRunStatus.FAILED)
+                _on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.FAILED)
                 break
 
     else:
         # All task succeeded so the entire pipeline succeeded
-        _on_pipeline_status_changed(pipeline_run, PipelineRunStatus.COMPLETED)
+        _on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.COMPLETED)
 
     pipeline_context.reset(pipeline_token)
     run_context.reset(run_token)

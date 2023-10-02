@@ -23,7 +23,7 @@ import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun } from '@/repository'
 import { useSocket } from '@/socket'
 import { Trigger } from '@/types'
-import { TASKS_COLORS, formatDate, formatTimestamp } from '@/utils'
+import { TASKS_COLORS, formatDate, formatDateTime, formatTime } from '@/utils'
 
 const RunViewPage = () => {
   const { lastMessage } = useSocket('run-update')
@@ -88,7 +88,7 @@ const RunViewPage = () => {
         </>
       }
     >
-      <Grid numColsMd={3} className="gap-6 mt-6">
+      <Grid numItemsMd={3} className="gap-6 mt-6">
         <RunsTasksList pipeline={pipeline} run={run} />
 
         <Card>
@@ -109,7 +109,7 @@ const RunViewPage = () => {
           </Flex>
 
           <CategoryBar
-            categoryPercentageValues={tasksRunDurations}
+            values={tasksRunDurations}
             colors={TASKS_COLORS}
             showLabels={false}
             className="mt-3"
@@ -118,14 +118,18 @@ const RunViewPage = () => {
           <Flex alignItems="start" className="mt-2">
             <div>
               <Text>
-                <Bold>{formatTimestamp(run.start_time)}</Bold>
+                <Bold title={formatDateTime(run.start_time, true)}>
+                  {formatTime(run.start_time)}
+                </Bold>
               </Text>
               <Text className="mt-1">{formatDate(run.start_time)}</Text>
             </div>
 
             <div className="text-right">
               <Text>
-                <Bold>{formatTimestamp(runEndTime)}</Bold>
+                <Bold title={formatDateTime(runEndTime, true)}>
+                  {formatTime(runEndTime)}
+                </Bold>
               </Text>
               {!isSameDay(run.start_time, runEndTime) && (
                 <Text>{formatDate(runEndTime)}</Text>

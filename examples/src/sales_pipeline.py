@@ -1,17 +1,31 @@
 from asyncio import sleep
 from datetime import datetime
+import enum
+from typing import Optional
 from dateutil import tz
 
 from apscheduler.triggers.interval import IntervalTrigger
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from plombery import register_pipeline, task, Trigger, get_logger
 
 
+class StoreLocations(enum.Enum):
+    Brussels = "BRU"
+    Milan = "MIL"
+    Rio = "RIO"
+
+
 class InputParams(BaseModel):
-    some_value: int
+    """Showcase all the available input types in Plombery"""
+
+    pick_a_number: int
+    iterations: int = Field(ge=0, le=10, default=5, description="How many times?")
+    notes: Optional[str] = None
+    store: StoreLocations = StoreLocations.Milan
+    some_flag: bool = True
 
 
 @task
@@ -20,9 +34,9 @@ async def get_sales_data(params: InputParams) -> pd.DataFrame:
 
     logger = get_logger()
 
-    logger.info("Pipeline called with some_value=%d", params.some_value)
+    logger.info("Pipeline called with some_value=%d", params.pick_a_number)
 
-    for i in range(10):
+    for i in range(params.iterations):
         await sleep(1 + np.random.random() / 2)
         logger.debug("Iteration %d", i)
 
@@ -52,7 +66,7 @@ register_pipeline(
             id="daily",
             name="Daily",
             description="Run the pipeline every day",
-            params=InputParams(some_value=2),
+            params=InputParams(pick_a_number=2, store=StoreLocations.Milan),
             schedule=IntervalTrigger(
                 days=1,
                 start_date=datetime(

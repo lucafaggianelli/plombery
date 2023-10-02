@@ -1,0 +1,39 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+  "name": "Python 3",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  // "image": "mcr.microsoft.com/devcontainers/python:3.11",
+
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "VARIANT": "3.11",
+      "NODE_VERSION": "20" // Set to "none" to skip Node.js installation
+    }
+  },
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  "forwardPorts": [8000],
+
+  // Use 'portsAttributes' to set default properties for specific forwarded ports.
+  // More info: https://containers.dev/implementors/json_reference/#port-attributes
+  "portsAttributes": {
+    "8000": {
+      "label": "Application port",
+      "onAutoForward": "openBrowser"
+    }
+  },
+
+  "containerEnv": {
+    "PYTHONPATH": "/workspace/plombery/examples"
+  },
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "cd examples && pip3 install -r requirements.txt && cd ../frontend && yarn && yarn build",
+
+  "postAttachCommand": "cd examples && ./run.sh"
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
+}
