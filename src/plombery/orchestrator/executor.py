@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional
-import asyncio
 from datetime import datetime, timezone
 import inspect
 
@@ -63,7 +62,7 @@ def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
         duration=pipeline_run.duration,
     )
 
-    ws_coro = manager.emit(
+    manager.emit(
         "run-update",
         dict(
             run=run,
@@ -72,7 +71,7 @@ def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
         ),
     )
 
-    run_all_coroutines([notify_coro, ws_coro])
+    run_all_coroutines([notify_coro])
 
 
 async def run(
@@ -193,10 +192,7 @@ async def _execute_task(
     args = [flowing_data] if result.has_positional_args else []
     kwargs = {"params": params} if params and result.has_params_arg else {}
 
-    if asyncio.iscoroutinefunction(task.run):
-        result = await task.run(*args, **kwargs)
-    else:
-        result = task.run(*args, **kwargs)
+    result = await task.run(*args, **kwargs)
 
     return result
 

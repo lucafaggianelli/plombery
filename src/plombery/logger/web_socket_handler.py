@@ -1,4 +1,3 @@
-import asyncio
 from logging.handlers import QueueHandler
 
 from plombery.websocket import manager
@@ -11,4 +10,4 @@ class WebSocketHandler(QueueHandler):
         self.run_id = run_id
 
     def enqueue(self, record):
-        asyncio.create_task(manager.emit(f"logs.{self.run_id}", record.message))
+        manager.emit(f"logs.{self.run_id}", record.message)

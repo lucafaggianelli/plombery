@@ -1,9 +1,8 @@
-from multiprocessing.util import get_logger
 import time
 
 from pydantic import BaseModel
 
-from plombery import register_pipeline, task
+from plombery import register_pipeline, task, get_logger
 
 
 class InputParams(BaseModel):
