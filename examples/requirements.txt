@@ -1,3 +1,4 @@
 -e ..
 python-dateutil
 pandas
+uvicorn==0.23.*
