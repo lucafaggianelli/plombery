@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Show absolute URL in trigger run hook (#82)
 - Re-implement dialog to fix several bugs (#81)
 - Validate parameters in pipeline run endpoint
+- Derive correct WebSocket scheme from the HTTP URL scheme
 
 ### Changed
 - Migrate tremor to v3
