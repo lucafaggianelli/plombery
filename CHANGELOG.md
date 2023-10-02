@@ -26,12 +26,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Sometimes logs are appended to an existing logs files of previous runs (#131)
 - During a pipeline run, logs are streamed to any pipeline run page bug (#130)
+- Check task function signature before calling it (#154)
 - Fix link arrow decoration in scrolling containers
 - Fix table sticky headers
 - Show absolute URL in trigger run hook (#82)
 - Re-implement dialog to fix several bugs (#81)
 - Validate parameters in pipeline run endpoint
 - Derive correct WebSocket scheme from the HTTP URL scheme
+- Fix context in sync tasks functions (#153)
 
 ### Changed
 - Migrate tremor to v3

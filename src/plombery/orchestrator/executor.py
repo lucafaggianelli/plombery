@@ -1,5 +1,5 @@
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional
-import asyncio
 from datetime import datetime, timezone
 import inspect
 
@@ -62,7 +62,7 @@ def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
         duration=pipeline_run.duration,
     )
 
-    ws_coro = manager.emit(
+    manager.emit(
         "run-update",
         dict(
             run=run,
@@ -71,7 +71,7 @@ def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
         ),
     )
 
-    run_all_coroutines([notify_coro, ws_coro])
+    run_all_coroutines([notify_coro])
 
 
 async def run(
@@ -154,7 +154,13 @@ async def run(
     run_context.reset(run_token)
 
 
-def _has_positional_args(func: Callable) -> bool:
+@dataclass
+class TaskFunctionSignature:
+    has_positional_args: bool = False
+    has_params_arg: bool = False
+
+
+def check_task_signature(func: Callable) -> TaskFunctionSignature:
     """
     Check if a function signature declares positional args.
 
@@ -162,14 +168,18 @@ def _has_positional_args(func: Callable) -> bool:
     accepts data inputs from another task
     """
 
+    result = TaskFunctionSignature()
+
     for name, parameter in inspect.signature(func).parameters.items():
         if (
             parameter.kind == inspect.Parameter.POSITIONAL_ONLY
             or inspect.Parameter.VAR_POSITIONAL
         ) and name != "params":
-            return True
+            result.has_positional_args = True
+        elif parameter.VAR_KEYWORD or (parameter.KEYWORD_ONLY and name == "params"):
+            result.has_params_arg = True
 
-    return False
+    return result
 
 
 async def _execute_task(
@@ -177,13 +187,12 @@ async def _execute_task(
     flowing_data,
     params: Optional[BaseModel] = None,
 ):
-    args = [flowing_data] if _has_positional_args(task.run) else []
-    kwargs = {"params": params} if params else {}
+    result = check_task_signature(task.run)
 
-    if asyncio.iscoroutinefunction(task.run):
-        result = await task.run(*args, **kwargs)
-    else:
-        result = task.run(*args, **kwargs)
+    args = [flowing_data] if result.has_positional_args else []
+    kwargs = {"params": params} if params and result.has_params_arg else {}
+
+    result = await task.run(*args, **kwargs)
 
     return result
 

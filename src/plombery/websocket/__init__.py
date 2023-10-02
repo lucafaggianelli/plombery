@@ -42,7 +42,7 @@ class ConnectionManager:
         except KeyError:
             pass
 
-    async def emit(self, topic: str, data: Any):
+    def emit(self, topic: str, data: Any):
         all_coroutines = []
 
         for connection in self.subscriptions.get(topic, set()):
@@ -57,7 +57,7 @@ class ConnectionManager:
 
         run_all_coroutines(all_coroutines)
 
-    async def broadcast(self, type: str, data: Any):
+    def broadcast(self, type: str, data: Any):
         all_coroutines = []
 
         for connection in self.active_connections:

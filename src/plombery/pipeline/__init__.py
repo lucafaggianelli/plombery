@@ -1,6 +1,6 @@
-from typing import Callable, Union
-from asyncio import iscoroutinefunction, get_event_loop
+import asyncio
 import functools
+from typing import Callable, Union
 
 from .task import Task
 from .context import task_context
@@ -11,12 +11,15 @@ def task(func: Union[Callable, functools.partial]):
     async def wrapper_decorator(*args, **kwargs):
         token = task_context.set(task_instance)
 
-        if iscoroutinefunction(func):
+        if asyncio.iscoroutinefunction(func):
             value = await func(*args, **kwargs)
         else:
-            value = await get_event_loop().run_in_executor(
-                None, functools.partial(func, **kwargs), *args
-            )
+            # Run in thread rather than in event loop to propagate context
+            # to sync functions as well.
+            #
+            # This fixes:
+            # https://github.com/lucafaggianelli/plombery/issues/153
+            value = await asyncio.to_thread(func, *args, **kwargs)
 
         task_context.reset(token)
 
