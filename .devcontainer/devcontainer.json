@@ -26,7 +26,7 @@
   },
 
   "containerEnv": {
-    "PYTHONPATH": "/workspace/$project/examples"
+    "PYTHONPATH": "/workspace/plombery/examples"
   },
 
   // Use 'postCreateCommand' to run commands after the container is created.
