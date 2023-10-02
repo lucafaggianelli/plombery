@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from apprise import Apprise
+from apprise import Apprise, NotifyFormat
 import apprise
 
 from plombery.config import settings
@@ -66,6 +66,7 @@ class NotificationManager:
             result = await apobj.async_notify(
                 title=title,
                 body=html,
+                body_format=NotifyFormat.HTML,
             )
 
             if result:
