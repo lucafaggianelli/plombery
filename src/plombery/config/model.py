@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseModel, HttpUrl, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     notifications: Optional[List[NotificationRule]] = None
     server_url: AnyHttpUrl = AnyHttpUrl("http://localhost:8000")
     frontend_url: AnyHttpUrl = AnyHttpUrl("http://localhost:8000")
+    allowed_origins: Union[List[AnyHttpUrl], Literal["*"]] = "*"
 
     model_config = SettingsConfigDict(
         env_file=BASE_SETTINGS_FOLDER / ".env",
