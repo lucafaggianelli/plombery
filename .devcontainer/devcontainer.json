@@ -17,7 +17,7 @@
     }
   },
 
-  "workspaceFolder": "examples",
+  "workspaceFolder": "/workspaces/plombery/examples",
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [8000],

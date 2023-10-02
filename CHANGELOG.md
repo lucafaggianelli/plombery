@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - (docs): added recipe SSL certificate check
 - (docs): document pipelines and tasks (#110)
 - Improve manual run form
+- (docs): add codespaces config to run demo
 
 ### Fixed
 - Sometimes logs are appended to an existing logs files of previous runs (#131)
