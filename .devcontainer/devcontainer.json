@@ -26,13 +26,13 @@
   },
 
   "containerEnv": {
-    "PYTHONPATH": "/workspace/$project"
+    "PYTHONPATH": "/workspace/$project/examples"
   },
 
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "cd examples && pip3 install -r requirements.txt && cd ../frontend && yarn && yarn build",
 
-  "postAttachCommand": "cd examples && PYTHONPATH=$(pwd) python src/app.py"
+  "postAttachCommand": "cd examples && python src/app.py"
 
   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
   // "remoteUser": "root"
