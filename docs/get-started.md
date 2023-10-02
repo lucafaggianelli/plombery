@@ -20,6 +20,7 @@ python -m venv .venv
 ```
 
 Activate it:
+
 ```bash
 # on Mac/Linux
 source .venv/bin/activate
@@ -37,3 +38,21 @@ pip install plombery
 ```
 
 Now you're ready to write your first pipeline!
+
+## 🎮 Try on GitHub Codespaces
+
+If you don't want to setup the project locally and you just want to have a look at
+Plombery and how it works, then you should try GitHub Codespaces:
+
+<figure align="center">
+  <img src="https://github.com/lucafaggianelli/plombery/raw/main/docs/assets/images/codespaces.png" alt="Get Started on Codespaces">
+</figure>
+
+Codespaces are development environments that run in the cloud so you
+can run a project without cloning it, installing deps etc, here's an how
+to:
+
+- Go to the the [lucafaggianelli/plombery](https://github.com/lucafaggianelli/plombery) GitHub page
+- Click on the green **Code** button on the top right
+- Choose the **Codespaces** tab
+- Click on *create new codespace from main* or reuse an existing one
