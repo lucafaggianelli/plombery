@@ -39,7 +39,7 @@ const post = async <ResponseType = any>(
 
 export const getWebsocketUrl = () => {
   const url = new URL(BASE_URL)
-  url.protocol = url.protocol === 'http' ? 'ws' : 'wss'
+  url.protocol = url.protocol === 'http:' ? 'ws' : 'wss'
   url.pathname += '/ws/'
   return url
 }
