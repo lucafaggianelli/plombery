@@ -26,6 +26,7 @@ from plombery.schemas import PipelineRunStatus, TaskRun
 def utcnow():
     return datetime.now(tz=timezone.utc)
 
+
 def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
     pipeline_run = create_pipeline_run(
         PipelineRunCreate(

@@ -46,7 +46,7 @@ async def get_sales_data(params: InputParams) -> pd.DataFrame:
 register_pipeline(
     id="sales_pipeline",
     description="""This is a very useless pipeline""",
-    tasks=[get_sales_data],
+    tasks=[get_sales_data, run_pipeline("store_data")],
     triggers=[
         Trigger(
             id="daily",
@@ -63,3 +63,12 @@ register_pipeline(
     ],
     params=InputParams,
 )
+
+
+@task
+async def store_data():
+    await sleep(1)
+    get_logger().info("File stored")
+
+
+register_pipeline(id="store_data", tasks=[store_data])
