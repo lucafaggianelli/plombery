@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - (docs): added recipe SSL certificate check
 - (docs): document pipelines and tasks (#110)
 - Improve manual run form
+- (docs): add codespaces config to run demo
+- Add `allowed_origins` configuration to explicitly set CORS headers
 
 ### Fixed
 - Sometimes logs are appended to an existing logs files of previous runs (#131)
@@ -28,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Show absolute URL in trigger run hook (#82)
 - Re-implement dialog to fix several bugs (#81)
 - Validate parameters in pipeline run endpoint
+- Derive correct WebSocket scheme from the HTTP URL scheme
 
 ### Changed
 - Migrate tremor to v3
@@ -40,6 +43,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - (breaking): `pipelines/`, `runs/` and `ws/` endpoints now have trailing slashes
 - (breaking): updated pydantic to v2
 - (breaking): `Trigger.params` accepts a `BaseModel` instance, not a dict
+- (breaking): By default CORS headers allow_origins is set to `*`
 
 ## [0.3.2] - 2023-06-20
 

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Sequence
+from typing import List
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,19 +24,12 @@ class SPAStaticFiles(StaticFiles):
 
 
 def setup_cors(app: FastAPI):
-    origins: Sequence[str] = [
-        str(settings.frontend_url).rstrip("/"),
-    ]
+    origins: List[str] = []
 
-    # Help during develop so the app can be opened at localhost or 127.0.0.1
-    if settings.frontend_url.host == "localhost":
-        origins.append(
-            str(settings.frontend_url).replace("localhost", "127.0.0.1").rstrip("/")
-        )
-    elif settings.frontend_url.host == "127.0.0.1":
-        origins.append(
-            str(settings.frontend_url).replace("127.0.0.1", "localhost").rstrip("/")
-        )
+    if settings.allowed_origins == "*":
+        origins.append("*")
+    else:
+        origins = [str(origin) for origin in settings.allowed_origins]
 
     app.add_middleware(
         CORSMiddleware,

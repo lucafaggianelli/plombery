@@ -84,6 +84,30 @@ When you shouldn't use it:
 ## 🚀 Getting Started
 
 Check the 👉 [official website](https://lucafaggianelli.github.io/plombery/)
+to get started with Plombery.
+
+## 🎮 Try on GitHub Codespaces
+
+Try Plombery with some demo pipelines on GitHub Codespaces:
+
+<figure align="center">
+  <img src="https://github.com/lucafaggianelli/plombery/raw/main/docs/assets/images/codespaces.png" alt="Get Started on Codespaces">
+</figure>
+
+Codespaces are development environments that run in the cloud so you
+can run a project without cloning it, installing deps etc, here's an how
+to:
+
+- Go to the the [lucafaggianelli/plombery](https://github.com/lucafaggianelli/plombery) GitHub page
+- Click on the green **Code** button on the top right
+- Choose the **Codespaces** tab
+- Click on *create new codespace from main* or reuse an existing one
+- A new page will open at `github.dev`, wait for the environment build
+- Once your codespace is ready you'll see an interface similar to VSCode
+- Some commands will be run in the terminal to build the frontend etc., wait for their completion
+- If everything went well, Plombery home page will be open in a new browser tab
+- Changes in the Python code will be immediately reflected in the web page, like if you were developing
+  on your laptop
 
 ## 🧐 Show me the code
 
