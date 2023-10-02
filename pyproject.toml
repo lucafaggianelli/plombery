@@ -38,7 +38,7 @@ dev = [
   "pytest-env==1.0.1",
 ]
 docs = [
-  "mkdocs-material==9.1.*",
+  "mkdocs-material>=9.1,<9.5",
 ]
 
 [tool.setuptools.dynamic]
