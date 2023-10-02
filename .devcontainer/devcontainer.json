@@ -18,6 +18,7 @@
   },
 
   "workspaceFolder": "/workspaces/plombery/examples",
+  "workspaceMount": "/workspaces/plombery/examples",
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [8000],
@@ -34,7 +35,7 @@
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "pip3 install -r requirements.txt",
 
-  "postAttachCommand": "uvicorn app:get_app --reload --factory"
+  "postAttachCommand": "PYTHONPATH=$(pwd) ./src/app.py"
 
   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
   // "remoteUser": "root"

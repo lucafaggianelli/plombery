@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """
 Run via the run.sh or run.ps1 script
 """
