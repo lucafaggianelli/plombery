@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from plombery.api.authentication import init_auth
 from plombery._version import __version__
-from .middlewares import FRONTEND_FOLDER, SPAStaticFiles, setup_cors
+from .middlewares import SPAStaticFiles, setup_cors
 from .routers import pipelines, runs, websocket
 
 
@@ -18,4 +18,4 @@ app.include_router(runs.router, prefix=API_PREFIX)
 app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(websocket.router, prefix=API_PREFIX)
 
-app.mount("/", SPAStaticFiles(directory=FRONTEND_FOLDER, html=True))
+app.mount("/", SPAStaticFiles(api_prefix=API_PREFIX))
