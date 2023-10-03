@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Validate parameters in pipeline run endpoint
 - Derive correct WebSocket scheme from the HTTP URL scheme
 - Fix context in sync tasks functions (#153)
+- Show validation errors in manual run form dialog (#192)
 
 ### Changed
 - Migrate tremor to v3

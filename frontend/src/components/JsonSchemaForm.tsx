@@ -14,6 +14,7 @@ import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 
 interface Props {
   schema: JSONSchema7
+  errors?: Record<string, string>
 }
 
 interface FieldDefinition {
@@ -129,7 +130,7 @@ const renderField = (field: FieldDefinition) => {
   return renderers[fieldType](field)
 }
 
-const JsonSchemaForm: React.FC<Props> = ({ schema }) => {
+const JsonSchemaForm: React.FC<Props> = ({ errors = {}, schema }) => {
   const resolveDefinition = useCallback(
     (ref: string) => {
       const defs = schema.definitions || schema.$defs
@@ -216,6 +217,12 @@ const JsonSchemaForm: React.FC<Props> = ({ schema }) => {
           )}
         </Flex>
         {component}
+
+        {errors[key] && (
+          <Text color="rose" className="mt-1">
+            {errors[key]}
+          </Text>
+        )}
       </div>
     )
   })

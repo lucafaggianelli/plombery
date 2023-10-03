@@ -21,6 +21,7 @@ import { formatDateTime } from '@/utils'
 import StatusBadge from './StatusBadge'
 import Timer from './Timer'
 import ErrorAlert from './queries/Error'
+import { TableLoader } from './queries/Loaders'
 
 interface Props {
   pipelineId?: string
@@ -74,6 +75,8 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
       setRuns(query.data)
     }
   }, [query.data])
+
+  const numberOfColumns = 4 + Number(!!pipelineId) + Number(!!triggerId)
 
   return (
     <Card>
@@ -150,37 +153,13 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
             </TableRow>
           ))}
 
-          {query.isFetching &&
-            new Array(10).fill(1).map((_, i) => (
-              <TableRow className="animate-pulse" key={i}>
-                <TableCell>
-                  <div className="h-2 py-2 bg-slate-700 rounded" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-2 py-2 bg-slate-700 rounded" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-2 py-2 bg-slate-700 rounded" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-2 py-2 bg-slate-700 rounded" />
-                </TableCell>
-                {pipelineId && (
-                  <TableCell>
-                    <div className="h-2 py-2 bg-slate-700 rounded" />
-                  </TableCell>
-                )}
-                {triggerId && (
-                  <TableCell>
-                    <div className="h-2 py-2 bg-slate-700 rounded" />
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
+          {(query.isFetching || query.isLoading) && (
+            <TableLoader columns={numberOfColumns} />
+          )}
 
           {query.isError && (
             <TableRow>
-              <TableCell colSpan={6}>
+              <TableCell colSpan={numberOfColumns}>
                 <ErrorAlert query={query} />
               </TableCell>
             </TableRow>
