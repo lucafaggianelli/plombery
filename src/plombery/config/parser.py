@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Type
 
 from pydantic.fields import FieldInfo
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource
@@ -21,7 +21,7 @@ class SettingsFileSource(PydanticBaseSettingsSource):
 
     data: dict
 
-    def __init__(self, settings_cls: type[BaseSettings]):
+    def __init__(self, settings_cls: Type[BaseSettings]):
         super().__init__(settings_cls)
 
         self.data = self._load_config_file()
