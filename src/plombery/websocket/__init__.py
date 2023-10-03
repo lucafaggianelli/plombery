@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any, Dict, Set
+from typing import Any, Dict, List, Set
 from fastapi import WebSocket
 
 from plombery.utils import run_all_coroutines
@@ -10,7 +10,7 @@ logger = getLogger(__name__)
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: list[WebSocket] = []
+        self.active_connections: List[WebSocket] = []
         self.subscriptions: Dict[str, Set[WebSocket]] = {}
 
     async def connect(self, websocket: WebSocket):

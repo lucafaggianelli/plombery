@@ -49,7 +49,7 @@ class SettingsFileSource(PydanticBaseSettingsSource):
 
     def get_field_value(
         self, field: FieldInfo, field_name: str
-    ) -> tuple[Any, str, bool]:
+    ) -> Tuple[Any, str, bool]:
         field_value = self.data.get(field_name)
         return field_value, field_name, False
 
