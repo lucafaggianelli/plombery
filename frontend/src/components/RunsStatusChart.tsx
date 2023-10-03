@@ -1,5 +1,5 @@
 import { UseQueryResult } from '@tanstack/react-query'
-import { Card, Title, Text, Flex, Tracker, Italic } from '@tremor/react'
+import { Card, Title, Text, Flex, Tracker, Italic, Metric } from '@tremor/react'
 import { HTTPError } from 'ky'
 
 import { PipelineRun } from '../types'
@@ -10,16 +10,21 @@ interface Props {
   subject: 'Trigger' | 'Pipeline'
 }
 
-const Loader = ({ subject }: {subject: string}) => (
+const Loader = ({ subject }: { subject: string }) => (
   <Card>
-    <Flex>
-      <Title>{subject} health</Title>
+    <Flex className="items-start">
+      <Text>Successful runs</Text>
+    </Flex>
+
+    <Flex className="justify-start items-baseline space-x-3 truncate">
+      <Metric className="w-24 bg-slate-700 animate-pulse rounded">
+        &nbsp;
+      </Metric>
     </Flex>
 
     <>
       <Flex className="mt-4">
-        <Text>Successful runs</Text>
-        <div className="h-2 bg-slate-700 animate-pulse w-4 rounded" />
+        <Text>{subject} health</Text>
       </Flex>
 
       <div className="h-10 mt-2 bg-slate-700 animate-pulse rounded" />
@@ -50,15 +55,20 @@ const RunsStatusChart: React.FC<Props> = ({ query, subject }) => {
 
   return (
     <Card>
-      <Flex>
-        <Title>{subject} health</Title>
+      <Flex className="items-start">
+        <Text>Successful runs</Text>
+      </Flex>
+
+      <Flex className="justify-start items-baseline space-x-3 truncate">
+        <Metric>
+          {successPercentage.toFixed(1)} <span className="text-lg">%</span>
+        </Metric>
       </Flex>
 
       {runs.length ? (
         <>
           <Flex className="mt-4">
-            <Text>Successful runs</Text>
-            <Text>{successPercentage.toFixed(1)} %</Text>
+            <Text>{subject} health</Text>
           </Flex>
           <Tracker
             className="mt-2"

@@ -17,7 +17,8 @@ const loader = (
     </Flex>
 
     <Flex className="justify-start items-baseline space-x-3 truncate">
-      <Metric className="w-24 bg-slate-700 animate-pulse rounded">&nbsp;
+      <Metric className="w-24 bg-slate-700 animate-pulse rounded">
+        &nbsp;
       </Metric>
     </Flex>
 
