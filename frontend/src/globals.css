@@ -2,21 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+html.dark {
+  /* Apply dark scheme to native browser elements */
+  color-scheme: dark;
+}
+
 a {
-    @apply hover:text-indigo-500 hover:decoration-indigo-500 decoration-inherit underline underline-offset-2;
-    transition: text-decoration .3s cubic-bezier(0.22, 0.61, 0.36, 1);
-    position: relative;
+  @apply hover:text-indigo-500 hover:decoration-indigo-500 decoration-inherit underline underline-offset-2;
+  transition: text-decoration 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  position: relative;
 }
 
 a.link--arrow::after {
-    content: "→";
-    opacity: 0;
-    position: absolute;
-    transform: translateX(-2px);
-    transition: transform .3s cubic-bezier(0.22, 0.61, 0.36, 1), opacity .3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  content: '→';
+  opacity: 0;
+  position: absolute;
+  transform: translateX(-2px);
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 a.link--arrow:hover::after {
-    opacity: 1;
-    transform: translateX(5px);
+  opacity: 1;
+  transform: translateX(5px);
 }
