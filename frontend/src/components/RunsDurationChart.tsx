@@ -4,6 +4,7 @@ import { HTTPError } from 'ky'
 
 import { PipelineRun } from '../types'
 import ErrorAlert from './queries/Error'
+import { ChartLoader, MetricLoader } from './queries/Loaders'
 
 interface Props {
   query: UseQueryResult<PipelineRun[], HTTPError>
@@ -11,25 +12,19 @@ interface Props {
 
 const dataFormatter = (number: number) => (number / 1000).toFixed(1) + ' s'
 
-const loader = (
+const Loader = () => (
   <Card>
-    <Flex className="items-start">
-      <Text>Duration (AVG)</Text>
-    </Flex>
+    <Text>Duration (AVG)</Text>
 
-    <Flex className="justify-start items-baseline space-x-3 truncate">
-      <Metric className="w-24 bg-slate-700 animate-pulse rounded">
-        &nbsp;
-      </Metric>
-    </Flex>
+    <MetricLoader />
 
-    <div className="mt-6 h-28 bg-slate-700 animate-pulse rounded bg-stripes"></div>
+    <ChartLoader className="mt-6" />
   </Card>
 )
 
 const RunsDurationChart: React.FC<Props> = ({ query }) => {
   if (query.isFetching || query.isLoading) {
-    return loader
+    return <Loader />
   }
 
   if (query.isError) {

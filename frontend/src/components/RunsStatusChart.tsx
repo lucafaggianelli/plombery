@@ -1,17 +1,11 @@
 import { UseQueryResult } from '@tanstack/react-query'
-import {
-  Card,
-  Text,
-  Flex,
-  Tracker,
-  Italic,
-  Metric,
-} from '@tremor/react'
+import { Card, Text, Flex, Tracker, Italic, Metric } from '@tremor/react'
 import { HTTPError } from 'ky'
 
 import { PipelineRun } from '../types'
 import { STATUS_COLORS } from '../utils'
 import ErrorAlert from './queries/Error'
+import { MetricLoader, TextLoader, TrackerLoader } from './queries/Loaders'
 
 interface Props {
   query: UseQueryResult<PipelineRun[], HTTPError>
@@ -20,26 +14,17 @@ interface Props {
 
 const Loader = ({ subject }: { subject: string }) => (
   <Card>
-    <Flex className="items-start">
-      <Text>Successful runs</Text>
-    </Flex>
+    <Text>Successful runs</Text>
 
-    <Flex className="justify-start items-baseline space-x-3 truncate">
-      <Metric className="w-24 bg-slate-700 animate-pulse rounded">
-        &nbsp;
-      </Metric>
-    </Flex>
+    <MetricLoader />
 
-    <>
-      <Flex className="mt-4">
-        <Text>{subject} health</Text>
-      </Flex>
+    <Text className="mt-4">{subject} health</Text>
 
-      <div className="h-10 mt-2 bg-slate-700 animate-pulse rounded" />
-    </>
+    <TrackerLoader />
+
     <Flex className="mt-2">
-      <div className="h-2 bg-slate-700 animate-pulse" />
-      <div className="h-2 bg-slate-700 animate-pulse" />
+      <TextLoader className="w-20" />
+      <TextLoader className="w-20" />
     </Flex>
   </Card>
 )
