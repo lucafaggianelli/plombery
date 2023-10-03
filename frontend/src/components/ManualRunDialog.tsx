@@ -1,6 +1,6 @@
 import { PlayIcon } from '@heroicons/react/24/outline'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Button, Flex } from '@tremor/react'
+import { Button, Flex, Text } from '@tremor/react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -23,6 +23,18 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
   })
 
   const runPipelineMutation = useMutation(runPipeline(pipeline.id))
+
+  const formErrors =
+    runPipelineMutation.isError && runPipelineMutation.error.status === 422
+      ? Object.fromEntries(
+          runPipelineMutation.error.data.data.detail.map((detail: any) => [
+            detail.loc.join('.'),
+            detail.msg,
+          ])
+        )
+      : undefined
+
+  const genericError = runPipelineMutation.error?.message
 
   return (
     <>
@@ -66,7 +78,13 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
             'Error'
           ) : (
             <div style={{ width: 350 }}>
-              <JsonSchemaForm schema={query.data} />
+              <JsonSchemaForm schema={query.data} errors={formErrors} />
+
+              {genericError && (
+                <Text className="mt-2" color="rose">
+                  {genericError}
+                </Text>
+              )}
             </div>
           )}
 

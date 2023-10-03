@@ -4,6 +4,35 @@ import ky, { HTTPError, Options } from 'ky'
 import { LogEntry, Pipeline, PipelineRun, WhoamiResponse } from './types'
 import { JSONSchema7 } from 'json-schema'
 
+interface BaseError {
+  status: number
+  data: any
+}
+
+interface Error422 extends BaseError {
+  status: 422
+  data: {
+    detail: {
+      loc: string[]
+      msg: string
+      type: string
+    }[]
+  }
+}
+
+type AllErrors = Error422
+
+class PlomberyHttpError extends Error implements BaseError {
+  data: any
+  status: number
+
+  constructor(message: string, status: number, data: AllErrors) {
+    super(message)
+    this.data = { data, status }
+    this.status = status
+  }
+}
+
 const DEFAULT_BASE_URL = import.meta.env.DEV
   ? 'http://localhost:8000/api'
   : `${window.location.protocol}//${window.location.host}/api`
@@ -34,7 +63,17 @@ const post = async <ResponseType = any>(
   url: string,
   request?: Options
 ): Promise<ResponseType> => {
-  return (await client.post(url, request)).json<ResponseType>()
+  try {
+    return await client.post(url, request).json<ResponseType>()
+  } catch (e) {
+    const error = e as HTTPError
+
+    throw new PlomberyHttpError(
+      error.message,
+      error.response.status,
+      await error.response.json()
+    )
+  }
 }
 
 export const getWebsocketUrl = () => {
@@ -203,7 +242,11 @@ export const getRunData = (
 export const runPipeline = (
   pipelineId: string,
   triggerId?: string
-): UseMutationOptions<PipelineRun, HTTPError, Record<string, any> | void> => ({
+): UseMutationOptions<
+  PipelineRun,
+  PlomberyHttpError,
+  Record<string, any> | void
+> => ({
   async mutationFn(params) {
     return await post<PipelineRun>('runs/', {
       json: {
