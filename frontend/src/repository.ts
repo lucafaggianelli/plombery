@@ -130,7 +130,7 @@ export const getPipelineInputSchema = (
 export const listRuns = (
   pipelineId?: string,
   triggerId?: string
-): UseQueryOptions<PipelineRun[]> => ({
+): UseQueryOptions<PipelineRun[], HTTPError> => ({
   queryKey: ['runs', pipelineId, triggerId],
   queryFn: async () => {
     const params = {

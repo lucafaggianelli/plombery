@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { UseQueryResult, useQueryClient } from '@tanstack/react-query'
 import {
   Card,
   Table,
@@ -22,12 +22,16 @@ import Timer from './Timer'
 
 interface Props {
   pipelineId?: string
-  runs: PipelineRun[]
+  query: UseQueryResult<PipelineRun[], unknown>
   triggerId?: string
 }
 
-const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
-  const [runs, setRuns] = useState(_runs)
+const RunsList: React.FC<Props> = ({
+  pipelineId,
+  query,
+  triggerId,
+}) => {
+  const [runs, setRuns] = useState<PipelineRun[]>(query.data || [])
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { lastMessage } = useSocket('run-update')
@@ -68,10 +72,10 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
   }, [lastMessage])
 
   useEffect(() => {
-    if (_runs.length) {
-      setRuns(_runs)
+    if (query.data?.length) {
+      setRuns(query.data)
     }
-  }, [_runs])
+  }, [query.data])
 
   return (
     <Card>
@@ -147,6 +151,34 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
               </TableCell>
             </TableRow>
           ))}
+
+          {query.isFetching &&
+            new Array(10).fill(1).map((_, i) => (
+              <TableRow className="animate-pulse" key={i}>
+                <TableCell>
+                  <div className="h-2 py-2 bg-slate-700 rounded" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-2 py-2 bg-slate-700 rounded" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-2 py-2 bg-slate-700 rounded" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-2 py-2 bg-slate-700 rounded" />
+                </TableCell>
+                {pipelineId && (
+                  <TableCell>
+                    <div className="h-2 py-2 bg-slate-700 rounded" />
+                  </TableCell>
+                )}
+                {triggerId && (
+                  <TableCell>
+                    <div className="h-2 py-2 bg-slate-700 rounded" />
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
         </TableBody>
       </Table>
     </Card>

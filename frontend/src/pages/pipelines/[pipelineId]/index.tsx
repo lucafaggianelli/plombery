@@ -40,10 +40,10 @@ const PipelineView: React.FC = () => {
     <CopyButton content={getPipelineRunUrl(pipelineId)} className="ml-2.5" />
   )
 
-  if (runsQuery.isLoading || pipelineQuery.isLoading)
+  if (pipelineQuery.isLoading)
     return <div>Loading...</div>
 
-  if (runsQuery.isError || pipelineQuery.isError)
+  if (pipelineQuery.isError)
     return <div>An error has occurred</div>
 
   const pipeline = pipelineQuery.data
@@ -141,10 +141,10 @@ const PipelineView: React.FC = () => {
 
         <RunsStatusChart
           subject="Pipeline"
-          runs={[...runsQuery.data].reverse()}
+          query={runsQuery}
         />
 
-        <RunsDurationChart runs={runsQuery.data} />
+        <RunsDurationChart query={runsQuery} />
       </Grid>
 
       <Grid
@@ -159,7 +159,10 @@ const PipelineView: React.FC = () => {
         </Col>
 
         <Col>
-          <RunsList runs={runsQuery.data} pipelineId={pipelineId} />
+          <RunsList
+            query={runsQuery}
+            pipelineId={pipelineId}
+          />
         </Col>
       </Grid>
     </PageLayout>

@@ -1,14 +1,46 @@
+import { UseQueryResult } from '@tanstack/react-query'
 import { Card, Title, Text, Flex, Tracker, Italic } from '@tremor/react'
+import { HTTPError } from 'ky'
 
 import { PipelineRun } from '../types'
 import { STATUS_COLORS } from '../utils'
 
 interface Props {
-  runs: PipelineRun[]
+  query: UseQueryResult<PipelineRun[], HTTPError>
   subject: 'Trigger' | 'Pipeline'
 }
 
-const RunsStatusChart: React.FC<Props> = ({ runs, subject }) => {
+const Loader = ({ subject }: {subject: string}) => (
+  <Card>
+    <Flex>
+      <Title>{subject} health</Title>
+    </Flex>
+
+    <>
+      <Flex className="mt-4">
+        <Text>Successful runs</Text>
+        <div className="h-2 bg-slate-700 animate-pulse w-4 rounded" />
+      </Flex>
+
+      <div className="h-10 mt-2 bg-slate-700 animate-pulse rounded" />
+    </>
+    <Flex className="mt-2">
+      <div className="h-2 bg-slate-700 animate-pulse" />
+      <div className="h-2 bg-slate-700 animate-pulse" />
+    </Flex>
+  </Card>
+)
+
+const RunsStatusChart: React.FC<Props> = ({ query, subject }) => {
+  if (query.isLoading || query.isFetching) {
+    return <Loader subject={subject} />
+  }
+
+  if (query.error) {
+    return <div>error</div>
+  }
+
+  const runs = [...query.data].reverse()
   const successfulRuns = runs.filter((run) => run.status === 'completed')
 
   const successPercentage = (successfulRuns.length / runs.length) * 100 || 0
