@@ -1,5 +1,7 @@
 import {
+  Button,
   Card,
+  Icon,
   Table,
   TableBody,
   TableCell,
@@ -13,6 +15,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 
 import { Pipeline } from '@/types'
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 
 interface Props {
   pipeline: Pipeline
@@ -55,6 +58,27 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
               </TableCell>
             </TableRow>
           ))}
+
+          {pipeline.triggers.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={3}>
+                <Text className="text-center italic">
+                  This pipeline has no triggers, can be run only manually.
+                </Text>
+
+                <div className="text-center mt-2 text-sm">
+                  <a
+                    href="https://lucafaggianelli.github.io/plombery/triggers/"
+                    target="_blank"
+                    className="inline-flex items-center gap-2 bg-indigo-50/30 hover:bg-indigo-50 dark:bg-indigo-950/50 dark:hover:bg-indigo-950 rounded-sm px-4 py-2 text-indigo-500 transition-colors duration-300 cursor-pointer no-underline"
+                  >
+                    How to create triggers
+                    <Icon icon={ArrowTopRightOnSquareIcon} size="sm" className='p-0' color='indigo' />
+                  </a>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </Card>

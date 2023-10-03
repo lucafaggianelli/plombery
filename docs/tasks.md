@@ -11,6 +11,14 @@ async def async_task():
   pass
 ```
 
+Then pass the function names to the `register_pipeline` function:
+
+```py
+register_pipeline(
+  tasks=[sync_task, async_task]
+)
+```
+
 ## Input parameters
 
 If the pipeline declares input parameters:
