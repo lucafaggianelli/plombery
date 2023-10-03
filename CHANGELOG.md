@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - (docs): add codespaces config to run demo
 - Add `allowed_origins` configuration to explicitly set CORS headers
 - Add HTML template for email notifications (#52)
+- Add in-app messages for new users to get started (#38)
+- Use skeleton loaders during data fetch
 
 ### Fixed
 - Sometimes logs are appended to an existing logs files of previous runs (#131)

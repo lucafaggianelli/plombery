@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { UseQueryResult, useQueryClient } from '@tanstack/react-query'
 import {
   Card,
   Table,
@@ -13,21 +13,23 @@ import {
 import { formatDistanceToNow, differenceInDays } from 'date-fns'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { HTTPError } from 'ky'
 
 import { useSocket } from '@/socket'
 import { PipelineRun, WebSocketMessage } from '@/types'
 import { formatDateTime } from '@/utils'
 import StatusBadge from './StatusBadge'
 import Timer from './Timer'
+import ErrorAlert from './queries/Error'
 
 interface Props {
   pipelineId?: string
-  runs: PipelineRun[]
+  query: UseQueryResult<PipelineRun[], HTTPError>
   triggerId?: string
 }
 
-const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
-  const [runs, setRuns] = useState(_runs)
+const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
+  const [runs, setRuns] = useState<PipelineRun[]>(query.data || [])
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { lastMessage } = useSocket('run-update')
@@ -68,10 +70,10 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
   }, [lastMessage])
 
   useEffect(() => {
-    if (_runs.length) {
-      setRuns(_runs)
+    if (query.data?.length) {
+      setRuns(query.data)
     }
-  }, [_runs])
+  }, [query.data])
 
   return (
     <Card>
@@ -147,6 +149,42 @@ const RunsList: React.FC<Props> = ({ pipelineId, runs: _runs, triggerId }) => {
               </TableCell>
             </TableRow>
           ))}
+
+          {query.isFetching &&
+            new Array(10).fill(1).map((_, i) => (
+              <TableRow className="animate-pulse" key={i}>
+                <TableCell>
+                  <div className="h-2 py-2 bg-slate-700 rounded" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-2 py-2 bg-slate-700 rounded" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-2 py-2 bg-slate-700 rounded" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-2 py-2 bg-slate-700 rounded" />
+                </TableCell>
+                {pipelineId && (
+                  <TableCell>
+                    <div className="h-2 py-2 bg-slate-700 rounded" />
+                  </TableCell>
+                )}
+                {triggerId && (
+                  <TableCell>
+                    <div className="h-2 py-2 bg-slate-700 rounded" />
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+
+          {query.isError && (
+            <TableRow>
+              <TableCell colSpan={6}>
+                <ErrorAlert query={query} />
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </Card>

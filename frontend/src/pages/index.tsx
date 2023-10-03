@@ -9,10 +9,6 @@ import { listRuns } from '@/repository'
 const HomePage: React.FC = () => {
   const runsQuery = useQuery(listRuns())
 
-  if (runsQuery.isLoading) return <div>Loading...</div>
-
-  if (runsQuery.isError) return <div>An error has occurred</div>
-
   return (
     <PageLayout
       header={
@@ -27,13 +23,7 @@ const HomePage: React.FC = () => {
         </Col>
 
         <Col>
-          {runsQuery.isLoading ? (
-            'Loading...'
-          ) : runsQuery.isError ? (
-            'Error loading runs'
-          ) : (
-            <RunsList runs={runsQuery.data} />
-          )}
+          <RunsList query={runsQuery} />
         </Col>
       </Grid>
     </PageLayout>

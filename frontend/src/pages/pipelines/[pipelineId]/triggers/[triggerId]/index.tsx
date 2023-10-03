@@ -62,10 +62,10 @@ const TriggerView: React.FC = () => {
     />
   )
 
-  if (runsQuery.isLoading || pipelineQuery.isLoading)
+  if (pipelineQuery.isLoading)
     return <div>Loading...</div>
 
-  if (runsQuery.isError || pipelineQuery.isError)
+  if (pipelineQuery.isError)
     return <div>An error has occurred</div>
 
   const pipeline = pipelineQuery.data
@@ -168,15 +168,15 @@ const TriggerView: React.FC = () => {
 
         <RunsStatusChart
           subject="Trigger"
-          runs={[...runsQuery.data].reverse()}
+          query={runsQuery}
         />
 
-        <RunsDurationChart runs={runsQuery.data} />
+        <RunsDurationChart query={runsQuery} />
       </Grid>
 
       <div className="mt-6">
         <RunsList
-          runs={runsQuery.data}
+          query={runsQuery}
           pipelineId={pipelineId}
           triggerId={triggerId}
         />

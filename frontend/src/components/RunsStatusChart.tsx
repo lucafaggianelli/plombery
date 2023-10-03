@@ -1,14 +1,63 @@
-import { Card, Title, Text, Flex, Tracker, Italic } from '@tremor/react'
+import { UseQueryResult } from '@tanstack/react-query'
+import {
+  Card,
+  Text,
+  Flex,
+  Tracker,
+  Italic,
+  Metric,
+} from '@tremor/react'
+import { HTTPError } from 'ky'
 
 import { PipelineRun } from '../types'
 import { STATUS_COLORS } from '../utils'
+import ErrorAlert from './queries/Error'
 
 interface Props {
-  runs: PipelineRun[]
+  query: UseQueryResult<PipelineRun[], HTTPError>
   subject: 'Trigger' | 'Pipeline'
 }
 
-const RunsStatusChart: React.FC<Props> = ({ runs, subject }) => {
+const Loader = ({ subject }: { subject: string }) => (
+  <Card>
+    <Flex className="items-start">
+      <Text>Successful runs</Text>
+    </Flex>
+
+    <Flex className="justify-start items-baseline space-x-3 truncate">
+      <Metric className="w-24 bg-slate-700 animate-pulse rounded">
+        &nbsp;
+      </Metric>
+    </Flex>
+
+    <>
+      <Flex className="mt-4">
+        <Text>{subject} health</Text>
+      </Flex>
+
+      <div className="h-10 mt-2 bg-slate-700 animate-pulse rounded" />
+    </>
+    <Flex className="mt-2">
+      <div className="h-2 bg-slate-700 animate-pulse" />
+      <div className="h-2 bg-slate-700 animate-pulse" />
+    </Flex>
+  </Card>
+)
+
+const RunsStatusChart: React.FC<Props> = ({ query, subject }) => {
+  if (query.isLoading || query.isFetching) {
+    return <Loader subject={subject} />
+  }
+
+  if (query.isError) {
+    return (
+      <Card>
+        <ErrorAlert query={query} />
+      </Card>
+    )
+  }
+
+  const runs = [...query.data].reverse()
   const successfulRuns = runs.filter((run) => run.status === 'completed')
 
   const successPercentage = (successfulRuns.length / runs.length) * 100 || 0
@@ -18,15 +67,20 @@ const RunsStatusChart: React.FC<Props> = ({ runs, subject }) => {
 
   return (
     <Card>
-      <Flex>
-        <Title>{subject} health</Title>
+      <Flex className="items-start">
+        <Text>Successful runs</Text>
+      </Flex>
+
+      <Flex className="justify-start items-baseline space-x-3 truncate">
+        <Metric>
+          {successPercentage.toFixed(1)} <span className="text-lg">%</span>
+        </Metric>
       </Flex>
 
       {runs.length ? (
         <>
           <Flex className="mt-4">
-            <Text>Successful runs</Text>
-            <Text>{successPercentage.toFixed(1)} %</Text>
+            <Text>{subject} health</Text>
           </Flex>
           <Tracker
             className="mt-2"

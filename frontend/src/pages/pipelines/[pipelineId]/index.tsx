@@ -14,7 +14,10 @@ import {
 } from '@tremor/react'
 import { useParams } from 'react-router-dom'
 import React from 'react'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
+import {
+  ArrowTopRightOnSquareIcon,
+  QuestionMarkCircleIcon,
+} from '@heroicons/react/24/outline'
 
 import CopyButton from '@/components/CopyButton'
 import Breadcrumbs from '@/components/Breadcrumbs'
@@ -37,10 +40,10 @@ const PipelineView: React.FC = () => {
     <CopyButton content={getPipelineRunUrl(pipelineId)} className="ml-2.5" />
   )
 
-  if (runsQuery.isLoading || pipelineQuery.isLoading)
+  if (pipelineQuery.isLoading)
     return <div>Loading...</div>
 
-  if (runsQuery.isError || pipelineQuery.isError)
+  if (pipelineQuery.isError)
     return <div>An error has occurred</div>
 
   const pipeline = pipelineQuery.data
@@ -86,6 +89,30 @@ const PipelineView: React.FC = () => {
                 </div>
               </ListItem>
             ))}
+
+            {pipeline.tasks.length === 0 && (
+              <div className="mt-4">
+                <Text className="text-center italic">
+                  This pipeline has no tasks so it can't be run.
+                </Text>
+
+                <div className="text-center mt-2 text-sm">
+                  <a
+                    href="https://lucafaggianelli.github.io/plombery/tasks/"
+                    target="_blank"
+                    className="inline-flex items-center gap-2 bg-indigo-50/30 hover:bg-indigo-50 dark:bg-indigo-950/50 dark:hover:bg-indigo-950 rounded-sm px-4 py-2 text-indigo-500 transition-colors duration-300 cursor-pointer no-underline"
+                  >
+                    How to create tasks
+                    <Icon
+                      icon={ArrowTopRightOnSquareIcon}
+                      size="sm"
+                      className="p-0"
+                      color="indigo"
+                    />
+                  </a>
+                </div>
+              </div>
+            )}
           </List>
 
           <div style={{ flexGrow: 1 }} />
@@ -114,10 +141,10 @@ const PipelineView: React.FC = () => {
 
         <RunsStatusChart
           subject="Pipeline"
-          runs={[...runsQuery.data].reverse()}
+          query={runsQuery}
         />
 
-        <RunsDurationChart runs={runsQuery.data} />
+        <RunsDurationChart query={runsQuery} />
       </Grid>
 
       <Grid
@@ -132,7 +159,10 @@ const PipelineView: React.FC = () => {
         </Col>
 
         <Col>
-          <RunsList runs={runsQuery.data} pipelineId={pipelineId} />
+          <RunsList
+            query={runsQuery}
+            pipelineId={pipelineId}
+          />
         </Col>
       </Grid>
     </PageLayout>
