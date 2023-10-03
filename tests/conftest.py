@@ -5,9 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from plombery import Plombery
-from plombery.config import settings, AuthSettings
-from plombery.api import api as fastapi_app
+from plombery import _Plombery
+from plombery.config import settings
+from plombery.config.model import AuthSettings
+from plombery.api import app as fastapi_app
 from plombery.api.authentication import _needs_auth
 
 
@@ -20,7 +21,7 @@ def _bypass_auth():
 
 @pytest.fixture
 def app():
-    plombery_app = Plombery()
+    plombery_app = _Plombery()
     yield plombery_app
 
 

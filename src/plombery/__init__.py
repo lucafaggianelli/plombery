@@ -3,7 +3,7 @@ import logging
 import os
 
 from apscheduler.schedulers.base import SchedulerAlreadyRunningError
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from .api import app
 from .config import settings
@@ -40,6 +40,12 @@ class _Plombery:
     def add_notification_rule(self, notification: NotificationRule):
         notification_manager.register_rule(notification)
 
+    def start(self):
+        try:
+            orchestrator.start()
+        except SchedulerAlreadyRunningError:
+            pass
+
     def stop(self):
         orchestrator.stop()
 
@@ -54,10 +60,7 @@ _app = _Plombery()
 
 @app.on_event("startup")
 def on_fastapi_start():
-    try:
-        orchestrator.start()
-    except SchedulerAlreadyRunningError:
-        pass
+    _app.start()
 
 
 def get_app():
