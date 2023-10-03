@@ -61,11 +61,12 @@ MSTEAMS_WEBHOOK=msteams://TokenA/TokenB/TokenC/
 
 The Sqlite DB URI, by default `sqlite:///./plombery.db`
 
-### `server_url`
+### `allowed_origins`
 
-The URL of the backend, be default `http://localhost:8000`.
+It allows to configure the CORS header `Access-Control-Allow-Origin`,
+by default it's value is `*` so it allows all origins.
 
-Change it if running in production.
+**Change it if running in production.**
 
 ### `frontend_url`
 
