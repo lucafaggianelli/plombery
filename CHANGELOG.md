@@ -51,6 +51,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - (breaking): `Trigger.params` accepts a `BaseModel` instance, not a dict
 - (breaking): By default CORS headers allow_origins is set to `*`
 
+### Removed
+- Remove `server_url` configuration as unused
+
 ## [0.3.2] - 2023-06-20
 
 ### Added
