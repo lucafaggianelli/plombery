@@ -1,9 +1,17 @@
 import { UseQueryResult } from '@tanstack/react-query'
-import { Card, Title, Text, Flex, Tracker, Italic, Metric } from '@tremor/react'
+import {
+  Card,
+  Text,
+  Flex,
+  Tracker,
+  Italic,
+  Metric,
+} from '@tremor/react'
 import { HTTPError } from 'ky'
 
 import { PipelineRun } from '../types'
 import { STATUS_COLORS } from '../utils'
+import ErrorAlert from './queries/Error'
 
 interface Props {
   query: UseQueryResult<PipelineRun[], HTTPError>
@@ -41,8 +49,12 @@ const RunsStatusChart: React.FC<Props> = ({ query, subject }) => {
     return <Loader subject={subject} />
   }
 
-  if (query.error) {
-    return <div>error</div>
+  if (query.isError) {
+    return (
+      <Card>
+        <ErrorAlert query={query} />
+      </Card>
+    )
   }
 
   const runs = [...query.data].reverse()

@@ -3,6 +3,7 @@ import { UseQueryResult } from '@tanstack/react-query'
 import { HTTPError } from 'ky'
 
 import { PipelineRun } from '../types'
+import ErrorAlert from './queries/Error'
 
 interface Props {
   query: UseQueryResult<PipelineRun[], HTTPError>
@@ -33,7 +34,9 @@ const RunsDurationChart: React.FC<Props> = ({ query }) => {
 
   if (query.isError) {
     return (
-      <div className="text-rose">Error fetching data {query.error.message}</div>
+      <Card>
+        <ErrorAlert query={query} />
+      </Card>
     )
   }
 

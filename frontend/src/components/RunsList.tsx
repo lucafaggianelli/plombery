@@ -13,24 +13,22 @@ import {
 import { formatDistanceToNow, differenceInDays } from 'date-fns'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { HTTPError } from 'ky'
 
 import { useSocket } from '@/socket'
 import { PipelineRun, WebSocketMessage } from '@/types'
 import { formatDateTime } from '@/utils'
 import StatusBadge from './StatusBadge'
 import Timer from './Timer'
+import ErrorAlert from './queries/Error'
 
 interface Props {
   pipelineId?: string
-  query: UseQueryResult<PipelineRun[], unknown>
+  query: UseQueryResult<PipelineRun[], HTTPError>
   triggerId?: string
 }
 
-const RunsList: React.FC<Props> = ({
-  pipelineId,
-  query,
-  triggerId,
-}) => {
+const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
   const [runs, setRuns] = useState<PipelineRun[]>(query.data || [])
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -179,6 +177,14 @@ const RunsList: React.FC<Props> = ({
                 )}
               </TableRow>
             ))}
+
+          {query.isError && (
+            <TableRow>
+              <TableCell colSpan={6}>
+                <ErrorAlert query={query} />
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </Card>
