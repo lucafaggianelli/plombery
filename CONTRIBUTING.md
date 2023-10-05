@@ -27,9 +27,59 @@ There are several ways you can contribute to this project:
 
 ## Getting Started
 
+### Prerequisites
+
+Tools requierd to run Plombery:
+
+- Python3 (Version: >=3.x)
+- Pip
+- Yarn (for frontend)
+
+### Setup
+
 1. Fork the repository and clone it to your local machine.
-2. Install the necessary dependencies (if any) as mentioned in the project's README.
-3. Create a new branch for your work: `git checkout -b feature/your-feature-name`.
+
+2. Create a python virtual environment:
+
+```sh
+> python3 -m venv .venv
+> source .venv/bin/activate # on Mac/Linux
+> .venv/Script/activate # on Win
+```
+
+3. install dependencies:
+
+```sh
+pip install .
+```
+
+4. Duplicate the `.example.env` to `.env` and update the variables accordingly.
+
+5. The React frontend is in the `frontend/` folder, enter the folder and install the dependencies:
+
+```sh
+> cd frontend
+> yarn
+```
+
+- run the development server:
+
+```sh
+yarn dev
+```
+
+6. For development purposes only,open a new terminal and run the example backend/API:
+
+```sh
+cd examples
+
+# Create a venv for the example app
+> python3 -m venv .venv-example
+> source .venv-example/bin/activate
+> pip install -r requirements.txt
+
+> ./run.sh # or ./run.ps1 for win
+```
 
 ## Development Workflow
 
