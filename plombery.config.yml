@@ -1,0 +1,12 @@
+frontend_url: $FRONTEND_URL
+auth:
+  client_id: $GOOGLE_CLIENT_ID
+  client_secret: $GOOGLE_CLIENT_SECRET
+  server_metadata_url: https://accounts.google.com/.well-known/openid-configuration
+
+notifications:
+  - pipeline_status:
+      - failed
+    channels:
+      - $GMAIL_ACCOUNT
+      - $MSTEAMS_WEBHOOK
