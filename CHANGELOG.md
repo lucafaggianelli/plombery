@@ -4,8 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## [Unreleased]
 
+## [0.4.0] - 2023-10-06
 ### Added
 - Navigate to run page after running manually a pipeline or trigger (#71)
 - Add `ky` frontend dependency as HTTP fetch library
@@ -55,7 +56,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Remove `server_url` configuration as unused
 
 ## [0.3.2] - 2023-06-20
-
 ### Added
 - Add next fire time to pipelines and triggers (#27)
 - show run time in runs list (#129)
@@ -69,4 +69,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fix the run pipeline dialog open/close logic
 - Show pipeline name in runs list (#127)
 
+[Unreleased]: https://github.com/lucafaggianelli/mario-pype/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/lucafaggianelli/mario-pype/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/lucafaggianelli/plombery.git/releases/tag/v0.3.2
