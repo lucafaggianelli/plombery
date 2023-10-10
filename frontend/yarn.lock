@@ -459,10 +459,10 @@
     "@tanstack/query-core" "4.36.1"
     use-sync-external-store "^1.2.0"
 
-"@tremor/react@^3.9.0-beta.16":
-  version "3.9.0-beta.16"
-  resolved "https://registry.yarnpkg.com/@tremor/react/-/react-3.9.0-beta.16.tgz#e20813badb8ef29e8c0416e19c09b14ae793e77c"
-  integrity sha512-3gpowGWsFSlLErbWssg2v0kIxM36MMMp68FBZE4sFgKB5McAJsrAGy1vSYqq1mNo6LQVBo5iRu328kruAEMvUA==
+"@tremor/react@^3.9.1":
+  version "3.9.1"
+  resolved "https://registry.yarnpkg.com/@tremor/react/-/react-3.9.1.tgz#f40c6ccfa97b42ae67dc6fd11bbbca878aa0b5e4"
+  integrity sha512-WSo1MzXjjW+g4pIncfUsQZTISsEd+lBFwSn52SYTcH/4hH4VLqZIaUmVK7bzdvlYMN4sF7PRF4zfByYeeQ4ySg==
   dependencies:
     "@floating-ui/react" "^0.19.1"
     "@headlessui/react" "^1.7.14"
