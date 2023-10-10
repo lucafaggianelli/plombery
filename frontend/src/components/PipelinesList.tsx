@@ -56,7 +56,7 @@ const PipelinesList: React.FC = () => {
           </ListItem>
         ))}
 
-        {pipelines.length !== 0 && (
+        {pipelines.length === 0 && (
           <div className='mt-4'>
             <Text className="text-center italic">
               There are no pipelines, you can't do much.
