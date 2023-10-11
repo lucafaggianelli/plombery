@@ -17,9 +17,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      - uses: actions/cache@v3
-        with:
-          key: ${{ github.ref }}
-          path: .cache
-      - run: pip install mkdocs-material
+          cache: 'pip'
+          cache-dependency-path: pyproject.toml
+      - run: pip install .[docs]
       - run: mkdocs gh-deploy --force
