@@ -5,9 +5,6 @@ import { Fragment, PropsWithChildren, ReactNode } from 'react'
 interface Props extends PropsWithChildren {
   footer?: ReactNode
   isOpen: boolean
-  maxHeight?: React.CSSProperties['maxHeight']
-  maxWidth?: React.CSSProperties['maxWidth']
-  minWidth?: React.CSSProperties['minWidth']
   subtitle?: string
   title?: string
   onClose: () => any
@@ -39,7 +36,7 @@ const Dialog: React.FC<Props> = ({
           />
         </Transition.Child>
 
-        <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+        <div className="fixed inset-0 flex w-screen items-center justify-center p-12">
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -49,7 +46,7 @@ const Dialog: React.FC<Props> = ({
             leaveFrom="opacity-100 translate-y-0"
             leaveTo="opacity-0 -translate-y-1/3"
           >
-            <HUDialog.Panel>
+            <HUDialog.Panel className="max-w-full">
               <Card>
                 {title && (
                   <HUDialog.Title>

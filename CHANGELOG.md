@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - No pipelines message appearing when pipelines where there
+- Fix the traceback info dialog (fix #229)
 
 ## [0.4.0] - 2023-10-06
 ### Added
