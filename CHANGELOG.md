@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2023-10-11
+
 ### Fixed
 - No pipelines message appearing when pipelines where there
 - Fix the traceback info dialog (fix #229)
@@ -73,6 +75,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fix the run pipeline dialog open/close logic
 - Show pipeline name in runs list (#127)
 
-[Unreleased]: https://github.com/lucafaggianelli/mario-pype/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/lucafaggianelli/mario-pype/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/lucafaggianelli/mario-pype/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/lucafaggianelli/mario-pype/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/lucafaggianelli/plombery.git/releases/tag/v0.3.2
