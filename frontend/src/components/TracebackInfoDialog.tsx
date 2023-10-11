@@ -36,7 +36,6 @@ const TracebackInfoDialog: React.FC<Props> = ({ logEntry }) => {
             Close
           </Button>
         }
-        maxWidth="80%"
         onClose={() => setOpen(false)}
       >
         <div className="flex flex-col">
@@ -48,7 +47,7 @@ const TracebackInfoDialog: React.FC<Props> = ({ logEntry }) => {
               flexGrow: 1,
               maxHeight: '70vh',
             }}
-            className="p-3 my-3 bg-slate-100 rounded-md whitespace-pre font-mono"
+            className="p-3 my-3 bg-tremor-background-subtle dark:bg-dark-tremor-background-subtle rounded-md whitespace-pre font-mono"
           >
             {logEntry.exc_info}
           </div>

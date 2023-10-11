@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- No pipelines message appearing when pipelines where there
+- Fix the traceback info dialog (fix #229)
+
 ## [0.4.0] - 2023-10-06
 ### Added
 - Navigate to run page after running manually a pipeline or trigger (#71)
