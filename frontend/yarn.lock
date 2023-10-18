@@ -1146,10 +1146,10 @@ json5@^2.2.3:
   resolved "https://registry.yarnpkg.com/json5/-/json5-2.2.3.tgz#78cd6f1a19bdc12b73db5ad0c61efd66c1e29283"
   integrity sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==
 
-ky@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/ky/-/ky-1.0.1.tgz#3b167f0bf75097240ffc5505e6b4f7b3be8161d0"
-  integrity sha512-UvcwpQO0LOuZwG0Ti3VDo6w57KYt+r4bWEYlNaMt82hgyFtse86QtOGum1RzsZni31FndXQl6NvtDArfunt2JQ==
+ky@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/ky/-/ky-1.1.0.tgz#4c84504da920b7f56c9838b34db76ae364fba7dd"
+  integrity sha512-n/rS/Yw+pc/j61kl353yIhxpM/FN0VidhPeiMv6Y/QyyCUpSJtHtHlX655wYolZ/Wc3BKO4Q5syWKfzJ5CT7Bg==
 
 lilconfig@^2.0.5, lilconfig@^2.1.0:
   version "2.1.0"
