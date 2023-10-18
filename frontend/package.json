@@ -33,7 +33,7 @@
   "devDependencies": {
     "@types/json-schema": "^7.0.11",
     "@types/node": "^20.8.6",
-    "@types/react": "^18.2.27",
+    "@types/react": "^18.2.29",
     "@types/react-dom": "^18.2.12",
     "@vitejs/plugin-react": "^4.0.4",
     "autoprefixer": "^10.4.13",
