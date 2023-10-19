@@ -1,0 +1,14 @@
+version: '3'
+services:
+  myapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      NODE_VERSION: "20"
+      VARIAN: "3.11"
+    volumes:
+      - ./examples:/workspace/plombery/examples
+    command: /bin/bash -c "cd /workspace/plombery/examples && ./run.sh"
