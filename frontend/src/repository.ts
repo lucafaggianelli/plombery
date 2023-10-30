@@ -36,7 +36,7 @@ class PlomberyHttpError extends Error implements BaseError {
 const DEFAULT_BASE_URL = import.meta.env.DEV
   ? 'http://localhost:8000/api'
   : `${window.location.protocol}//${window.location.host}/api`
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
+const BASE_URL: string = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 
 const client = ky.create({
   prefixUrl: BASE_URL,
@@ -44,7 +44,7 @@ const client = ky.create({
   redirect: 'follow',
 })
 
-export const getApiUrl = () => BASE_URL
+export const getApiUrl = (): string => BASE_URL
 
 /**
  * Helper function to GET a JSON request
@@ -85,9 +85,6 @@ export const getWebsocketUrl = () => {
 
 export const getPipelineRunUrl = (pipelineId: string) =>
   `${BASE_URL}/pipelines/${pipelineId}/run`
-
-export const getTriggerRunUrl = (pipelineId: string, triggerId: string) =>
-  `${BASE_URL}/pipelines/${pipelineId}/triggers/${triggerId}/run`
 
 export const getCurrentUser = async () => {
   return await get<WhoamiResponse>('auth/whoami')

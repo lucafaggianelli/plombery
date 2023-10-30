@@ -10,24 +10,20 @@ import {
   List,
   Bold,
   Grid,
-  TextInput,
 } from '@tremor/react'
 import { useParams } from 'react-router-dom'
 import React from 'react'
-import {
-  ArrowTopRightOnSquareIcon,
-  QuestionMarkCircleIcon,
-} from '@heroicons/react/24/outline'
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 
-import CopyButton from '@/components/CopyButton'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import RunsDurationChart from '@/components/RunsDurationChart'
 import RunsList from '@/components/RunsList'
 import RunsStatusChart from '@/components/RunsStatusChart'
-import { getPipeline, getPipelineRunUrl, listRuns } from '@/repository'
+import { getPipeline, listRuns } from '@/repository'
 import ManualRunDialog from '@/components/ManualRunDialog'
 import TriggersList from '@/components/TriggersList'
 import PageLayout from '@/components/PageLayout'
+import PipelineHttpRun from '@/components/help/PipelineHttpRun'
 
 const PipelineView: React.FC = () => {
   const urlParams = useParams()
@@ -36,15 +32,9 @@ const PipelineView: React.FC = () => {
   const pipelineQuery = useQuery(getPipeline(pipelineId))
   const runsQuery = useQuery(listRuns(pipelineId))
 
-  const CopyUrlButton = () => (
-    <CopyButton content={getPipelineRunUrl(pipelineId)} className="ml-2.5" />
-  )
+  if (pipelineQuery.isLoading) return <div>Loading...</div>
 
-  if (pipelineQuery.isLoading)
-    return <div>Loading...</div>
-
-  if (pipelineQuery.isError)
-    return <div>An error has occurred</div>
+  if (pipelineQuery.isError) return <div>An error has occurred</div>
 
   const pipeline = pipelineQuery.data
 
@@ -117,32 +107,14 @@ const PipelineView: React.FC = () => {
 
           <div style={{ flexGrow: 1 }} />
 
-          <Flex className="gap-8">
-            <Flex className="justify-start w-auto flex-shrink-0">
-              <Text>Run URL</Text>
+          <Flex className="justify-between gap-8">
+            <Text>Run URL</Text>
 
-              <Icon
-                size="sm"
-                color="slate"
-                icon={QuestionMarkCircleIcon}
-                tooltip="URL to run the pipeline programmatically via an HTTP POST request"
-              />
-            </Flex>
-
-            <TextInput
-              title={getPipelineRunUrl(pipelineId)}
-              value={getPipelineRunUrl(pipelineId)}
-              readOnly
-              icon={CopyUrlButton}
-              className="flex-grow"
-            />
+            <PipelineHttpRun pipelineId={pipelineId} />
           </Flex>
         </Card>
 
-        <RunsStatusChart
-          subject="Pipeline"
-          query={runsQuery}
-        />
+        <RunsStatusChart subject="Pipeline" query={runsQuery} />
 
         <RunsDurationChart query={runsQuery} />
       </Grid>
@@ -159,10 +131,7 @@ const PipelineView: React.FC = () => {
         </Col>
 
         <Col>
-          <RunsList
-            query={runsQuery}
-            pipelineId={pipelineId}
-          />
+          <RunsList query={runsQuery} pipelineId={pipelineId} />
         </Col>
       </Grid>
     </PageLayout>
