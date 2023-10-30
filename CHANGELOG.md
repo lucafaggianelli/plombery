@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Link to REST API docs in settings menu
 
+### Changed
+- (internal): pipeline HTTP run url is now `/pipelines/{pipeline_id}/run`
+
 ## [0.4.1] - 2023-10-11
 
 ### Fixed

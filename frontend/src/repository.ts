@@ -245,9 +245,8 @@ export const runPipeline = (
   Record<string, any> | void
 > => ({
   async mutationFn(params) {
-    return await post<PipelineRun>('runs/', {
+    return await post<PipelineRun>(`pipelines/${pipelineId}/run`, {
       json: {
-        pipeline_id: pipelineId,
         trigger_id: triggerId,
         params,
       },

@@ -1,11 +1,9 @@
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Response
-from pydantic import BaseModel, ValidationError
 
 from plombery.api.authentication import NeedsAuth
 from plombery.database.schemas import PipelineRun
-from plombery.orchestrator import orchestrator, run_pipeline_now
 from plombery.orchestrator.executor import get_pipeline_run_logs, get_pipeline_run_data
 from plombery.database.repository import list_pipeline_runs, get_pipeline_run
 
@@ -51,42 +49,3 @@ def get_run_data(run_id: int, task: str):
         raise HTTPException(status_code=404, detail="Task has no data")
 
     return data
-
-
-class PipelineRunInput(BaseModel):
-    pipeline_id: str
-    trigger_id: Optional[str] = None
-    params: Optional[Dict[str, Any]] = None
-
-
-@router.post("/")
-async def run_pipeline(body: PipelineRunInput) -> PipelineRun:
-    if not (pipeline := orchestrator.get_pipeline(body.pipeline_id)):
-        raise HTTPException(
-            404, f"The pipeline with ID {body.pipeline_id} doesn't exist"
-        )
-
-    if body.trigger_id:
-        triggers = [
-            trigger for trigger in pipeline.triggers if trigger.id == body.trigger_id
-        ]
-
-        if len(triggers) == 0:
-            raise HTTPException(
-                status_code=404, detail=f"Trigger {body.trigger_id} not found"
-            )
-
-        trigger = triggers[0]
-
-        return await run_pipeline_now(pipeline, trigger)
-    else:
-        if pipeline.params:
-            try:
-                pipeline.params.model_validate(body.params)
-            except ValidationError as exc:
-                raise HTTPException(
-                    status_code=422,
-                    detail=exc.errors(),
-                )
-
-        return await run_pipeline_now(pipeline, params=body.params)
