@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Link to REST API docs in settings menu
+
 ## [0.4.1] - 2023-10-11
 
 ### Fixed
