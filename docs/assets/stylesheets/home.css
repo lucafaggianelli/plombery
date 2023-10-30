@@ -1,0 +1,36 @@
+.hero__container {
+  display: flex;
+  flex-direction: column;
+  row-gap: 8em;
+  align-items: center;
+  justify-content: flex-end;
+  height: calc(100vh - 48px);
+  width: 100%;
+  background: url(/plombery/assets/images/home-hero-wide.jpeg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.hero__container h1 {
+  font-size: 2.5rem;
+  line-height: 3rem;
+  text-shadow: 0 0 20px rgba(192, 159, 210, 0.874);
+  margin-bottom: 1rem;
+  margin-top: 0;
+  text-align: center;
+}
+
+.hero__container h2 {
+  font-size: 1.25rem;
+  color: rgb(228, 228, 228);
+  text-align: center;
+  text-shadow: 0 0 20px rgba(149, 133, 157, 0.874);
+  margin: 0;
+}
+
+.hero__container img {
+  width: 60%;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 0 16px 20px rgb(92 17 132 / 67%);
+}

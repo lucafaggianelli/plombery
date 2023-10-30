@@ -1,5 +1,13 @@
 site_name: Plombery
 site_url: https://lucafaggianelli.github.io/plombery
+site_description: |
+  An open source (MIT license) pipeline runner and task scheduler
+  for Python with a web UI and a REST API.
+  If you need to run and monitor recurring or one-time python scripts
+  then it's the right tool for you!
+  The scheduler is based on APScheduler so you can use Plombery
+  as an APScheduler web UI.
+
 copyright: Copyright &copy; 2023 Luca Faggianelli
 
 repo_url: https://github.com/lucafaggianelli/plombery
