@@ -15,7 +15,6 @@ from plombery.database.repository import create_pipeline_run, update_pipeline_ru
 from plombery.database.schemas import PipelineRunCreate
 from plombery.orchestrator.data_storage import (
     read_logs_file,
-    read_task_run_data,
     store_task_output,
 )
 from plombery.pipeline.pipeline import Pipeline, Trigger, Task
@@ -199,7 +198,3 @@ async def _execute_task(
 
 def get_pipeline_run_logs(pipeline_run_id: int):
     return read_logs_file(pipeline_run_id)
-
-
-def get_pipeline_run_data(pipeline_run_id: int, task_id: str):
-    return read_task_run_data(pipeline_run_id, task_id)

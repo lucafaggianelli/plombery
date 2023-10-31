@@ -1,12 +1,14 @@
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, ValidationError
 
 from plombery.api.authentication import NeedsAuth
 from plombery.database.schemas import PipelineRun
 from plombery.orchestrator import orchestrator, run_pipeline_now
-from plombery.orchestrator.executor import get_pipeline_run_logs, get_pipeline_run_data
+from plombery.orchestrator.data_storage import get_task_run_data_file
+from plombery.orchestrator.executor import get_pipeline_run_logs
 from plombery.database.repository import list_pipeline_runs, get_pipeline_run
 
 
@@ -45,12 +47,12 @@ def get_run_logs(run_id: int):
 
 @router.get("/{run_id}/data/{task}")
 def get_run_data(run_id: int, task: str):
-    data = get_pipeline_run_data(run_id, task)
+    data_file = get_task_run_data_file(run_id, task)
 
-    if not data:
+    if not data_file.exists():
         raise HTTPException(status_code=404, detail="Task has no data")
 
-    return data
+    return FileResponse(path=data_file, filename=f"run-{run_id}-{task}-data.json")
 
 
 class PipelineRunInput(BaseModel):

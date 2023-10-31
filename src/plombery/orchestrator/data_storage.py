@@ -78,12 +78,8 @@ def read_logs_file(pipeline_run_id: int):
         return f.read().rstrip()
 
 
-def read_task_run_data(pipeline_run_id: int, task_id: str):
+def get_task_run_data_file(pipeline_run_id: int, task_id: str) -> Path:
     data_path = _get_data_path(pipeline_run_id)
     file = data_path / f"{task_id}.json"
 
-    if not file.exists():
-        return
-
-    with file.open(mode="r", encoding="utf-8") as f:
-        return json.load(f)
+    return file

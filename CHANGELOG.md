@@ -8,9 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.4.1] - 2023-10-11
 
+### Added
+- Add download task data button in data view dialog (close #46)
+
 ### Fixed
 - No pipelines message appearing when pipelines where there
 - Fix the traceback info dialog (fix #229)
+- Improve task data visualization (#257)
 
 ## [0.4.0] - 2023-10-06
 ### Added
