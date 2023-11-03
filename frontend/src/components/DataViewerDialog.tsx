@@ -97,6 +97,7 @@ const DataViewerDialog: React.FC<Props> = ({
               href={`${getApiUrl()}/${getRunDataUrl(runId, taskId)}`}
               target="_blank"
               className="tremor-Button-root flex-shrink-0 inline-flex justify-center items-center group font-medium outline-none rounded-tremor-default shadow-tremor-input dark:shadow-dark-tremor-input border px-4 py-2 text-sm bg-indigo-500 border-indigo-500 text-white hover:bg-indigo-600 hover:border-indigo-700 no-underline hover:text-inherit"
+              rel="noopener noreferrer"
             >
               <ArrowDownTrayIcon className="tremor-Button-icon shrink-0 h-5 w-5 -ml-1 mr-1.5" />
               Download
