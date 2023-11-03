@@ -23,7 +23,7 @@
     "@heroicons/react": "^2.0.16",
     "@microlink/react-json-view": "^1.23.0",
     "@tanstack/react-query": "^4.36.1",
-    "@tremor/react": "^3.9.2",
+    "@tremor/react": "^3.10.1",
     "handsontable": "^13.1.0",
     "ky": "^1.1.0",
     "react": "^18.2.0",
