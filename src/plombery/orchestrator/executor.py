@@ -6,6 +6,7 @@ import inspect
 from pydantic import BaseModel
 
 from plombery.constants import MANUAL_TRIGGER_ID
+from plombery.exceptions import InvalidDataPath
 from plombery.logger import get_logger
 from plombery.notifications import notification_manager
 from plombery.utils import run_all_coroutines
@@ -13,11 +14,7 @@ from plombery.websocket import manager
 from plombery.database.models import PipelineRun
 from plombery.database.repository import create_pipeline_run, update_pipeline_run
 from plombery.database.schemas import PipelineRunCreate
-from plombery.orchestrator.data_storage import (
-    read_logs_file,
-    read_task_run_data,
-    store_task_output,
-)
+from plombery.orchestrator.data_storage import store_task_output
 from plombery.pipeline.pipeline import Pipeline, Trigger, Task
 from plombery.pipeline.context import pipeline_context, run_context
 from plombery.schemas import PipelineRunStatus, TaskRun
@@ -135,15 +132,22 @@ async def run(
         finally:
             task_run.duration = (utcnow() - task_start_time).total_seconds() * 1000
 
-            task_run.has_output = store_task_output(
-                pipeline_run.id, task.id, flowing_data
-            )
+            try:
+                task_run.has_output = store_task_output(
+                    pipeline_run.id, task.id, flowing_data
+                )
+            except InvalidDataPath as error:
+                logger.error(
+                    "Can't store the task output as the path is invalid", exc_info=error
+                )
 
             pipeline_run.tasks_run.append(task_run)
 
             if task_run.status == PipelineRunStatus.FAILED:
                 # A task failed so the entire pipeline failed
-                _on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.FAILED)
+                _on_pipeline_status_changed(
+                    pipeline, pipeline_run, PipelineRunStatus.FAILED
+                )
                 break
 
     else:
@@ -195,11 +199,3 @@ async def _execute_task(
     result = await task.run(*args, **kwargs)
 
     return result
-
-
-def get_pipeline_run_logs(pipeline_run_id: int):
-    return read_logs_file(pipeline_run_id)
-
-
-def get_pipeline_run_data(pipeline_run_id: int, task_id: str):
-    return read_task_run_data(pipeline_run_id, task_id)

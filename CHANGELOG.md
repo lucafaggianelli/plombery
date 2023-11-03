@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Add download task data button in data view dialog (close #46)
+
+### Fixed
+- Improve task data visualization (#257)
+- Check data file paths before accessing them
+
 ## [0.4.1] - 2023-10-11
 
 ### Fixed

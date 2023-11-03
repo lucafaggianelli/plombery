@@ -229,13 +229,16 @@ export const getLogs = (
   initialData: [],
 })
 
+export const getRunDataUrl = (runId: number, taskId: string) =>
+  `runs/${runId}/data/${taskId}`
+
 export const getRunData = (
   runId: number,
   taskId: string
 ): UseQueryOptions<any, HTTPError> => ({
   queryKey: ['getRunData', { runId, taskId }],
   queryFn: async () => {
-    return await get(`runs/${runId}/data/${taskId}`)
+    return await get(getRunDataUrl(runId, taskId))
   },
 })
 
