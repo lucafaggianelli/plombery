@@ -4,6 +4,7 @@ import '@/globals.css'
 import Router from './Router'
 import { AuthProvider } from './contexts/AuthContext'
 import { BrowserRouter } from 'react-router-dom'
+import WebSocketContext from './contexts/WebSocketContext'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,11 +17,13 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <Router />
-        </AuthProvider>
-      </BrowserRouter>
+      <WebSocketContext>
+        <BrowserRouter>
+          <AuthProvider>
+            <Router />
+          </AuthProvider>
+        </BrowserRouter>
+      </WebSocketContext>
     </QueryClientProvider>
   )
 }

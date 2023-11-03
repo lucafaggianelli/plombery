@@ -1,12 +1,12 @@
 import logging
 
 from plombery.logger.formatter import JsonFormatter
-from plombery.logger.web_socket_handler import WebSocketHandler
+from plombery.logger.web_socket_handler import queue_handler
 from plombery.orchestrator.data_storage import get_logs_filename
 from plombery.pipeline.context import task_context, run_context, pipeline_context
 
 
-def get_logger() -> logging.Logger:
+def get_logger() -> logging.LoggerAdapter:
     """Get a logger for a task or pipeline. This function uses contexts
     so it must be called within a task function or within the internal
     functions that run a pipeline.
@@ -26,7 +26,7 @@ def get_logger() -> logging.Logger:
     json_handler = logging.FileHandler(filename)
     json_handler.setFormatter(json_formatter)
 
-    websocket_handler = WebSocketHandler(pipeline_run.id)
+    websocket_handler = queue_handler
     websocket_handler.setFormatter(json_formatter)
 
     # Create a logger that's unique for each pipeline run
@@ -54,4 +54,10 @@ def get_logger() -> logging.Logger:
         logger.addHandler(json_handler)
         logger.addHandler(websocket_handler)
 
-    return logger
+    extra_log_info = {
+        "pipeline": pipeline.id,
+        "run_id": pipeline_run.id,
+        "task": task.id if task else None,
+    }
+
+    return logging.LoggerAdapter(logger, extra_log_info)

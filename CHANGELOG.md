@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Improve task data visualization (#257)
 - Check data file paths before accessing them
 
+### Changed
+- Migrated plain websocket to SocketIO for improved communication stability
+
 ## [0.4.1] - 2023-10-11
 
 ### Fixed

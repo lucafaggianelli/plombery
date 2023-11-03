@@ -15,8 +15,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { HTTPError } from 'ky'
 
-import { useSocket } from '@/socket'
-import { PipelineRun, WebSocketMessage } from '@/types'
+import { socket } from '@/socket'
+import { PipelineRun } from '@/types'
 import { formatDateTime } from '@/utils'
 import StatusBadge from './StatusBadge'
 import Timer from './Timer'
@@ -33,12 +33,9 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
   const [runs, setRuns] = useState<PipelineRun[]>(query.data || [])
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const { lastMessage } = useSocket('run-update')
 
   const onWsMessage = useCallback(
-    (message: WebSocketMessage) => {
-      const { data, type } = message
-
+    (data: any) => {
       data.run.start_time = new Date(data.run.start_time)
       data.run.trigger_id = data.trigger
 
@@ -65,10 +62,12 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
   )
 
   useEffect(() => {
-    if (lastMessage) {
-      onWsMessage(lastMessage)
+    socket.on('run-update', onWsMessage)
+
+    return () => {
+      socket.off('run-update', onWsMessage)
     }
-  }, [lastMessage])
+  }, [pipelineId])
 
   useEffect(() => {
     if (query.data?.length) {
