@@ -26,17 +26,14 @@ def _check_is_valid_path(path: Path) -> None:
         raise InvalidDataPath(path)
 
 
-def _get_data_path(pipeline_run_id: int, filename: Optional[str] = None) -> Path:
-    data_path = _base_data_path / "runs" / f"run_{pipeline_run_id}"
-
-    if filename:
-        data_path /= filename
+def _get_data_path(pipeline_run_id: int, filename: str) -> Path:
+    data_path = _base_data_path / "runs" / f"run_{pipeline_run_id}" / filename
 
     _check_is_valid_path(data_path)
 
     # Create all parent directories without raising errors
     # equivalent to mkdir -p
-    data_path.mkdir(parents=True, exist_ok=True)
+    data_path.parent.mkdir(parents=True, exist_ok=True)
 
     return data_path
 
