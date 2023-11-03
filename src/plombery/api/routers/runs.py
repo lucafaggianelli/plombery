@@ -6,9 +6,9 @@ from pydantic import BaseModel, ValidationError
 
 from plombery.api.authentication import NeedsAuth
 from plombery.database.schemas import PipelineRun
+from plombery.exceptions import InvalidDataPath
 from plombery.orchestrator import orchestrator, run_pipeline_now
-from plombery.orchestrator.data_storage import get_task_run_data_file
-from plombery.orchestrator.executor import get_pipeline_run_logs
+from plombery.orchestrator.data_storage import get_task_run_data_file, read_logs_file
 from plombery.database.repository import list_pipeline_runs, get_pipeline_run
 
 
@@ -41,13 +41,20 @@ def get_run(run_id: int) -> PipelineRun:
 
 @router.get("/{run_id}/logs", response_class=JSONLResponse)
 def get_run_logs(run_id: int):
-    logs = get_pipeline_run_logs(run_id)
+    try:
+        logs = read_logs_file(run_id)
+    except InvalidDataPath:
+        raise HTTPException(status_code=400, detail="Invalid run ID")
+
     return Response(content=logs, media_type="application/jsonl")
 
 
 @router.get("/{run_id}/data/{task}")
 def get_run_data(run_id: int, task: str):
-    data_file = get_task_run_data_file(run_id, task)
+    try:
+        data_file = get_task_run_data_file(run_id, task)
+    except InvalidDataPath:
+        raise HTTPException(status_code=400, detail="Invalid run or task ID")
 
     if not data_file.exists():
         raise HTTPException(status_code=404, detail="Task has no data")
