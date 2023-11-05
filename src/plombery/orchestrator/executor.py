@@ -133,9 +133,10 @@ async def run(
             task_run.duration = (utcnow() - task_start_time).total_seconds() * 1000
 
             try:
-                task_run.has_output = store_task_output(
-                    pipeline_run.id, task.id, flowing_data
-                )
+                if pipeline.save_output:
+                    task_run.has_output = store_task_output(
+                        pipeline_run.id, task.id, flowing_data
+                    )
             except InvalidDataPath as error:
                 logger.error(
                     "Can't store the task output as the path is invalid", exc_info=error
