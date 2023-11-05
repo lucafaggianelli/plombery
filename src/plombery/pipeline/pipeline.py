@@ -14,6 +14,7 @@ class Pipeline(BaseModel):
     description: Optional[str] = None
     params: Optional[Type[BaseModel]] = Field(exclude=True, default=None)
     triggers: List[Trigger] = Field(default_factory=list)
+    save_output: bool = True
 
     class Config:
         validate_assignment = True
