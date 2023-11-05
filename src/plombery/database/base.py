@@ -15,6 +15,7 @@ engine = create_engine(
     settings.database_url,
     json_serializer=json_serializer,
     connect_args={"check_same_thread": False},
+    pool_size=30, max_overflow=10
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
