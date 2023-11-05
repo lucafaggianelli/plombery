@@ -74,6 +74,7 @@ def register_pipeline(
     description: Optional[str] = None,
     params: Optional[Type[BaseModel]] = None,
     triggers: Optional[List[Trigger]] = None,
+    save_output: bool = True
 ):
     pipeline = Pipeline(
         id=id,
