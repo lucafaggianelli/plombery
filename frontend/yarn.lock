@@ -476,10 +476,10 @@
     "@tanstack/query-core" "4.36.1"
     use-sync-external-store "^1.2.0"
 
-"@tremor/react@^3.9.2":
-  version "3.9.2"
-  resolved "https://registry.yarnpkg.com/@tremor/react/-/react-3.9.2.tgz#6974c10375203caf97398aadcbcaa453596992be"
-  integrity sha512-JecMNPW3oPOqM+0essg6mYu4mef11uDl8qCWGvX4DVwQluS0H/DKonHIEOzLxMNuDUYSzztkwyObGEntVYO0Lg==
+"@tremor/react@^3.11.0":
+  version "3.11.0"
+  resolved "https://registry.yarnpkg.com/@tremor/react/-/react-3.11.0.tgz#88d4a00663ef148063b79b7ea5357b1a0e944107"
+  integrity sha512-ItGx8Q3uzG3JOqTLb92Ximx6p/opIc7AIY5ALialtOAA7kGA3DSQMHeChRRhxLIRD7SYOmiwUhOgLFjjoffwnw==
   dependencies:
     "@floating-ui/react" "^0.19.1"
     "@headlessui/react" "^1.7.14"
@@ -487,7 +487,7 @@
     date-fns "^2.28.0"
     react-day-picker "^8.7.1"
     react-transition-group "^4.4.5"
-    recharts "^2.7.1"
+    recharts "^2.9.0"
     tailwind-merge "^1.9.1"
 
 "@types/babel__core@^7.20.2":
@@ -813,11 +813,6 @@ cross-fetch@^3.1.5:
   integrity sha512-cvA+JwZoU0Xq+h6WkMvAUqPEYy92Obet6UdKLfW60qn99ftItKjB5T+BkyWOFWe2pUyfQ+IJHmpOTznqk1M6Kg==
   dependencies:
     node-fetch "^2.6.12"
-
-css-unit-converter@^1.1.1:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/css-unit-converter/-/css-unit-converter-1.1.2.tgz#4c77f5a1954e6dbff60695ecb214e3270436ab21"
-  integrity sha512-IiJwMC8rdZE0+xiEZHeru6YoONC4rfPMqGm2W85jMIbkFvv5nFTwJVFHam2eFrN6txmoUYFAFXiv8ICVeTO0MA==
 
 cssesc@^3.0.0:
   version "3.0.0"
@@ -1421,11 +1416,6 @@ postcss-selector-parser@^6.0.11:
     cssesc "^3.0.0"
     util-deprecate "^1.0.2"
 
-postcss-value-parser@^3.3.0:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/postcss-value-parser/-/postcss-value-parser-3.3.1.tgz#9ff822547e2893213cf1c30efa51ac5fd1ba8281"
-  integrity sha512-pISE66AbVkp4fDQ7VHBwRNXzAAKJjw4Vw7nWI/+Q3vuly7SNfgYXvm6i5IgFylHGK5sP/xHAbB7N49OS4gWNyQ==
-
 postcss-value-parser@^4.0.0, postcss-value-parser@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/postcss-value-parser/-/postcss-value-parser-4.2.0.tgz#723c09920836ba6d3e5af019f92bc0971c02e514"
@@ -1526,7 +1516,7 @@ react-router@6.17.0:
   dependencies:
     "@remix-run/router" "1.10.0"
 
-react-smooth@^2.0.2:
+react-smooth@^2.0.4:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/react-smooth/-/react-smooth-2.0.5.tgz#d153b7dffc7143d0c99e82db1532f8cf93f20ecd"
   integrity sha512-BMP2Ad42tD60h0JW6BFaib+RJuV5dsXJK9Baxiv/HlNFjvRLqA9xrNKxVWnUIZPQfzUwGXIlU/dSYLU+54YGQA==
@@ -1596,28 +1586,20 @@ recharts-scale@^0.4.4:
   dependencies:
     decimal.js-light "^2.4.1"
 
-recharts@^2.7.1:
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/recharts/-/recharts-2.8.0.tgz#90c95136e2cb6930224c94a51adce607701284fc"
-  integrity sha512-nciXqQDh3aW8abhwUlA4EBOBusRHLNiKHfpRZiG/yjups1x+auHb2zWPuEcTn/IMiN47vVMMuF8Sr+vcQJtsmw==
+recharts@^2.9.0:
+  version "2.9.2"
+  resolved "https://registry.yarnpkg.com/recharts/-/recharts-2.9.2.tgz#a6a4e4c2887467ea57abde7e3af5c8021355a606"
+  integrity sha512-ig0zYgO5nUP/896GW16b9yy2sHIRW1AHB90x48hypFTSjjxQt/J9rPzlLJjgNupzJKEHPCwMi1VnvN/k20K45w==
   dependencies:
     classnames "^2.2.5"
     eventemitter3 "^4.0.1"
     lodash "^4.17.19"
     react-is "^16.10.2"
     react-resize-detector "^8.0.4"
-    react-smooth "^2.0.2"
+    react-smooth "^2.0.4"
     recharts-scale "^0.4.4"
-    reduce-css-calc "^2.1.8"
+    tiny-invariant "^1.3.1"
     victory-vendor "^36.6.8"
-
-reduce-css-calc@^2.1.8:
-  version "2.1.8"
-  resolved "https://registry.yarnpkg.com/reduce-css-calc/-/reduce-css-calc-2.1.8.tgz#7ef8761a28d614980dc0c982f772c93f7a99de03"
-  integrity sha512-8liAVezDmUcH+tdzoEGrhfbGcP7nOV4NkGE3a74+qqvE7nt9i4sKLGBuZNOnpI4WiGksiNPklZxva80061QiPg==
-  dependencies:
-    css-unit-converter "^1.1.1"
-    postcss-value-parser "^3.3.0"
 
 regenerator-runtime@^0.14.0:
   version "0.14.0"
@@ -1760,6 +1742,11 @@ tiny-emitter@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/tiny-emitter/-/tiny-emitter-2.1.0.tgz#1d1a56edfc51c43e863cbb5382a72330e3555423"
   integrity sha512-NB6Dk1A9xgQPMoGqC5CVXn123gWyte215ONT5Pp5a0yt4nlEoO1ZWeCwpncaekPHXO60i47ihFnZPiRPjRMq4Q==
+
+tiny-invariant@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/tiny-invariant/-/tiny-invariant-1.3.1.tgz#8560808c916ef02ecfd55e66090df23a4b7aa642"
+  integrity sha512-AD5ih2NlSssTCwsMznbvwMZpJ1cbhkGd2uueNxzv2jDlEeZdU04JQfRnggJQ8DrcVBGjAsCKwFBbDlVNtEMlzw==
 
 to-fast-properties@^2.0.0:
   version "2.0.0"
