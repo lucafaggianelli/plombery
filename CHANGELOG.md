@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Link to REST API docs in settings menu
 - Add download task data button in data view dialog (close #46)
 - Add `python-socketio` dependency
 
@@ -16,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Migrated plain websocket to SocketIO for improved communication stability
+- (internal): pipeline HTTP run url is now `/pipelines/{pipeline_id}/run`
 
 ### Removed
 - Removed python `websockets` dependency
