@@ -78,8 +78,7 @@ const post = async <ResponseType = any>(
 
 export const getWebsocketUrl = () => {
   const url = new URL(BASE_URL)
-  url.protocol = url.protocol === 'http:' ? 'ws' : 'wss'
-  url.pathname += '/ws/'
+  url.pathname = url.pathname.replace(/api$/, '')
   return url
 }
 

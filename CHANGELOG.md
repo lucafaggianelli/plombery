@@ -8,10 +8,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - Add download task data button in data view dialog (close #46)
+- Add `python-socketio` dependency
 
 ### Fixed
 - Improve task data visualization (#257)
 - Check data file paths before accessing them
+
+### Changed
+- Migrated plain websocket to SocketIO for improved communication stability
+
+### Removed
+- Removed python `websockets` dependency
 
 ## [0.4.1] - 2023-10-11
 

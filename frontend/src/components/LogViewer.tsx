@@ -15,20 +15,14 @@ import {
   TableRow,
   Text,
 } from '@tremor/react'
+import { BarsArrowDownIcon } from '@heroicons/react/24/outline'
 import { createRef, useCallback, useEffect, useState } from 'react'
 
 import { getLogs } from '@/repository'
-import { useSocket } from '@/socket'
-import {
-  LogEntry,
-  LogLevel,
-  Pipeline,
-  PipelineRun,
-  WebSocketMessage,
-} from '@/types'
+import { socket } from '@/socket'
+import { LogEntry, LogLevel, Pipeline, PipelineRun } from '@/types'
 import { formatNumber, formatTime, getTasksColors } from '@/utils'
 import TracebackInfoDialog from './TracebackInfoDialog'
-import { BarsArrowDownIcon } from '@heroicons/react/24/outline'
 
 interface Props {
   pipeline: Pipeline
@@ -57,7 +51,6 @@ interface FilterType {
 const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
   const [filter, setFilter] = useState<FilterType>({ levels: [], tasks: [] })
   const [scrollToBottom, setScrollToBottom] = useState(true)
-  const { lastMessage } = useSocket(`logs.${run.id}`)
   const queryClient = useQueryClient()
 
   const tableRef = createRef<HTMLTableElement>()
@@ -65,11 +58,9 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
   const query = useQuery(getLogs(run.id))
 
   const onWsMessage = useCallback(
-    (message: WebSocketMessage) => {
-      const { data } = message
-
+    (message: string) => {
       queryClient.setQueryData<LogEntry[]>(['logs', run.id], (oldLogs = []) => {
-        const log: LogEntry = JSON.parse(data)
+        const log: LogEntry = JSON.parse(message)
         log.id = oldLogs.length
         log.timestamp = new Date(log.timestamp)
         return [...oldLogs, log]
@@ -122,10 +113,12 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
   })
 
   useEffect(() => {
-    if (lastMessage) {
-      onWsMessage(lastMessage)
+    socket.on(`logs.${run.id}`, onWsMessage)
+
+    return () => {
+      socket.off(`logs.${run.id}`, onWsMessage)
     }
-  }, [lastMessage])
+  }, [])
 
   const onFilterChange = useCallback((newFilter: Partial<FilterType>) => {
     setFilter((currentFilter) => ({ ...currentFilter, ...newFilter }))

@@ -10,7 +10,7 @@ from plombery.exceptions import InvalidDataPath
 from plombery.logger import get_logger
 from plombery.notifications import notification_manager
 from plombery.utils import run_all_coroutines
-from plombery.websocket import manager
+from plombery.websocket import sio
 from plombery.database.models import PipelineRun
 from plombery.database.repository import create_pipeline_run, update_pipeline_run
 from plombery.database.schemas import PipelineRunCreate
@@ -59,7 +59,7 @@ def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
         duration=pipeline_run.duration,
     )
 
-    manager.emit(
+    emit_coro = sio.emit(
         "run-update",
         dict(
             run=run,
@@ -68,7 +68,7 @@ def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
         ),
     )
 
-    run_all_coroutines([notify_coro])
+    run_all_coroutines([notify_coro, emit_coro])
 
 
 async def run(
