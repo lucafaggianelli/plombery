@@ -98,6 +98,7 @@ const SettingsMenu: React.FC<Props> = () => {
               className="flex items-center px-6 py-2 hover:bg-tremor-brand-faint hover:dark:bg-dark-tremor-brand-faint transition-colors no-underline"
               href={getApiUrl().replace(/\/api$/, '/docs')}
               target="_blank"
+              rel="noopener noreferrer"
             >
               <Icon
                 icon={CodeBracketSquareIcon}
