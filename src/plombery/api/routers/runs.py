@@ -1,10 +1,14 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, ValidationError
 
 from plombery.api.authentication import NeedsAuth
 from plombery.database.schemas import PipelineRun
-from plombery.orchestrator.executor import get_pipeline_run_logs, get_pipeline_run_data
+from plombery.exceptions import InvalidDataPath
+from plombery.orchestrator import orchestrator, run_pipeline_now
+from plombery.orchestrator.data_storage import get_task_run_data_file, read_logs_file
 from plombery.database.repository import list_pipeline_runs, get_pipeline_run
 
 
@@ -37,15 +41,61 @@ def get_run(run_id: int) -> PipelineRun:
 
 @router.get("/{run_id}/logs", response_class=JSONLResponse)
 def get_run_logs(run_id: int):
-    logs = get_pipeline_run_logs(run_id)
+    try:
+        logs = read_logs_file(run_id)
+    except InvalidDataPath:
+        raise HTTPException(status_code=400, detail="Invalid run ID")
+
     return Response(content=logs, media_type="application/jsonl")
 
 
 @router.get("/{run_id}/data/{task}")
 def get_run_data(run_id: int, task: str):
-    data = get_pipeline_run_data(run_id, task)
+    try:
+        data_file = get_task_run_data_file(run_id, task)
+    except InvalidDataPath:
+        raise HTTPException(status_code=400, detail="Invalid run or task ID")
 
-    if not data:
+    if not data_file.exists():
         raise HTTPException(status_code=404, detail="Task has no data")
 
-    return data
+    return FileResponse(path=data_file, filename=f"run-{run_id}-{task}-data.json")
+
+
+class PipelineRunInput(BaseModel):
+    pipeline_id: str
+    trigger_id: Optional[str] = None
+    params: Optional[Dict[str, Any]] = None
+
+
+@router.post("/")
+async def run_pipeline(body: PipelineRunInput) -> PipelineRun:
+    if not (pipeline := orchestrator.get_pipeline(body.pipeline_id)):
+        raise HTTPException(
+            404, f"The pipeline with ID {body.pipeline_id} doesn't exist"
+        )
+
+    if body.trigger_id:
+        triggers = [
+            trigger for trigger in pipeline.triggers if trigger.id == body.trigger_id
+        ]
+
+        if len(triggers) == 0:
+            raise HTTPException(
+                status_code=404, detail=f"Trigger {body.trigger_id} not found"
+            )
+
+        trigger = triggers[0]
+
+        return await run_pipeline_now(pipeline, trigger)
+    else:
+        if pipeline.params:
+            try:
+                pipeline.params.model_validate(body.params)
+            except ValidationError as exc:
+                raise HTTPException(
+                    status_code=422,
+                    detail=exc.errors(),
+                )
+
+        return await run_pipeline_now(pipeline, params=body.params)

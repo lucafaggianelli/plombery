@@ -21,12 +21,11 @@ import RunsTasksList from '@/components/Tasks'
 import Timer from '@/components/Timer'
 import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun } from '@/repository'
-import { useSocket } from '@/socket'
+import { socket } from '@/socket'
 import { Trigger } from '@/types'
 import { TASKS_COLORS, formatDate, formatDateTime, formatTime } from '@/utils'
 
 const RunViewPage = () => {
-  const { lastMessage } = useSocket('run-update')
   const queryClient = useQueryClient()
   const urlParams = useParams()
   const pipelineId = urlParams.pipelineId as string
@@ -34,12 +33,17 @@ const RunViewPage = () => {
   const runId = parseInt(urlParams.runId as string)
 
   useEffect(() => {
-    if (lastMessage) {
+    const onRunUpdate = () => {
       queryClient.invalidateQueries({
         queryKey: getRun(pipelineId, triggerId, runId).queryKey,
       })
     }
-  }, [lastMessage, pipelineId])
+    socket.on('run-update', onRunUpdate)
+
+    return () => {
+      socket.off('run-update', onRunUpdate)
+    }
+  }, [pipelineId])
 
   const pipelineQuery = useQuery(getPipeline(pipelineId))
   const runQuery = useQuery(getRun(pipelineId, triggerId, runId))

@@ -1,24 +1,57 @@
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from plombery.constants import PIPELINE_RUN_LOGS_FILE
+from plombery.exceptions import InvalidDataPath
 
 
-def _get_data_path(pipeline_run_id: int):
-    data_path = Path.cwd() / ".data" / "runs" / f"run_{pipeline_run_id}"
+_base_data_path = (Path.cwd() / ".data").absolute()
 
-    # Create dirs (eq. of mkdir -p)
-    data_path.mkdir(parents=True, exist_ok=True)
+
+def _check_is_valid_path(path: Path) -> None:
+    """
+    Check if a data file path is a valid one and not outside
+    the base data path.
+
+    This check is very important in case an attacker try to request
+    data files for the run id `../../.env`.
+
+    Raises:
+        InvalidDataPath: In case the path is invalid.
+    """
+    try:
+        path.relative_to(_base_data_path)
+    except ValueError:
+        raise InvalidDataPath(path)
+
+
+def _get_data_path(pipeline_run_id: int, filename: str) -> Path:
+    data_path = _base_data_path / "runs" / f"run_{pipeline_run_id}" / filename
+
+    _check_is_valid_path(data_path)
+
+    # Create all parent directories without raising errors
+    # equivalent to mkdir -p
+    data_path.parent.mkdir(parents=True, exist_ok=True)
 
     return data_path
 
 
-def store_data(filename: str, content: str, pipeline_run_id: int):
-    data_path = _get_data_path(pipeline_run_id)
+def get_task_run_data_file(pipeline_run_id: int, task_id: str) -> Path:
+    """Get the file path of a task run output
 
-    with (data_path / filename).open(mode="w") as f:
-        f.write(content)
+    Args:
+        pipeline_run_id (int): the run ID
+        task_id (str): the task ID
+
+    Returns:
+        Path: the file path
+
+    Raises:
+        InvalidDataPath: In case the path is invalid.
+    """
+    return _get_data_path(pipeline_run_id, f"{task_id}.json")
 
 
 def store_task_output(pipeline_run_id: int, task_id: str, data: Any) -> bool:
@@ -34,16 +67,19 @@ def store_task_output(pipeline_run_id: int, task_id: str, data: Any) -> bool:
 
     Returns:
         bool: returns True if the store succeeded, False otherwise
+
+    Raises:
+        InvalidDataPath: In case the path is invalid.
     """
-    data_path = _get_data_path(pipeline_run_id)
-    output_file = data_path / f"{task_id}.json"
+
+    output_file_path = get_task_run_data_file(pipeline_run_id, task_id)
 
     try:
         import pandas
 
         if type(data) is pandas.DataFrame:
             if not data.empty:
-                data.to_json(output_file, orient="records")
+                data.to_json(output_file_path, orient="records")
                 return True
             else:
                 return False
@@ -54,21 +90,46 @@ def store_task_output(pipeline_run_id: int, task_id: str, data: Any) -> bool:
         if data is None:
             return False
 
-        with output_file.open(mode="w", encoding="utf-8") as f:
-            json.dump(data, f, default=str)
+        with output_file_path.open(mode="w", encoding="utf-8") as output_file:
+            json.dump(data, output_file, default=str)
 
         return True
     except Exception as exc:
         print(f"Failed to save task {task_id} output", exc)
-        output_file.unlink()
+        output_file_path.unlink()
         return False
 
 
-def get_logs_filename(pipeline_run_id: int):
-    return _get_data_path(pipeline_run_id) / PIPELINE_RUN_LOGS_FILE
+def get_logs_filename(pipeline_run_id: int) -> Path:
+    """Get the logs file path for a given run ID
+
+    Args:
+        pipeline_run_id (int): the run ID
+
+    Returns:
+        Path: the logs file path
+
+    Raises:
+        InvalidDataPath: In case the path is invalid.
+    """
+
+    return _get_data_path(pipeline_run_id, PIPELINE_RUN_LOGS_FILE)
 
 
-def read_logs_file(pipeline_run_id: int):
+def read_logs_file(pipeline_run_id: int) -> Optional[str]:
+    """Read a logs file and returns its content or None
+    if the file doesn't exist
+
+    Args:
+        pipeline_run_id (int): the run ID
+
+    Returns:
+        Optional[str]: The logs content in JSONL format
+
+    Raises:
+        InvalidDataPath: In case the path is invalid.
+    """
+
     logs_file = get_logs_filename(pipeline_run_id)
 
     if not logs_file.exists():
@@ -76,14 +137,3 @@ def read_logs_file(pipeline_run_id: int):
 
     with logs_file.open(mode="r", encoding="utf-8") as f:
         return f.read().rstrip()
-
-
-def read_task_run_data(pipeline_run_id: int, task_id: str):
-    data_path = _get_data_path(pipeline_run_id)
-    file = data_path / f"{task_id}.json"
-
-    if not file.exists():
-        return
-
-    with file.open(mode="r", encoding="utf-8") as f:
-        return json.load(f)
