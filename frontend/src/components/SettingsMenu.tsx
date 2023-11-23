@@ -6,6 +6,7 @@ import {
   ComputerDesktopIcon,
   CodeBracketSquareIcon,
   ArrowTopRightOnSquareIcon,
+  ArchiveBoxIcon,
 } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 
@@ -107,6 +108,23 @@ const SettingsMenu: React.FC<Props> = () => {
               />
               <Text className="flex-grow no-underline border-0">
                 REST API docs
+              </Text>
+              <Icon icon={ArrowTopRightOnSquareIcon} color="slate" />
+            </a>
+
+            <a
+              className="flex items-center px-6 py-2 hover:bg-tremor-brand-faint hover:dark:bg-dark-tremor-brand-faint transition-colors no-underline"
+              href="https://github.com/lucafaggianelli/plombery"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon
+                icon={ArchiveBoxIcon}
+                color="slate"
+                className="mr-3"
+              />
+              <Text className="flex-grow no-underline border-0">
+                GitHub
               </Text>
               <Icon icon={ArrowTopRightOnSquareIcon} color="slate" />
             </a>

@@ -34,8 +34,7 @@ const PipelineHttpRun: React.FC<Props> = ({ pipelineId, triggerId }) => {
       code: `import httpx
 
 httpx.post('${getPipelineRunUrl(pipelineId)}', json={
-  "pipeline_id": "${pipelineId}",
-  "trigger_id": "${triggerId}",
+  "pipeline_id": "${pipelineId}",${triggerId ? `\n  "trigger_id": "${triggerId}",` : ''}
   "params": {
     "name": "value",
   }
@@ -50,8 +49,7 @@ httpx.post('${getPipelineRunUrl(pipelineId)}', json={
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    pipeline_id: '${pipelineId}',
-    trigger_id: '${triggerId}',
+    pipeline_id: '${pipelineId}',${triggerId ? `\n    trigger_id: '${triggerId}',` : ''}
     params: {},
   }),
 })`,
