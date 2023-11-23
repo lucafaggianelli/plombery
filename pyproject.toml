@@ -21,10 +21,10 @@ dependencies = [
   "jinja2==3.1.2",
   "pydantic==2.4.2",
   "pydantic-settings==2.0.3",
+  "python-socketio>=5.0.0,<6.0.0",
   "python-dotenv==1.0.0",
   "SQLAlchemy==2.0.22",
   "uvicorn==0.23.2",
-  "websockets==11.0.3",
 ]
 dynamic = ["version"]
 
