@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html.dark {
+  /* Apply dark scheme to native browser elements */
+  color-scheme: dark;
+}
+
+a {
+  @apply hover:text-indigo-500 hover:decoration-indigo-500 decoration-inherit underline underline-offset-2;
+  transition: text-decoration 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  position: relative;
+}
+
+a.link--arrow::after {
+  content: '→';
+  opacity: 0;
+  position: absolute;
+  transform: translateX(-2px);
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+a.link--arrow:hover::after {
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+// Thin scrollbar styling
+// Docs: https://developer.mozilla.org/en-US/docs/Web/CSS/::-webkit-scrollbar
+
+html {
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  // for vertical scroll bars
+  width: 9px;
+  // for horizontal scroll bars
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(155, 155, 155, 0.2);
+  border-radius: 20px;
+}
+html.dark {
+  ::-webkit-scrollbar-track {
+    background: rgba(155, 155, 155, 0.1);
+  }
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(155, 155, 155, 0.5);
+  border-radius: 20px;
+
+  &:hover {
+    background-color: rgba(155, 155, 155, 0.6);
+  }
+  &:active {
+    background-color: rgba(155, 155, 155, 0.7);
+  }
+}

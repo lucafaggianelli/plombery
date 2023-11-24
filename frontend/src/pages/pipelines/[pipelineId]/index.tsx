@@ -17,7 +17,7 @@ import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 
 import Breadcrumbs from '@/components/Breadcrumbs'
 import RunsDurationChart from '@/components/RunsDurationChart'
-import RunsList from '@/components/RunsList'
+import RunsTable from '@/components/runs/RunsTable'
 import RunsStatusChart from '@/components/RunsStatusChart'
 import { getPipeline, listRuns } from '@/repository'
 import ManualRunDialog from '@/components/ManualRunDialog'
@@ -132,7 +132,7 @@ const PipelineView: React.FC = () => {
         </Col>
 
         <Col>
-          <RunsList query={runsQuery} pipelineId={pipelineId} />
+          <RunsTable query={runsQuery} pipelineId={pipelineId} />
         </Col>
       </Grid>
     </PageLayout>

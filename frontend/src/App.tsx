@@ -1,5 +1,5 @@
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
-import '@/globals.css'
+import '@/globals.scss'
 
 import Router from './Router'
 import { AuthProvider } from './contexts/AuthContext'

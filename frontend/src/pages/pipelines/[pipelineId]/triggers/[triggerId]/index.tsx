@@ -19,7 +19,7 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import ManualRunDialog from '@/components/ManualRunDialog'
 import PageLayout from '@/components/PageLayout'
 import RunsDurationChart from '@/components/RunsDurationChart'
-import RunsList from '@/components/RunsList'
+import RunsTable from '@/components/runs/RunsTable'
 import RunsStatusChart from '@/components/RunsStatusChart'
 import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, listRuns, runPipeline } from '@/repository'
@@ -141,7 +141,7 @@ const TriggerView: React.FC = () => {
       </Grid>
 
       <div className="mt-6">
-        <RunsList
+        <RunsTable
           query={runsQuery}
           pipelineId={pipelineId}
           triggerId={triggerId}

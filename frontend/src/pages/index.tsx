@@ -2,7 +2,7 @@ import { Col, Grid, Title } from '@tremor/react'
 
 import PageLayout from '@/components/PageLayout'
 import PipelinesList from '@/components/PipelinesList'
-import RunsList from '@/components/RunsList'
+import RunsTable from '@/components/runs/RunsTable'
 import { useQuery } from '@tanstack/react-query'
 import { listRuns } from '@/repository'
 
@@ -23,7 +23,7 @@ const HomePage: React.FC = () => {
         </Col>
 
         <Col>
-          <RunsList query={runsQuery} />
+          <RunsTable query={runsQuery} />
         </Col>
       </Grid>
     </PageLayout>
