@@ -1,8 +1,11 @@
+from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel, ValidationError
 
-from plombery.orchestrator import orchestrator
 from plombery.api.authentication import NeedsAuth
+from plombery.database.schemas import PipelineRun
+from plombery.orchestrator import orchestrator, run_pipeline_now
 from plombery.pipeline.pipeline import Pipeline
 from plombery.pipeline.trigger import Trigger
 
@@ -51,3 +54,39 @@ def get_pipeline_input_schema(pipeline_id: str):
         raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
 
     return pipeline.params.model_json_schema() if pipeline.params else dict()
+
+
+class PipelineRunInput(BaseModel):
+    trigger_id: Optional[str] = None
+    params: Optional[Dict[str, Any]] = None
+
+
+@router.post("/{pipeline_id}/run")
+async def run_pipeline(pipeline_id: str, body: PipelineRunInput) -> PipelineRun:
+    if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
+        raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
+
+    if body.trigger_id:
+        triggers = [
+            trigger for trigger in pipeline.triggers if trigger.id == body.trigger_id
+        ]
+
+        if len(triggers) == 0:
+            raise HTTPException(
+                status_code=404, detail=f"Trigger {body.trigger_id} not found"
+            )
+
+        trigger = triggers[0]
+
+        return await run_pipeline_now(pipeline, trigger)
+    else:
+        if pipeline.params:
+            try:
+                pipeline.params.model_validate(body.params)
+            except ValidationError as exc:
+                raise HTTPException(
+                    status_code=422,
+                    detail=exc.errors(),
+                )
+
+        return await run_pipeline_now(pipeline, params=body.params)

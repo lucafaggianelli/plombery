@@ -5,7 +5,7 @@ import os
 from apscheduler.schedulers.base import SchedulerAlreadyRunningError
 from pydantic import BaseModel
 
-from .api import app
+from .api import combined_app, app
 from .config import settings
 from .logger import get_logger  # noqa F401
 from .notifications import NotificationRule, notification_manager
@@ -52,7 +52,7 @@ class _Plombery:
     # Wrap FastAPI ASGI interface so the Plombery object
     # can be served directly by uvicorn
     async def __call__(self, scope, receive, send):
-        await app.__call__(scope, receive, send)
+        await combined_app.__call__(scope, receive, send)
 
 
 _app = _Plombery()

@@ -1,14 +1,19 @@
-import { useAuthState } from '@/contexts/AuthContext'
-import { Card, Tab, TabGroup, TabList } from '@tremor/react'
-import { Popover, PopoverContent, PopoverTrigger } from './Popover'
+import { Card, Icon, List, Tab, TabGroup, TabList, Text } from '@tremor/react'
 import {
   Cog6ToothIcon,
   MoonIcon,
   SunIcon,
   ComputerDesktopIcon,
+  CodeBracketSquareIcon,
+  ArrowTopRightOnSquareIcon,
+  ArchiveBoxIcon,
 } from '@heroicons/react/24/outline'
-import UserInfo from './UserInfo'
 import { useState } from 'react'
+
+import { useAuthState } from '@/contexts/AuthContext'
+import { getApiUrl } from '@/repository'
+import { Popover, PopoverContent, PopoverTrigger } from './Popover'
+import UserInfo from './UserInfo'
 
 interface Props {}
 
@@ -88,10 +93,48 @@ const SettingsMenu: React.FC<Props> = () => {
         </div>
       </PopoverTrigger>
       <PopoverContent>
-        <Card className="shadow-xl z-20">
-          <ThemeSwitch />
+        <Card className="p-0 pt-4 shadow-xl z-20">
+          <List>
+            <a
+              className="flex items-center px-6 py-2 hover:bg-tremor-brand-faint hover:dark:bg-dark-tremor-brand-faint transition-colors no-underline"
+              href={getApiUrl().replace(/\/api$/, '/docs')}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon
+                icon={CodeBracketSquareIcon}
+                color="slate"
+                className="mr-3"
+              />
+              <Text className="flex-grow no-underline border-0">
+                REST API docs
+              </Text>
+              <Icon icon={ArrowTopRightOnSquareIcon} color="slate" />
+            </a>
 
-          {isAuthenticationEnabled && <UserInfo />}
+            <a
+              className="flex items-center px-6 py-2 hover:bg-tremor-brand-faint hover:dark:bg-dark-tremor-brand-faint transition-colors no-underline"
+              href="https://github.com/lucafaggianelli/plombery"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon
+                icon={ArchiveBoxIcon}
+                color="slate"
+                className="mr-3"
+              />
+              <Text className="flex-grow no-underline border-0">
+                GitHub
+              </Text>
+              <Icon icon={ArrowTopRightOnSquareIcon} color="slate" />
+            </a>
+          </List>
+
+          <div className="p-6">
+            <ThemeSwitch />
+
+            {isAuthenticationEnabled && <UserInfo />}
+          </div>
         </Card>
       </PopoverContent>
     </Popover>

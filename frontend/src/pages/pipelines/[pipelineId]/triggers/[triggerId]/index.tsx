@@ -8,16 +8,13 @@ import {
   ListItem,
   Button,
   Flex,
-  Icon,
   Grid,
-  TextInput,
 } from '@tremor/react'
-import { PlayIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
+import { PlayIcon } from '@heroicons/react/24/outline'
 import { useNavigate, useParams } from 'react-router-dom'
 import React from 'react'
 
 import TriggerParamsDialog from '@/components/TriggerParamsDialog'
-import CopyButton from '@/components/CopyButton'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import ManualRunDialog from '@/components/ManualRunDialog'
 import PageLayout from '@/components/PageLayout'
@@ -25,13 +22,9 @@ import RunsDurationChart from '@/components/RunsDurationChart'
 import RunsList from '@/components/RunsList'
 import RunsStatusChart from '@/components/RunsStatusChart'
 import { MANUAL_TRIGGER } from '@/constants'
-import {
-  getPipeline,
-  listRuns,
-  getTriggerRunUrl,
-  runPipeline,
-} from '@/repository'
+import { getPipeline, listRuns, runPipeline } from '@/repository'
 import { Trigger } from '@/types'
+import PipelineHttpRun from '@/components/help/PipelineHttpRun'
 
 const TriggerView: React.FC = () => {
   const navigate = useNavigate()
@@ -55,18 +48,9 @@ const TriggerView: React.FC = () => {
     },
   })
 
-  const CopyUrlButton = () => (
-    <CopyButton
-      content={getTriggerRunUrl(pipelineId, triggerId)}
-      className="ml-2.5"
-    />
-  )
+  if (pipelineQuery.isLoading) return <div>Loading...</div>
 
-  if (pipelineQuery.isLoading)
-    return <div>Loading...</div>
-
-  if (pipelineQuery.isError)
-    return <div>An error has occurred</div>
+  if (pipelineQuery.isError) return <div>An error has occurred</div>
 
   const pipeline = pipelineQuery.data
 
@@ -144,32 +128,14 @@ const TriggerView: React.FC = () => {
             )}
           </ListItem>
 
-          <Flex className="gap-8">
-            <Flex className="justify-start w-auto flex-shrink-0">
-              <Text>Run URL</Text>
+          <Flex className="">
+            <Text>Run URL</Text>
 
-              <Icon
-                size="sm"
-                color="slate"
-                icon={QuestionMarkCircleIcon}
-                tooltip="URL to run the pipeline programmatically via an HTTP POST request"
-              />
-            </Flex>
-
-            <TextInput
-              title={getTriggerRunUrl(pipelineId, triggerId)}
-              value={getTriggerRunUrl(pipelineId, triggerId)}
-              readOnly
-              icon={CopyUrlButton}
-              className="flex-grow"
-            />
+            <PipelineHttpRun pipelineId={pipelineId} triggerId={triggerId} />
           </Flex>
         </Card>
 
-        <RunsStatusChart
-          subject="Trigger"
-          query={runsQuery}
-        />
+        <RunsStatusChart subject="Trigger" query={runsQuery} />
 
         <RunsDurationChart query={runsQuery} />
       </Grid>

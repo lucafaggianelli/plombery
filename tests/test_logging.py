@@ -4,7 +4,7 @@ import pytest
 
 from plombery import _Plombery as Plombery
 from plombery.orchestrator import run_pipeline_now
-from plombery.orchestrator.executor import get_pipeline_run_logs
+from plombery.orchestrator.data_storage import read_logs_file
 from .pipeline_1 import pipeline1
 
 
@@ -14,7 +14,7 @@ def _clean_log_message(log):
 
 
 def get_parsed_logs(run_id: int):
-    logs = get_pipeline_run_logs(run_id)
+    logs = read_logs_file(run_id)
     return [
         json.loads(log, object_hook=_clean_log_message) for log in logs.splitlines()
     ]
