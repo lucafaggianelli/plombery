@@ -107,8 +107,10 @@ const renderers: Record<FieldType, (field: FieldDefinition) => JSX.Element> = {
     )
   },
   text: (field: FieldDefinition) => {
+    const inputType = field.value.format === 'password' ? "password" : "text"
     return (
       <TextInput
+        type={inputType}
         name={field.name}
         placeholder={field.label}
         defaultValue={field.defaultValue}
