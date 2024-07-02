@@ -33,6 +33,14 @@ const renderers: Record<FieldType, (field: FieldDefinition) => JSX.Element> = {
     return (
       <div className="flex items-center mb-4">
         <input
+          id={`${field.name}_hidden`}
+          name={field.name}
+          type="hidden"
+          checked={true}
+          readOnly={true}
+          value="false"
+        />
+        <input
           id={field.name}
           name={field.name}
           type="checkbox"
@@ -99,8 +107,10 @@ const renderers: Record<FieldType, (field: FieldDefinition) => JSX.Element> = {
     )
   },
   text: (field: FieldDefinition) => {
+    const inputType = field.value.format === 'password' ? "password" : "text"
     return (
       <TextInput
+        type={inputType}
         name={field.name}
         placeholder={field.label}
         defaultValue={field.defaultValue}
