@@ -48,7 +48,7 @@ const TriggerView: React.FC = () => {
     },
   })
 
-  if (pipelineQuery.isLoading) return <div>Loading...</div>
+  if (pipelineQuery.isPending) return <div>Loading...</div>
 
   if (pipelineQuery.isError) return <div>An error has occurred</div>
 

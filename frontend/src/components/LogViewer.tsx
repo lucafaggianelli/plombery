@@ -124,7 +124,7 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
     setFilter((currentFilter) => ({ ...currentFilter, ...newFilter }))
   }, [])
 
-  if (query.isLoading) {
+  if (query.isPending) {
     return <div>Loading...</div>
   }
 

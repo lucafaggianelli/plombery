@@ -32,7 +32,7 @@ const PipelineView: React.FC = () => {
   const pipelineQuery = useQuery(getPipeline(pipelineId))
   const runsQuery = useQuery(listRuns(pipelineId))
 
-  if (pipelineQuery.isLoading) return <div>Loading...</div>
+  if (pipelineQuery.isPending) return <div>Loading...</div>
 
   if (pipelineQuery.isError) return <div>An error has occurred</div>
 

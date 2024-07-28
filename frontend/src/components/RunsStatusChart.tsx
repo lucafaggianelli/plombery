@@ -30,7 +30,7 @@ const Loader = ({ subject }: { subject: string }) => (
 )
 
 const RunsStatusChart: React.FC<Props> = ({ query, subject }) => {
-  if (query.isLoading || query.isFetching) {
+  if (query.isPending || query.isFetching) {
     return <Loader subject={subject} />
   }
 

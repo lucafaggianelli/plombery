@@ -23,7 +23,7 @@ const Loader = () => (
 )
 
 const RunsDurationChart: React.FC<Props> = ({ query }) => {
-  if (query.isFetching || query.isLoading) {
+  if (query.isPending) {
     return <Loader />
   }
 

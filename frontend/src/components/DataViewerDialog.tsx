@@ -106,7 +106,7 @@ const DataViewerDialog: React.FC<Props> = ({
         }
         onClose={onClose}
       >
-        {query.isLoading && <div>Loading...</div>}
+        {query.isPending && <div>Loading...</div>}
 
         {query.isError &&
           (query.error.response.status === 404 ? (
@@ -117,7 +117,7 @@ const DataViewerDialog: React.FC<Props> = ({
             </Text>
           ))}
 
-        {!query.isLoading && !query.isError && <DataViewer data={query.data} />}
+        {!query.isPending && !query.isError && <DataViewer data={query.data} />}
       </Dialog>
     </>
   )

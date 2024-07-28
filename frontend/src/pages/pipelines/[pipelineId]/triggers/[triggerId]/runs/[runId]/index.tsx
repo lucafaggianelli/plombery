@@ -48,7 +48,7 @@ const RunViewPage = () => {
   const pipelineQuery = useQuery(getPipeline(pipelineId))
   const runQuery = useQuery(getRun(pipelineId, triggerId, runId))
 
-  if (pipelineQuery.isLoading) {
+  if (pipelineQuery.isPending) {
     return <div>Loading...</div>
   }
 

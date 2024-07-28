@@ -152,7 +152,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
             </TableRow>
           ))}
 
-          {(query.isFetching || query.isLoading) && (
+          {(query.isFetching || query.isPending) && (
             <TableLoader columns={numberOfColumns} />
           )}
 

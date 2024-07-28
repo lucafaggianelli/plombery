@@ -11,7 +11,7 @@ import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 const PipelinesList: React.FC = () => {
   const query = useQuery(listPipelines())
 
-  if (query.isLoading) return <div>Loading...</div>
+  if (query.isPending) return <div>Loading...</div>
 
   if (query.isError) return <div>An error has occurred</div>
 
