@@ -6,7 +6,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from plombery.config import settings
 
 
-def init_auth(app: FastAPI) -> APIRouter:
+def build_auth_router(app: FastAPI) -> APIRouter:
     router = APIRouter(
         prefix="/auth",
         tags=["Authentication"],
