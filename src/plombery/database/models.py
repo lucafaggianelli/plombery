@@ -81,17 +81,16 @@ Base.metadata.create_all(bind=engine)
 
 
 def _mark_cancelled_runs():
-    db = SessionLocal()
-
-    db.query(PipelineRun).filter(
-        PipelineRun.status == PipelineRunStatus.RUNNING.value
-    ).update(
-        dict(
-            status=PipelineRunStatus.CANCELLED.value,
+    with SessionLocal() as db:
+        db.query(PipelineRun).filter(
+            PipelineRun.status == PipelineRunStatus.RUNNING.value
+        ).update(
+            dict(
+                status=PipelineRunStatus.CANCELLED.value,
+            )
         )
-    )
 
-    db.commit()
+        db.commit()
 
 
 _mark_cancelled_runs()
