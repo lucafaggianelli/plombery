@@ -72,7 +72,7 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
             }
           }}
         >
-          {query.isPending ? (
+          {query.isPending || query.isFetching ? (
             'Loading...'
           ) : query.isError ? (
             'Error'

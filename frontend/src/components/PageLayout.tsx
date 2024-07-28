@@ -10,7 +10,7 @@ interface Props extends PropsWithChildren {
 const PageLayout: React.FC<Props> = ({ children, header }) => {
   return (
     <div className="bg-slate-100 dark:bg-slate-950 p-6 sm:p-10 min-h-screen">
-      <Flex className="items-start gap-8">
+      <Flex className="items-start gap-4 md:gap-8">
         {header && <div className="flex-grow max-w-full">{header}</div>}
         <SettingsMenu />
       </Flex>

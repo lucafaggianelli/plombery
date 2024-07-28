@@ -58,7 +58,7 @@ const PipelineView: React.FC = () => {
             <ManualRunDialog pipeline={pipeline} />
           </Flex>
 
-          <Breadcrumbs pipeline={pipeline} className="mt-4" />
+          <Breadcrumbs pipeline={pipeline} className="mt-4 md:mt-0" />
         </div>
       }
     >
@@ -69,12 +69,14 @@ const PipelineView: React.FC = () => {
           <List>
             {pipeline.tasks.map((task) => (
               <ListItem key={task.id}>
-                <div>
+                <div className="max-w-full">
                   <Text>
                     <Bold>{task.name}</Bold>
                   </Text>
                   {task.description && (
-                    <Text className="truncate">{task.description}</Text>
+                    <div className="truncate" title={task.description}>
+                      {task.description}
+                    </div>
                   )}
                 </div>
               </ListItem>

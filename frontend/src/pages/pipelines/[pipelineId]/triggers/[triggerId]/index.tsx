@@ -99,7 +99,11 @@ const TriggerView: React.FC = () => {
             {runTriggerButton}
           </Flex>
 
-          <Breadcrumbs pipeline={pipeline} trigger={trigger} className="mt-4" />
+          <Breadcrumbs
+            pipeline={pipeline}
+            trigger={trigger}
+            className="mt-4 md:mt-0"
+          />
         </div>
       }
     >
