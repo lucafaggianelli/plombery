@@ -10,14 +10,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Link to REST API docs in settings menu
 - Add download task data button in data view dialog (close #46)
 - Add `python-socketio` dependency
+- Add support to Pydantic's `SecretStr` input types (by @flashdagger)
 
 ### Fixed
 - Improve task data visualization (#257)
 - Check data file paths before accessing them
+- Fixed boolean parameter input when default is True (by @flashdagger)
+- Fix connection with non sqlite db (#392) (by @PierrickBrun)
 
 ### Changed
 - Migrated plain websocket to SocketIO for improved communication stability
 - (internal): pipeline HTTP run url is now `/pipelines/{pipeline_id}/run`
+- (internal): updated frontend dependencies
 
 ### Removed
 - Removed python `websockets` dependency
