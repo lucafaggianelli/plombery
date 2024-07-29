@@ -4,9 +4,10 @@ import datetime
 from fastapi.encoders import jsonable_encoder
 from pydantic import TypeAdapter
 import sqlalchemy as sa
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, and_, or_
 from sqlalchemy.dialects.postgresql import JSONB
 
+from plombery.constants import MANUAL_TRIGGER_ID
 from plombery.database.base import Base, engine, SessionLocal
 from plombery.schemas import PipelineRunStatus, TaskRun
 
@@ -81,12 +82,18 @@ Base.metadata.create_all(bind=engine)
 
 
 def _mark_cancelled_runs():
+    stuck_runs_filter = or_(
+        PipelineRun.status == PipelineRunStatus.RUNNING,
+        and_(
+            PipelineRun.status == PipelineRunStatus.PENDING,
+            PipelineRun.trigger_id == MANUAL_TRIGGER_ID,
+        ),
+    )
+
     with SessionLocal() as db:
-        db.query(PipelineRun).filter(
-            PipelineRun.status == PipelineRunStatus.RUNNING.value
-        ).update(
+        db.query(PipelineRun).filter(stuck_runs_filter).update(
             dict(
-                status=PipelineRunStatus.CANCELLED.value,
+                status=PipelineRunStatus.CANCELLED,
             )
         )
 
