@@ -255,3 +255,17 @@ export const runPipeline = (
     })
   },
 })
+
+export const getLatestRelease = (): UseQueryOptions<{
+  tag_name: string
+  prerelease: boolean
+}> => ({
+  queryKey: ['gh', 'latest-release'],
+  queryFn: async () => {
+    return await ky
+      .get(
+        'https://api.github.com/repos/lucafaggianelli/plombery/releases/latest'
+      )
+      .json<{ tag_name: string; prerelease: boolean }>()
+  },
+})

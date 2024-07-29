@@ -8,12 +8,14 @@ import {
   ArrowTopRightOnSquareIcon,
   ArchiveBoxIcon,
 } from '@heroicons/react/24/outline'
+import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { useAuthState } from '@/contexts/AuthContext'
-import { getApiUrl } from '@/repository'
+import { getApiUrl, getLatestRelease } from '@/repository'
 import { Popover, PopoverContent, PopoverTrigger } from './Popover'
 import UserInfo from './UserInfo'
+import { version } from '../../package.json'
 
 interface Props {}
 
@@ -67,8 +69,25 @@ const ThemeSwitch: React.FC = () => {
   )
 }
 
+const isNewerReleaseAvailable = (current: string, latest: string): boolean => {
+  const currentParts = current.replace(/^v/, '').split('.').map(Number)
+  const latestParts = latest.replace(/^v/, '').split('.').map(Number)
+
+  for (let i = 0; i < currentParts.length; i++) {
+    if (currentParts[i] > latestParts[i]) {
+      return true
+    } else if (currentParts[i] < latestParts[i]) {
+      return false
+    }
+  }
+
+  return false
+}
+
 const SettingsMenu: React.FC<Props> = () => {
+  const [isOpen, setOpen] = useState(false)
   const { user, isAuthenticationEnabled } = useAuthState()
+  const ghLatestRelease = useQuery({ ...getLatestRelease(), enabled: isOpen })
 
   // If auth is not enabled, just show a settings icon
   let dialogTrigger: React.ReactElement | string = <Cog6ToothIcon />
@@ -82,9 +101,13 @@ const SettingsMenu: React.FC<Props> = () => {
         : nameParts[0]
   }
 
+  const isNewerRelease = ghLatestRelease.isSuccess
+    ? isNewerReleaseAvailable(version, ghLatestRelease.data.tag_name)
+    : false
+
   return (
-    <Popover placement="bottom-start">
-      <PopoverTrigger>
+    <Popover placement="bottom-start" open={isOpen} onOpenChange={setOpen}>
+      <PopoverTrigger onClick={() => setOpen(true)}>
         <div
           className="flex justify-center items-center font-medium dark:bg-dark-tremor-background dark:ring-dark-tremor-ring ring-1 ring-slate-300 text-indigo-500 rounded-full hover:ring-2 hover:ring-indigo-400 dark:hover:ring-indigo-700 transition-shadow"
           style={{ width: 34, height: 34 }}
@@ -118,14 +141,8 @@ const SettingsMenu: React.FC<Props> = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Icon
-                icon={ArchiveBoxIcon}
-                color="slate"
-                className="mr-3"
-              />
-              <Text className="flex-grow no-underline border-0">
-                GitHub
-              </Text>
+              <Icon icon={ArchiveBoxIcon} color="slate" className="mr-3" />
+              <Text className="flex-grow no-underline border-0">GitHub</Text>
               <Icon icon={ArrowTopRightOnSquareIcon} color="slate" />
             </a>
           </List>
@@ -134,6 +151,15 @@ const SettingsMenu: React.FC<Props> = () => {
             <ThemeSwitch />
 
             {isAuthenticationEnabled && <UserInfo />}
+          </div>
+
+          <div className="px-6 pb-3 text-center text-tremor-content-subtle dark:text-dark-tremor-content-subtle text-sm">
+            Plombery v{version}{' '}
+            {isNewerRelease && (
+              <span className="text-xs text-amber-600">
+                (v{ghLatestRelease.data?.tag_name} available)
+              </span>
+            )}
           </div>
         </Card>
       </PopoverContent>
