@@ -12,30 +12,30 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
-  "APScheduler==3.10.4",
-  "apprise==1.6.0",
-  "authlib==1.2.1",
-  "fastapi==0.104.0",
-  "httpx==0.25.0",
-  "itsdangerous==2.1.2",
-  "jinja2==3.1.2",
-  "pydantic==2.4.2",
-  "pydantic-settings==2.0.3",
+  "APScheduler>=3.10.4,<4.0.0",
+  "apprise>=1.6.0,<2.0.0",
+  "authlib>=1.2.1,<2.0.0",
+  "fastapi>=0.104.0",
+  "httpx>=0.25.0",
+  "itsdangerous>=2.1.2,<3.0.0",
+  "jinja2>=3.1.2,<4.0.0",
+  "pydantic>=2.4.2,<3.0.0",
+  "pydantic-settings>=2.0.3,<3.0.0",
   "python-socketio>=5.0.0,<6.0.0",
-  "python-dotenv==1.0.0",
-  "SQLAlchemy==2.0.22",
-  "uvicorn==0.23.2",
+  "python-dotenv>=1.0.0",
+  "SQLAlchemy>=2.0.22,<3.0.0",
+  "uvicorn>=0.23.2",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
 dev = [
-  "black==23.10.1",
-  "coverage==7.3.2",
-  "flake8==6.1.0",
-  "pytest==7.4.3",
-  "pytest_asyncio==0.21.1",
-  "pytest-env==1.1.0",
+  "black>=23.10.1",
+  "coverage>7.3.2",
+  "flake8>=6.1.0",
+  "pytest>=7.4.3",
+  "pytest_asyncio>=0.21.1",
+  "pytest-env>=1.1.0",
 ]
 docs = [
   "mkdocs-material>=9.1,<9.5",
