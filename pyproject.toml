@@ -23,7 +23,7 @@ dependencies = [
   "pydantic-settings==2.0.3",
   "python-socketio>=5.0.0,<6.0.0",
   "python-dotenv==1.0.0",
-  "SQLAlchemy==2.0.22",
+  "SQLAlchemy==2.0.36",
   "uvicorn==0.23.2",
 ]
 dynamic = ["version"]
