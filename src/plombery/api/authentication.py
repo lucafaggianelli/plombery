@@ -80,8 +80,15 @@ def build_auth_router(app: FastAPI) -> APIRouter:
 
     @router.get("/redirect")
     async def auth_redirect(request: Request):
-        token = await oauth_client.authorize_access_token(request)
-        user = token["userinfo"]
+        try:
+            token = await oauth_client.authorize_access_token(request)
+        except Exception as e:
+            raise HTTPException(401, f"Unable to authenticate. Error: {str(e)}")
+
+        try:
+            user = token["userinfo"]
+        except:
+            raise HTTPException(401, "Unable to authenticate. Error: No user info")
 
         if user:
             request.session["user"] = dict(user)
