@@ -19,7 +19,7 @@ hide:
     <div>
       <i>👩‍💻🐍</i>
       <h2>Python pipelines</h2>
-      <p>Define pipelines and tasks in pure Python</p>
+      <p>Define pipelines and tasks in pure Python: if you can write a function, you can write a pipeline</p>
     </div>
     <img src="assets/images/minimal-code.png" />
   </article>
@@ -28,15 +28,16 @@ hide:
     <div>
       <i>🎛️</i>
       <h2>Parametrized pipelines</h2>
-      <p>Use <a href="https://docs.pydantic.dev/">Pydantic</a> to define parameters</p>
+      <p>Use <a href="https://docs.pydantic.dev/">Pydantic</a> to define parameters,
+       and get a nice web form to run your pipelines</p>
     </div>
-    <img src="assets/images/run-pipeline-dialog.png" />
+    <img src="assets/images/recipes/ssl_check_manual.png" />
   </article>
 
   <article>
     <i>👉</i>
     <h2>Manual runs</h2>
-    <p>Run pipelines manually from the web UI</p>
+    <p>Run pipelines manually from the web UI, just click the button</p>
   </article>
 
   <article>
@@ -62,16 +63,20 @@ hide:
 
   <article class="large">
     <div>
-      <i>📩</i>
-      <h2>Monitoring</h2>
-      <p>Get alerted if something goes wrong</p>
+      <i>💣</i>
+      <h2>REST API</h2>
+      <p>For advanced integrations use the REST API</p>
+    </div>
+    <div class="api-endpoint">
+      <span>POST</span>
+      <span>https://plombery.com/api/pipelines/run</span>
     </div>
   </article>
 
   <article>
-    <i>💣</i>
-    <h2>REST API</h2>
-    <p>For advanced integrations</p>
+    <i>📩</i>
+    <h2>Monitoring</h2>
+    <p>Get alerted if something goes wrong</p>
   </article>
 </div>
 </section>

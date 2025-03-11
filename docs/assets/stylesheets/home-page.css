@@ -70,6 +70,8 @@ section.home {
 
 .bento article.large img {
   margin: -1rem -1rem -1rem 0;
+  object-fit: cover;
+  object-position: left;
 }
 
 .bento article i {
@@ -85,4 +87,24 @@ section.home {
 
 .bento article p {
   margin: 0;
+}
+
+.bento article .api-endpoint {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: monospace;
+  align-self: center;
+  border: 1px solid var(--md-primary-fg-color);
+  background-color: hsl(225 17% 9% / 1);
+  box-shadow: 0 0 7px 1px var(--md-primary-fg-color--dark) inset;
+}
+
+.bento article .api-endpoint span:first-child {
+  font-weight: 600;
+  border-right: 1px solid var(--md-default-bg-color);
+  padding-right: 0.5rem;
 }
