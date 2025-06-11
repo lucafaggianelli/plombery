@@ -24,7 +24,7 @@
     "@microlink/react-json-view": "^1.23.0",
     "@tanstack/react-query": "^5.80.6",
     "@tremor/react": "^3.11.1",
-    "handsontable": "^13.1.0",
+    "handsontable": "^15.3.0",
     "ky": "^1.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
