@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@handsontable/react": "^15.3.0",
-    "@heroicons/react": "^2.0.16",
+    "@heroicons/react": "^2.2.0",
     "@microlink/react-json-view": "^1.26.2",
     "@tanstack/react-query": "^5.80.6",
     "@tremor/react": "^3.18.7",
