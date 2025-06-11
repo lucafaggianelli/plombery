@@ -13,7 +13,7 @@ classifiers = [
 ]
 dependencies = [
   "APScheduler==3.11.0",
-  "apprise==1.6.0",
+  "apprise==1.9.3",
   "authlib==1.6.0",
   "fastapi==0.104.0",
   "httpx==0.28.1",
