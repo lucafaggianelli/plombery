@@ -24,7 +24,7 @@ dependencies = [
   "python-socketio>=5.0.0,<6.0.0",
   "python-dotenv==1.0.0",
   "SQLAlchemy==2.0.41",
-  "uvicorn==0.23.2",
+  "uvicorn==0.34.3",
 ]
 dynamic = ["version"]
 
