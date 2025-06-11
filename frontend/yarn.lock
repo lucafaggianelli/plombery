@@ -347,10 +347,10 @@
   resolved "https://registry.yarnpkg.com/@handsontable/pikaday/-/pikaday-1.0.0.tgz#21a432b727791d48f4f231094d999b1a4b5f6f5f"
   integrity sha512-1VN6N38t5/DcjJ7y7XUYrDx1LuzvvzlrFdBdMG90Qo1xc8+LXHqbWbsTEm5Ec5gXTEbDEO53vUT35R+2COmOyg==
 
-"@handsontable/react@^13.1.0":
-  version "13.1.0"
-  resolved "https://registry.yarnpkg.com/@handsontable/react/-/react-13.1.0.tgz#0f58a3348a66d38c07100d41b33bbd2d4331043a"
-  integrity sha512-dl5r1VHw2A8UTIprigfIc/DaXXrKovpMcn8s9GDHpdpqBPwOCDsp5ETdqiSeZ2y+TiNydUeJhb/z+N2T+rsP+g==
+"@handsontable/react@^15.3.0":
+  version "15.3.0"
+  resolved "https://registry.yarnpkg.com/@handsontable/react/-/react-15.3.0.tgz#e46884d3f800bfdec370c5a8a8c7adef38fabb9d"
+  integrity sha512-DoUhv1nFj//exVu6a2C7vPtdL9Ii/F3h4eNTA8XL8drb2H9yDm/sjj1ESmFA5a8gXzja/vd+I//qRvXp3LRgpQ==
 
 "@headlessui/react@^1.7.19":
   version "1.7.19"

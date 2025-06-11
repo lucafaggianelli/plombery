@@ -19,7 +19,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@handsontable/react": "^13.1.0",
+    "@handsontable/react": "^15.3.0",
     "@heroicons/react": "^2.0.16",
     "@microlink/react-json-view": "^1.23.0",
     "@tanstack/react-query": "^5.80.6",
