@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add support to Pydantic's `SecretStr` input types (by @flashdagger)
 
 ### Fixed
+- Release logger resources after run (fix #491)
 - Improve task data visualization (#257)
 - Check data file paths before accessing them
 - Fixed boolean parameter input when default is True (by @flashdagger)
