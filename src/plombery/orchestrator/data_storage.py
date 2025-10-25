@@ -4,9 +4,10 @@ from typing import Any, Optional
 
 from plombery.constants import PIPELINE_RUN_LOGS_FILE
 from plombery.exceptions import InvalidDataPath
+from plombery.config import settings
 
 
-_base_data_path = (Path.cwd() / ".data").absolute()
+_base_data_path = (settings.data_path / ".data").absolute()
 
 
 def _check_is_valid_path(path: Path) -> None:
