@@ -160,8 +160,7 @@ source .venv/bin/activate
 and install the dependencies:
 
 ```sh
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+pip install ".[dev]"
 ```
 
 for development purposes, it's useful to run the example application:

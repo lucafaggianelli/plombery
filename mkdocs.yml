@@ -1,6 +1,6 @@
 site_name: Plombery
 site_url: https://lucafaggianelli.github.io/plombery
-copyright: Copyright &copy; 2023 Luca Faggianelli
+copyright: Copyright &copy; 2023 - <script>document.write(new Date().getFullYear());</script> Luca Faggianelli
 
 repo_url: https://github.com/lucafaggianelli/plombery
 edit_uri: edit/main/docs/
@@ -10,15 +10,15 @@ extra_css:
 
 theme:
   name: material
-  logo: assets/images/mario-pipe-flower.png
-  favicon: assets/images/mario-pipe-flower.png
+  logo: assets/images/logo.svg
+  favicon: assets/images/logo.svg
 
   palette:
-     # Palette toggle for light mode
+    # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: deep purple
-      accent: cyan
+      primary: indigo
+      accent: purple
       toggle:
         icon: material/weather-sunny
         name: Switch to dark mode
@@ -26,8 +26,8 @@ theme:
     # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: deep purple
-      accent: cyan
+      primary: indigo
+      accent: purple
       toggle:
         icon: material/weather-night
         name: Switch to light mode
@@ -66,15 +66,15 @@ markdown_extensions:
         - "."
 
 nav:
-  - Welcome: index.md
+  - Home: index.md
   - Get Started:
-    - Install: get-started.md
-    - Your first pipeline: create-a-pipeline.md
+      - Install: get-started.md
+      - Your first pipeline: create-a-pipeline.md
   - Docs:
-    - Pipelines: pipelines.md
-    - Tasks: tasks.md
-    - Triggers: triggers.md
-    - Configuration: configuration.md
-    - Deployment: deployment.md
+      - Pipelines: pipelines.md
+      - Tasks: tasks.md
+      - Triggers: triggers.md
+      - Configuration: configuration.md
+      - Deployment: deployment.md
   - Recipes:
-    - SSL Certificate Check: recipes/certificates-expiration.md
+      - SSL Certificate Check: recipes/certificates-expiration.md
