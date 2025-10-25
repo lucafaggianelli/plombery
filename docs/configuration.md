@@ -31,7 +31,6 @@ notifications:
 Now define the secrets as environmental variables in a `.env` file,
 in your shell or in your hosting environment.
 
-
 !!! tip
 
     By default, Plombery will load any `.env` found in your project root.
@@ -57,16 +56,23 @@ MSTEAMS_WEBHOOK=msteams://TokenA/TokenB/TokenC/
     If you're running Plombery locally, in most cases you don't need to change
     these settings
 
-### `database_url`
-
-The Sqlite DB URI, by default `sqlite:///./plombery.db`
-
 ### `allowed_origins`
+
+**Change it if running in production.**
 
 It allows to configure the CORS header `Access-Control-Allow-Origin`,
 by default it's value is `*` so it allows all origins.
 
-**Change it if running in production.**
+
+### `data_path`
+
+The absolute path to the data directory where logs and output data is stored.
+
+By default is set to the current working directory.
+
+### `database_url`
+
+The Sqlite DB URI, by default `sqlite:///./plombery.db`
 
 ### `frontend_url`
 
@@ -109,20 +115,20 @@ A notification rule defines when to send notifications and to whom.
 
 A list of 1 or more pipeline run status among:
 
-  * `completed`
-  * `failed`
-  * `cancelled`
+- `completed`
+- `failed`
+- `cancelled`
 
 #### `channels`
 
 A list of 1 or more recipients where to send the notifications.
 
-A channel is an *Apprise* URI string that defines an email address or a MS Teams
+A channel is an _Apprise_ URI string that defines an email address or a MS Teams
 channel, for example:
 
-* **Email** mailto://myuser:mypass@gmail.com
-* **MS Teams** msteams://TokenA/TokenB/TokenC/
-* **AWS SES** ses://user@domain/AccessKeyID/AccessSecretKey/RegionName/email1/
+- **Email** mailto://myuser:mypass@gmail.com
+- **MS Teams** msteams://TokenA/TokenB/TokenC/
+- **AWS SES** ses://user@domain/AccessKeyID/AccessSecretKey/RegionName/email1/
 
 Behind the scene Plombery uses [Apprise](https://github.com/caronc/apprise),
 a library to send notifications to many notification providers, so check their
@@ -161,9 +167,9 @@ know it, you need to fill up the values for the other URLs: `access_token_url`,
 
 Here a table of well known Metadata URLs:
 
-| Provider | URL |
-| -------- | --- |
-| Google | https://accounts.google.com/.well-known/openid-configuration |
+| Provider | URL                                                          |
+| -------- | ------------------------------------------------------------ |
+| Google   | https://accounts.google.com/.well-known/openid-configuration |
 
 #### `access_token_url`
 
