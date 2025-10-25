@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from plombery.constants import MANUAL_TRIGGER_ID
 from plombery.exceptions import InvalidDataPath
-from plombery.logger import get_logger
+from plombery.logger import close_logger, get_logger
 from plombery.notifications import notification_manager
 from plombery.utils import run_all_coroutines
 from plombery.websocket import sio
@@ -156,6 +156,7 @@ async def run(
 
     pipeline_context.reset(pipeline_token)
     run_context.reset(run_token)
+    close_logger(logger)
 
 
 @dataclass

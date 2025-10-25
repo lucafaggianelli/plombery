@@ -61,3 +61,16 @@ def get_logger() -> logging.LoggerAdapter:
     }
 
     return logging.LoggerAdapter(logger, extra_log_info)
+
+
+def close_logger(logger: logging.LoggerAdapter):
+    """
+    Close all the resources and file descriptors opened by the logger.
+    Solves issue 491: https://github.com/lucafaggianelli/plombery/issues/491
+
+    Args:
+        logger (logging.LoggerAdapter): logger obtained with get_logger
+    """
+    for handler in logger.logger.handlers:
+        logger.logger.removeHandler(handler)
+        handler.close()
