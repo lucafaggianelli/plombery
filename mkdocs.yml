@@ -1,6 +1,6 @@
 site_name: Plombery
 site_url: https://lucafaggianelli.github.io/plombery
-copyright: Copyright &copy; 2023 Luca Faggianelli
+copyright: Copyright &copy; 2023 - <script>document.write(new Date().getFullYear());</script> Luca Faggianelli
 
 repo_url: https://github.com/lucafaggianelli/plombery
 edit_uri: edit/main/docs/
