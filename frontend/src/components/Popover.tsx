@@ -129,8 +129,8 @@ interface PopoverTriggerProps {
 }
 
 export const PopoverTrigger = React.forwardRef<
-  HTMLElement,
-  React.HTMLProps<HTMLElement> & PopoverTriggerProps
+  HTMLButtonElement,
+  React.HTMLProps<HTMLButtonElement> & PopoverTriggerProps
 >(function PopoverTrigger({ children, asChild = false, ...props }, propRef) {
   const context = usePopoverContext()
   const childrenRef = (children as any).ref
@@ -143,9 +143,9 @@ export const PopoverTrigger = React.forwardRef<
       context.getReferenceProps({
         ref,
         ...props,
-        ...children.props,
+        ...(children.props as object),
         'data-state': context.open ? 'open' : 'closed',
-      })
+      } as any)
     )
   }
 
