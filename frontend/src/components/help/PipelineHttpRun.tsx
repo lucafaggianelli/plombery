@@ -8,11 +8,13 @@ import {
 } from '@tremor/react'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import {
-  okaidia,
-  oneLight,
+  oneLight as lightTheme,
+  atomDark as darkTheme,
 } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import ts from 'react-syntax-highlighter/dist/esm/languages/prism/typescript'
+import py from 'react-syntax-highlighter/dist/esm/languages/prism/python'
 
 import CopyButton from '@/components/CopyButton'
 import Dialog from '@/components/Dialog'
@@ -22,6 +24,9 @@ interface Props {
   pipelineId: string
   triggerId?: string
 }
+
+SyntaxHighlighter.registerLanguage('ts', ts)
+SyntaxHighlighter.registerLanguage('py', py)
 
 const PipelineHttpRun: React.FC<Props> = ({ pipelineId, triggerId }) => {
   const [open, setOpen] = useState(false)
@@ -84,8 +89,8 @@ httpx.post('${getPipelineRunUrl(pipelineId)}', json={${
                 <div className="mt-6 relative group">
                   <SyntaxHighlighter
                     language={snippet.language}
-                    style={isDark ? okaidia : oneLight}
-                    customStyle={{ borderRadius: 8 }}
+                    style={isDark ? darkTheme : lightTheme}
+                    customStyle={{ borderRadius: 8, fontSize: 14 }}
                   >
                     {snippet.code}
                   </SyntaxHighlighter>
