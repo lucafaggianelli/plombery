@@ -1,5 +1,4 @@
 import {
-  Button,
   Card,
   Icon,
   Table,
@@ -12,7 +11,7 @@ import {
   Title,
 } from '@tremor/react'
 import { formatDistanceToNow } from 'date-fns'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 
 import { Pipeline } from '@/types'
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
@@ -25,8 +24,8 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
   const navigate = useNavigate()
 
   return (
-    <Card>
-      <Title>Triggers</Title>
+    <Card className="p-0 overflow-hidden">
+      <Title className="p-6">Triggers</Title>
 
       <Table>
         <TableHead className="sticky top-0 bg-tremor-background dark:bg-dark-tremor-background shadow dark:shadow-tremor-dropdown z-10">
@@ -74,7 +73,12 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
                     rel="noopener noreferrer"
                   >
                     How to create triggers
-                    <Icon icon={ArrowTopRightOnSquareIcon} size="sm" className='p-0' color='indigo' />
+                    <Icon
+                      icon={ArrowTopRightOnSquareIcon}
+                      size="sm"
+                      className="p-0"
+                      color="indigo"
+                    />
                   </a>
                 </div>
               </TableCell>

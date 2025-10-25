@@ -145,7 +145,7 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
 
   return (
     <Flex flexDirection="col" alignItems="stretch" style={{ maxHeight: 600 }}>
-      <Grid numItemsMd={3} className="gap-6 items-start">
+      <Grid numItemsMd={3} className="gap-6 items-start p-6">
         <div>
           <Text>Tasks</Text>
 
@@ -236,7 +236,11 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
                   </Text>
                 </TableCell>
                 <TableCell>
-                  <Badge size="xs" color={LOG_LEVELS_COLORS[log.level]}>
+                  <Badge
+                    size="xs"
+                    color={LOG_LEVELS_COLORS[log.level]}
+                    className="rounded-full"
+                  >
                     {log.level}
                   </Badge>
                 </TableCell>

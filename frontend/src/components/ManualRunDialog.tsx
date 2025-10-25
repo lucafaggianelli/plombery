@@ -2,7 +2,7 @@ import { PlayIcon } from '@heroicons/react/24/outline'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Button, Flex, Text } from '@tremor/react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 
 import { getPipelineInputSchema, runPipeline } from '../repository'
 import { Pipeline } from '../types'

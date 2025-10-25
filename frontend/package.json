@@ -19,30 +19,30 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@handsontable/react": "^13.1.0",
-    "@heroicons/react": "^2.0.16",
-    "@microlink/react-json-view": "^1.23.0",
-    "@tanstack/react-query": "^5.51.15",
-    "@tremor/react": "^3.11.1",
-    "handsontable": "^13.1.0",
-    "ky": "^1.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.17.0",
-    "react-syntax-highlighter": "^15.5.0",
-    "socket.io-client": "^4.7.2"
+    "@handsontable/react-wrapper": "^16.1.1",
+    "@heroicons/react": "^2.2.0",
+    "@microlink/react-json-view": "^1.27.0",
+    "@tanstack/react-query": "^5.90.5",
+    "@tremor/react": "^3.18.7",
+    "handsontable": "^16.1.1",
+    "ky": "^1.13.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router": "^7.9.4",
+    "react-syntax-highlighter": "^15.6.6",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@types/json-schema": "^7.0.15",
-    "@types/node": "^22.0.0",
-    "@types/react": "^18.2.33",
-    "@types/react-dom": "^18.2.17",
-    "@types/react-syntax-highlighter": "^15.5.9",
-    "@vitejs/plugin-react": "^4.0.4",
-    "autoprefixer": "^10.4.13",
-    "postcss": "^8.4.21",
-    "tailwindcss": "^3.3.5",
-    "typescript": "^5.2.2",
-    "vite": "^5.3.5"
+    "@types/node": "^24.9.1",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "@vitejs/plugin-react": "^5.1.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12"
   }
 }

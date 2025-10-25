@@ -1,5 +1,5 @@
 import { Flex, Text } from '@tremor/react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import React from 'react'
 
 import { Pipeline, PipelineRun, Trigger } from '../types'

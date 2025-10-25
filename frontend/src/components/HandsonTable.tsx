@@ -1,4 +1,4 @@
-import { HotTable, HotTableProps } from '@handsontable/react'
+import { HotTable, HotTableProps } from '@handsontable/react-wrapper'
 import {
   registerAllCellTypes,
   registerAllRenderers,

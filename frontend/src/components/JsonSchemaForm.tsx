@@ -12,6 +12,7 @@ import { JSONSchema7, JSONSchema7TypeName } from 'json-schema'
 import { useCallback, useState } from 'react'
 
 import RangeSlider from './RangeSlider'
+import React from 'react'
 
 interface Props {
   schema: JSONSchema7
@@ -29,7 +30,10 @@ interface FieldDefinition {
 
 type FieldType = 'checkbox' | 'range' | 'number' | 'select' | 'text'
 
-const renderers: Record<FieldType, (field: FieldDefinition) => JSX.Element> = {
+const renderers: Record<
+  FieldType,
+  (field: FieldDefinition) => React.ReactElement
+> = {
   checkbox: (field: FieldDefinition) => {
     return (
       <div className="flex items-center mb-4">

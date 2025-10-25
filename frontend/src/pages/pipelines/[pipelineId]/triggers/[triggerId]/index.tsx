@@ -11,7 +11,7 @@ import {
   Grid,
 } from '@tremor/react'
 import { PlayIcon } from '@heroicons/react/24/outline'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router'
 import React from 'react'
 
 import TriggerParamsDialog from '@/components/TriggerParamsDialog'

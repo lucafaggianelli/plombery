@@ -11,7 +11,7 @@ import {
   Bold,
   Grid,
 } from '@tremor/react'
-import { useParams } from 'react-router-dom'
+import { useParams } from 'react-router'
 import React from 'react'
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 
