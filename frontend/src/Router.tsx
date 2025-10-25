@@ -5,7 +5,7 @@ import {
   Navigate,
   Routes,
   Route,
-} from 'react-router-dom'
+} from 'react-router'
 
 import { useAuthState } from '@/contexts/AuthContext'
 

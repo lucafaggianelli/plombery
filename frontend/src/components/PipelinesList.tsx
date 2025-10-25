@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Text, Title, Card, List, Bold, ListItem, Icon } from '@tremor/react'
 import { formatDistanceToNow } from 'date-fns'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import React from 'react'
 
 import { listPipelines } from '@/repository'
@@ -26,12 +26,12 @@ const PipelinesList: React.FC = () => {
           <ListItem key={pipeline.id} className="gap-x-1">
             <div className="min-w-0">
               <Text className="truncate">
-                <Bold>
-                  <Link to={`/pipelines/${pipeline.id}`}>{pipeline.name}</Link>
-                </Bold>
+                <Link to={`/pipelines/${pipeline.id}`} className='font-bold'>{pipeline.name}</Link>
               </Text>
               {pipeline.description && (
-                <Text className="truncate">{pipeline.description}</Text>
+                <Text className="truncate text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
+                  {pipeline.description}
+                </Text>
               )}
             </div>
 
@@ -57,7 +57,7 @@ const PipelinesList: React.FC = () => {
         ))}
 
         {pipelines.length === 0 && (
-          <div className='mt-4'>
+          <div className="mt-4">
             <Text className="text-center italic">
               There are no pipelines, you can't do much.
             </Text>

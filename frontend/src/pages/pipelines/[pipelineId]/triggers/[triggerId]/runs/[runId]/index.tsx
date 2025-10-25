@@ -10,7 +10,7 @@ import {
   Title,
 } from '@tremor/react'
 import { addMilliseconds, isSameDay } from 'date-fns'
-import { useParams } from 'react-router-dom'
+import { useParams } from 'react-router'
 import { useEffect } from 'react'
 
 import Breadcrumbs from '@/components/Breadcrumbs'
@@ -144,7 +144,7 @@ const RunViewPage = () => {
       </Grid>
 
       <div className="mt-6">
-        <Card>
+        <Card className="p-0 overflow-hidden">
           <LogViewer pipeline={pipeline} run={run} />
         </Card>
       </div>

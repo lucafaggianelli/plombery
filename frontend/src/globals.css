@@ -9,7 +9,7 @@ html.dark {
 
 a {
   @apply hover:text-indigo-500 hover:decoration-indigo-500 decoration-inherit underline underline-offset-2;
-  transition: text-decoration 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
   position: relative;
 }
 

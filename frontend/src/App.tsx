@@ -1,9 +1,9 @@
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
-import '@/globals.css'
+import { BrowserRouter } from 'react-router'
 
+import '@/globals.css'
 import Router from './Router'
 import { AuthProvider } from './contexts/AuthContext'
-import { BrowserRouter } from 'react-router-dom'
 import WebSocketContext from './contexts/WebSocketContext'
 
 const queryClient = new QueryClient({

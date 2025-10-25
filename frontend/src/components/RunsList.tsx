@@ -12,7 +12,7 @@ import {
 } from '@tremor/react'
 import { formatDistanceToNow, differenceInDays } from 'date-fns'
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router'
 import { HTTPError } from 'ky'
 
 import { socket } from '@/socket'
@@ -78,8 +78,8 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
   const numberOfColumns = 4 + Number(!!pipelineId) + Number(!!triggerId)
 
   return (
-    <Card>
-      <Title>Runs</Title>
+    <Card className="p-0 overflow-hidden">
+      <Title className="p-6">Runs</Title>
 
       <Table className="overflow-auto max-h-[50vh]">
         <TableHead className="sticky top-0 bg-tremor-background dark:bg-dark-tremor-background shadow dark:shadow-tremor-dropdown z-10">

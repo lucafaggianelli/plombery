@@ -33,7 +33,9 @@ const PipelineHttpRun: React.FC<Props> = ({ pipelineId, triggerId }) => {
       name: 'Python',
       code: `import httpx
 
-httpx.post('${getPipelineRunUrl(pipelineId)}', json={${triggerId ? `\n  "trigger_id": "${triggerId}",` : ''}
+httpx.post('${getPipelineRunUrl(pipelineId)}', json={${
+        triggerId ? `\n  "trigger_id": "${triggerId}",` : ''
+      }
   "params": {
     "name": "value",
   }
@@ -58,11 +60,11 @@ httpx.post('${getPipelineRunUrl(pipelineId)}', json={${triggerId ? `\n  "trigger
     <>
       <Button
         color="indigo"
-        variant="secondary"
+        variant="light"
         size="xs"
         icon={QuestionMarkCircleIcon}
         onClick={() => setOpen(true)}
-      ></Button>
+      />
 
       <Dialog
         isOpen={open}

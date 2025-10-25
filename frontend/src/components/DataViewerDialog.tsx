@@ -13,8 +13,8 @@ interface Props {
   onClose: () => any
 }
 
-const HotTable = React.lazy(() => import('./HandsonTable.js'))
-const ReactJson = React.lazy(() => import('@microlink/react-json-view'))
+// const HotTable = React.lazy(() => import('./HandsonTable'))
+// const ReactJson = React.lazy(() => import('@microlink/react-json-view'))
 
 const JsonComponent: React.FC<{ data: any }> = ({ data }) => {
   const isDark = document.documentElement.classList.contains('dark')
@@ -22,7 +22,7 @@ const JsonComponent: React.FC<{ data: any }> = ({ data }) => {
   return (
     <div className="border dark:border-slate-800 rounded-lg">
       <Suspense fallback={<div>Loading table UI...</div>}>
-        <ReactJson
+        {/* <ReactJson
           src={data}
           collapseStringsAfterLength={50}
           iconStyle="triangle"
@@ -31,7 +31,7 @@ const JsonComponent: React.FC<{ data: any }> = ({ data }) => {
             padding: 24,
             borderRadius: 'inherit',
           }}
-        />
+        /> */}
       </Suspense>
     </div>
   )
@@ -49,14 +49,14 @@ const DataViewer: React.FC<{ data: any }> = ({ data }) => {
   if (Array.isArray(data) && typeof data[0] === 'object') {
     return (
       <Suspense fallback={<div>Loading table UI...</div>}>
-        <HotTable
+        {/* <HotTable
           data={data}
           rowHeaders={true}
           colHeaders={Object.keys(data[0])}
           height="70vh"
           width="700px"
           licenseKey="non-commercial-and-evaluation"
-        />
+        /> */}
       </Suspense>
     )
   } else if (typeof data === 'object' && data !== null) {
