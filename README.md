@@ -182,16 +182,16 @@ and install the dependencies:
 
 ```sh
 cd frontend/
-# The project uses yarn as dependency manager, if you don't have
+# The project uses pnpm as dependency manager, if you don't have
 # it, you must install it.
 # This command will install the deps:
-yarn
+pnpm
 ```
 
 run the development server:
 
 ```sh
-yarn dev
+pnpm dev
 ```
 
 ### Documentation

@@ -1,55 +1,51 @@
 [project]
 name = "plombery"
-authors = [
-    {name = "Luca Faggianelli", email = "luca@velvetlab.tech"},
-]
+authors = [{ name = "Luca Faggianelli", email = "luca@velvetlab.tech" }]
 description = "Python task scheduler with a user-friendly web UI"
-readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.8.1"
-keywords = ["pipeline", "task-scheduler", "apscheduler", "orchestrator", "web-ui", "fastapi", "pydantic"]
-license = {text = "MIT"}
-classifiers = [
-    "Programming Language :: Python :: 3",
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.9"
+keywords = [
+  "pipeline",
+  "task-scheduler",
+  "apscheduler",
+  "orchestrator",
+  "web-ui",
+  "fastapi",
+  "pydantic",
 ]
+license = "MIT"
+classifiers = ["Programming Language :: Python :: 3"]
 dependencies = [
-  "APScheduler==3.10.4",
-  "apprise==1.6.0",
-  "authlib==1.2.1",
-  "fastapi==0.104.0",
-  "httpx==0.25.0",
-  "itsdangerous==2.1.2",
-  "jinja2==3.1.2",
-  "pydantic==2.4.2",
-  "pydantic-settings==2.0.3",
-  "python-socketio>=5.0.0,<6.0.0",
-  "python-dotenv==1.0.0",
-  "SQLAlchemy==2.0.22",
-  "uvicorn==0.23.2",
+  "APScheduler>=3.10.4",
+  "apprise>=1.8.0",
+  "authlib==1.6.5",
+  "fastapi>=0.115.8",
+  "httpx>=0.25.0",
+  "itsdangerous>=2.1.2",
+  "jinja2>=3.1.6",
+  "pydantic>=2.12.0",
+  "pydantic-settings>=2.6.0",
+  "SQLAlchemy>=2.0.22",
+  "uvicorn>=0.32.0",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
 dev = [
-  "black==23.10.1",
-  "coverage==7.3.2",
-  "flake8==6.1.0",
-  "pytest==7.4.3",
-  "pytest_asyncio==0.21.1",
-  "pytest-env==1.1.0",
+  "black>=25.0.0",
+  "coverage>=7.3.2",
+  "flake8>=7.0.0",
+  "pytest>=8.0.0",
+  "pytest_asyncio>=0.21.1,<1.0.0",
+  "pytest-env>=1.1.0",
 ]
-docs = [
-  "mkdocs-material>=9.1,<9.5",
-]
+docs = ["mkdocs-material>=9.1,<9.7"]
 
 [tool.setuptools.dynamic]
-version = {attr="plombery._version.__version__"}
+version = { attr = "plombery._version.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
-# include = ["plombery*"]
-# exclude = ["tests*"]
 
 [tool.pytest.ini_options]
-env = [
-  "DATABASE_URL=sqlite:///:memory:"
-]
+env = ["DATABASE_URL=sqlite:///:memory:"]

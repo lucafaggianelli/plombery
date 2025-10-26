@@ -17,41 +17,45 @@ permissions:
 
 jobs:
   deploy:
-
     runs-on: ubuntu-latest
     permissions:
       # this permission is mandatory for PyPI trusted publishing
       id-token: write
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
 
-    - uses: actions/setup-node@v3
-      with:
-        cache-dependency-path: frontend/yarn.lock
-        node-version: 18
-        cache: 'yarn'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
 
-    - name: Install frontend dependencies
-      working-directory: frontend
-      run: yarn
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
 
-    - name: Build frontend
-      working-directory: frontend
-      run: yarn build
+      - uses: actions/setup-node@v6
+        with:
+          cache-dependency-path: frontend/pnpm-lock.yaml
+          node-version: 22
+          cache: "pnpm"
 
-    - name: Install py dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install
 
-    - name: Build package
-      run: python -m build
+      - name: Build frontend
+        working-directory: frontend
+        run: pnpm build
 
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Build package
+        run: uv build
+
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
