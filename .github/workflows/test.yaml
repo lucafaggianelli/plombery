@@ -41,7 +41,7 @@ jobs:
         run: uv sync --locked --all-extras --dev
 
       - name: Lint with flake8
-        run: flake8 src/ --count --show-source --statistics
+        run: uv run flake8 src/ --count --show-source --statistics
 
       - name: Test with pytest
-        run: pytest
+        run: uv run pytest
