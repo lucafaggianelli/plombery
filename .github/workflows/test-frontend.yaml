@@ -24,6 +24,7 @@ jobs:
         name: Install pnpm
         with:
           run_install: false
+          package_json_file: frontend/package.json
 
       - uses: actions/setup-node@v6
         with:
