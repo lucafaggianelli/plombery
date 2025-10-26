@@ -107,7 +107,6 @@ def build_auth_router(app: FastAPI) -> APIRouter:
             {
                 "id": settings.auth.provider,
                 "name": provider_config.get("name"),
-                "logo": f"/icons/{settings.auth.provider}.svg",
                 "redirect_url": "/api/auth/redirect",
             }
         ]
