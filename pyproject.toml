@@ -50,3 +50,4 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 env = ["DATABASE_URL=sqlite:///:memory:"]
+pythonpath = [".", "src"]
