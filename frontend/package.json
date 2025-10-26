@@ -13,6 +13,7 @@
     "url": "https://github.com/lucafaggianelli/plombery"
   },
   "type": "module",
+  "packageManager": "pnpm@10.19.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build --emptyOutDir",
