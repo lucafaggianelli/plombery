@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Pre-defined auth providers for Google and Microsoft
 - Config for data directory (close #299)
 - Link to REST API docs in settings menu
 - Add download task data button in data view dialog (close #46)

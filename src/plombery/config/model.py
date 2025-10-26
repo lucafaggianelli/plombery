@@ -15,12 +15,14 @@ BASE_SETTINGS_FOLDER = Path()
 class AuthSettings(BaseModel):
     client_id: SecretStr
     client_secret: SecretStr
+    provider: Optional[str] = None
     server_metadata_url: Optional[HttpUrl] = None
     access_token_url: Optional[HttpUrl] = None
     authorize_url: Optional[HttpUrl] = None
     jwks_uri: Optional[HttpUrl] = None
     client_kwargs: Optional[Any] = None
     secret_key: SecretStr = SecretStr("not-very-secret-string")
+    microsoft_tenant_id: Optional[str] = None
 
 
 class Settings(BaseSettings):

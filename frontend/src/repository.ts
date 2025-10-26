@@ -93,6 +93,16 @@ export const logout = async () => {
   await post('auth/logout')
 }
 
+export const getAuthProviders = (): UseQueryOptions<
+  { id: string; name: string; redirect_uri: string }[],
+  HTTPError
+> => ({
+  queryKey: ['auth-providers'],
+  queryFn: async () => {
+    return await get('auth/providers')
+  },
+})
+
 /**
  * Pipelines
  */
