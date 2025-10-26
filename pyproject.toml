@@ -3,7 +3,7 @@ name = "plombery"
 authors = [{ name = "Luca Faggianelli", email = "luca@velvetlab.tech" }]
 description = "Python task scheduler with a user-friendly web UI"
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.14"
 keywords = [
   "pipeline",
   "task-scheduler",
