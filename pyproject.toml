@@ -17,6 +17,7 @@ license = "MIT"
 classifiers = ["Programming Language :: Python :: 3"]
 dependencies = [
   "APScheduler>=3.10.4",
+  "alembic>=1.16.5",
   "apprise>=1.8.0",
   "authlib==1.6.5",
   "fastapi>=0.115.8",

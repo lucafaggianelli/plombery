@@ -164,3 +164,4 @@ node_modules
 !/src/plombery/static/.gitkeep
 
 .DS_Store
+*.db

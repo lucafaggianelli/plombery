@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from .api import app
 from .config import settings
+from .database.operations import setup_database
 from .logger import get_logger  # noqa F401
 from .notifications import NotificationRule, notification_manager
 from .orchestrator import orchestrator
@@ -80,3 +81,6 @@ def register_pipeline(
     )
 
     _app.register_pipeline(pipeline)
+
+
+setup_database()

@@ -1,12 +1,15 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.5.0] - 2025-10-26
 
 ### Added
+
+- Database migrations managed by Alembic (#142)
 - Pre-defined auth providers for Google and Microsoft
 - Config for data directory (close #299)
 - Link to REST API docs in settings menu
@@ -14,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add support to Pydantic's `SecretStr` input types (by @flashdagger)
 
 ### Fixed
+
 - Release logger resources after run (fix #491)
 - Improve task data visualization (#257)
 - Check data file paths before accessing them
@@ -21,21 +25,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fix connection with non sqlite db (#392) (by @PierrickBrun)
 
 ### Changed
+
 - Migrated plain websocket to SocketIO for improved communication stability
 - (internal): pipeline HTTP run url is now `/pipelines/{pipeline_id}/run`
 - (internal): updated frontend dependencies
 
 ### Removed
+
 - Removed python `websockets` dependency
 
 ## [0.4.1] - 2023-10-11
 
 ### Fixed
+
 - No pipelines message appearing when pipelines where there
 - Fix the traceback info dialog (fix #229)
 
 ## [0.4.0] - 2023-10-06
+
 ### Added
+
 - Navigate to run page after running manually a pipeline or trigger (#71)
 - Add `ky` frontend dependency as HTTP fetch library
 - Spin the running icon in the status badge
@@ -55,6 +64,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Use skeleton loaders during data fetch
 
 ### Fixed
+
 - Sometimes logs are appended to an existing logs files of previous runs (#131)
 - During a pipeline run, logs are streamed to any pipeline run page bug (#130)
 - Check task function signature before calling it (#154)
@@ -68,6 +78,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Show validation errors in manual run form dialog (#192)
 
 ### Changed
+
 - Migrate tremor to v3
 - Update frontend deps
 - (breaking) updated FastAPI to v0.103 (#144)
@@ -81,23 +92,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - (breaking): By default CORS headers allow_origins is set to `*`
 
 ### Removed
+
 - Remove `server_url` configuration as unused
 
 ## [0.3.2] - 2023-06-20
+
 ### Added
+
 - Add next fire time to pipelines and triggers (#27)
 - show run time in runs list (#129)
 
 ### Changed
+
 - Save times with UTC timezone (#132)
 
 ### Fixed
+
 - change taskrun duration from positive to non-negative (#128)
 - specify button type when in form to avoid submit (#133)
 - Fix the run pipeline dialog open/close logic
 - Show pipeline name in runs list (#127)
 
-[Unreleased]: https://github.com/lucafaggianelli/mario-pype/compare/v0.4.1...HEAD
-[0.4.1]: https://github.com/lucafaggianelli/mario-pype/compare/v0.4.0...v0.4.1
-[0.4.0]: https://github.com/lucafaggianelli/mario-pype/compare/v0.3.2...v0.4.0
-[0.3.2]: https://github.com/lucafaggianelli/plombery.git/releases/tag/v0.3.2
+[Unreleased]: https://github.com/lucafaggianelli/plombery/compare/0.4.1...HEAD
+[0.4.1]: https://github.com/lucafaggianelli/plombery/compare/0.4.0...0.4.1
+[0.4.0]: https://github.com/lucafaggianelli/plombery/compare/0.3.2...0.4.0
+[0.3.2]: https://github.com/lucafaggianelli/plombery.git/releases/tag/0.3.2
