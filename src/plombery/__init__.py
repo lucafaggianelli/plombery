@@ -49,11 +49,6 @@ class _Plombery:
     def stop(self):
         orchestrator.stop()
 
-    # Wrap FastAPI ASGI interface so the Plombery object
-    # can be served directly by uvicorn
-    async def __call__(self, scope, receive, send):
-        await app.__call__(scope, receive, send)
-
 
 _app = _Plombery()
 
@@ -64,7 +59,7 @@ def on_fastapi_start():
 
 
 def get_app():
-    return _app
+    return app
 
 
 def register_pipeline(
