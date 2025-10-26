@@ -1,0 +1,50 @@
+{% extends "main.html" %}
+
+<!-- Render hero under tabs -->
+{% block tabs %} {{ super() }}
+
+<link
+  type="text/css"
+  rel="stylesheet"
+  href="assets/stylesheets/home-page.css"
+/>
+
+<!-- Hero for landing page -->
+<section class="mdx-container">
+  <div class="md-grid md-typeset">
+    <div class="hero">
+      <div>
+        <h1>Plombery</h1>
+        <p>
+          An open source task scheduler for Python with a web UI and a REST API.
+        </p>
+        <div class="md-typeset" style="display: flex; gap: 16px">
+          <a
+            class="md-button md-button--primary"
+            href="{{ page.next_page.url | url }}"
+            style="border-radius: 9999px"
+            >Get Started</a
+          >
+          <a
+            class="md-button"
+            href="{{ 'pipelines/' | url }}"
+            style="border-radius: 9999px"
+            >Docs</a
+          >
+        </div>
+      </div>
+
+      <div>
+        <img src="assets/images/screenshot.png" alt="Plombery screenshot" />
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+<!-- Content -->
+<!-- {% block content %} {{ super() }} {% endblock %} -->
+
+<!-- Application footer -->
+{% block footer %} {{ super() }} {% endblock %}
