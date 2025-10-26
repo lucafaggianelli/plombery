@@ -1,6 +1,7 @@
-import { useAuthState } from "@/contexts/AuthContext"
-import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline"
-import { Button, Flex, Subtitle, Title } from "@tremor/react"
+import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline'
+import { Button, Flex } from '@tremor/react'
+
+import { useAuthState } from '@/contexts/AuthContext'
 
 const UserInfo: React.FC = () => {
   const { logout, user } = useAuthState()
@@ -10,20 +11,22 @@ const UserInfo: React.FC = () => {
   }
 
   return (
-    <Flex className="gap-4 mt-8">
+    <Flex className="gap-4 px-8 mb-6">
       <div>
-        <Title>{user.name}</Title>
-        <Subtitle>{user.email}</Subtitle>
+        <div>{user.name}</div>
+        <div className="text-sm dark:text-dark-tremor-content-subtle text-tremor-content-subtle">
+          {user.email}
+        </div>
       </div>
 
       <Button
         size="xs"
         variant="secondary"
         color="rose"
-        icon={ArrowRightOnRectangleIcon}
+        icon={ArrowRightStartOnRectangleIcon}
         onClick={async () => await logout()}
-      >
-      </Button>
+        tooltip="Logout"
+      />
     </Flex>
   )
 }

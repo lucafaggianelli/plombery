@@ -1,6 +1,6 @@
 site_name: Plombery
 site_url: https://lucafaggianelli.github.io/plombery
-copyright: Copyright &copy; 2023 - <script>document.write(new Date().getFullYear());</script> Luca Faggianelli
+copyright: Copyright &copy; 2023 - 2025 Luca Faggianelli
 
 repo_url: https://github.com/lucafaggianelli/plombery
 edit_uri: edit/main/docs/
@@ -10,8 +10,8 @@ extra_css:
 
 theme:
   name: material
-  logo: assets/images/logo.svg
-  favicon: assets/images/logo.svg
+  logo: /plombery/assets/images/logo.svg
+  favicon: /plombery/assets/images/logo.svg
 
   palette:
     # Palette toggle for light mode
@@ -74,7 +74,18 @@ nav:
       - Pipelines: pipelines.md
       - Tasks: tasks.md
       - Triggers: triggers.md
-      - Configuration: configuration.md
       - Deployment: deployment.md
+  - Configuration:
+      - Overview: configuration/index.md
+      - Authentication:
+          - Generic OAuth: configuration/auth/generic-oauth.md
+          - Google: configuration/auth/google.md
+          - Microsoft: configuration/auth/microsoft.md
+      - Notifications: configuration/notifications/index.md
+      - System: configuration/system.md
   - Recipes:
       - SSL Certificate Check: recipes/certificates-expiration.md
+
+watch:
+  - ./docs
+  - mkdocs.yml

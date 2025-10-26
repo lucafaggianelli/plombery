@@ -7,6 +7,7 @@ import {
   CodeBracketSquareIcon,
   ArrowTopRightOnSquareIcon,
   ArchiveBoxIcon,
+  BookOpenIcon,
 } from '@heroicons/react/24/outline'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -75,9 +76,9 @@ const isNewerReleaseAvailable = (current: string, latest: string): boolean => {
 
   for (let i = 0; i < currentParts.length; i++) {
     if (currentParts[i] > latestParts[i]) {
-      return true
-    } else if (currentParts[i] < latestParts[i]) {
       return false
+    } else if (currentParts[i] < latestParts[i]) {
+      return true
     }
   }
 
@@ -117,7 +118,22 @@ const SettingsMenu: React.FC<Props> = () => {
       </PopoverTrigger>
       <PopoverContent>
         <Card className="p-0 pt-4 shadow-xl z-20">
+          {isAuthenticationEnabled && <UserInfo />}
+
           <List>
+            <a
+              className="flex items-center px-6 py-2 hover:bg-tremor-brand-faint hover:dark:bg-dark-tremor-brand-faint transition-colors no-underline"
+              href="https://lucafaggianelli.github.io/plombery/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon icon={BookOpenIcon} color="slate" className="mr-3" />
+              <Text className="flex-grow no-underline border-0">
+                Plombery docs
+              </Text>
+              <Icon icon={ArrowTopRightOnSquareIcon} color="slate" />
+            </a>
+
             <a
               className="flex items-center px-6 py-2 hover:bg-tremor-brand-faint hover:dark:bg-dark-tremor-brand-faint transition-colors no-underline"
               href={getApiUrl().replace(/\/api$/, '/docs')}
@@ -149,8 +165,6 @@ const SettingsMenu: React.FC<Props> = () => {
 
           <div className="p-6">
             <ThemeSwitch />
-
-            {isAuthenticationEnabled && <UserInfo />}
           </div>
 
           <div className="px-6 pb-3 text-center text-tremor-content-subtle dark:text-dark-tremor-content-subtle text-sm">

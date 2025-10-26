@@ -1,8 +1,11 @@
 from authlib.integrations.starlette_client import OAuth, StarletteOAuth2App
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
+from httpx import HTTPStatusError
+from pydantic import HttpUrl
 from starlette.middleware.sessions import SessionMiddleware
 
+from plombery.auth.providers import get_provider_config
 from plombery.config import settings
 
 
@@ -29,7 +32,19 @@ def build_auth_router(app: FastAPI) -> APIRouter:
         SessionMiddleware, secret_key=settings.auth.secret_key.get_secret_value()
     )
 
-    # Explicitly convert URL objects to str as from Pydantic v2
+    if settings.auth.provider:
+        provider_config = get_provider_config(settings.auth.provider)
+
+        if not provider_config:
+            raise ValueError(
+                f"Unsupported authentication provider: {settings.auth.provider}"
+            )
+
+        settings.auth.server_metadata_url = HttpUrl(provider_config.get("metadata_url"))
+        settings.auth.client_kwargs = provider_config.get("client_kwargs")
+
+    # Explicitly convert the URL objects to str as from Pydantic v2 they're not converted automatically
+    # and Authlib complains
     server_metadata_url = (
         str(settings.auth.server_metadata_url)
         if settings.auth.server_metadata_url
@@ -63,7 +78,12 @@ def build_auth_router(app: FastAPI) -> APIRouter:
     @router.get("/login")
     async def login(request: Request):
         redirect_uri = request.url_for("auth_redirect")
-        return await oauth_client.authorize_redirect(request, redirect_uri)
+
+        try:
+            return await oauth_client.authorize_redirect(request, redirect_uri)
+        except HTTPStatusError as e:
+            print(f"Unable to authenticate. Error: {e}")
+            raise HTTPException(401, "Unable to authenticate") from e
 
     @router.post("/logout")
     async def logout(request: Request):
@@ -78,20 +98,34 @@ def build_auth_router(app: FastAPI) -> APIRouter:
             "is_authentication_enabled": True,
         }
 
+    @router.get("/providers")
+    async def get_providers():
+        if not settings.auth:
+            return []
+
+        return [
+            {
+                "id": settings.auth.provider,
+                "name": provider_config.get("name"),
+                "logo": f"/icons/{settings.auth.provider}.svg",
+                "redirect_url": "/api/auth/redirect",
+            }
+        ]
+
     @router.get("/redirect")
     async def auth_redirect(request: Request):
         try:
-            token = await oauth_client.authorize_access_token(request)
+            token: dict = await oauth_client.authorize_access_token(request)
         except Exception as e:
-            raise HTTPException(401, f"Unable to authenticate. Error: {str(e)}")
+            print(f"Unable to authenticate. Error: {e}")
+            raise HTTPException(401, "Unable to authenticate") from e
 
-        try:
-            user = token["userinfo"]
-        except:
+        user = token.get("userinfo")
+
+        if not user:
             raise HTTPException(401, "Unable to authenticate. Error: No user info")
 
-        if user:
-            request.session["user"] = dict(user)
+        request.session["user"] = dict(user)
 
         return RedirectResponse(url=str(settings.frontend_url))
 
