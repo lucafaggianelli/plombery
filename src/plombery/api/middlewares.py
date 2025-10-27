@@ -35,7 +35,7 @@ def setup_cors(app: FastAPI):
     else:
         origins = [
             # Origins must not contain any path, not even a trailing /
-            f"{origin.scheme}://{origin.host}{f":{origin.port}" if origin.port else ""}"
+            f"{origin.scheme}://{origin.host}{(":" + str(origin.port)) if origin.port else ""}"
             for origin in settings.allowed_origins
         ]
 
