@@ -37,7 +37,7 @@ dev = [
   "coverage>=7.3.2",
   "flake8>=7.0.0",
   "pytest>=8.0.0",
-  "pytest_asyncio>=0.21.1,<1.0.0",
+  "pytest_asyncio>=0.21.1,<2.0.0",
   "pytest-env>=1.1.0",
 ]
 docs = ["mkdocs-material>=9.1,<9.7"]
