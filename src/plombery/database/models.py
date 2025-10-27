@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import Column, Integer, String
 
@@ -17,5 +17,5 @@ class PipelineRun(Base):
     start_time = Column(AwareDateTime)
     duration = Column(Integer, default=0)
     tasks_run = Column(PydanticType(List[TaskRun]), default=list)
-    input_params = Column(PydanticType(dict), default=None)
+    input_params = Column(PydanticType(Optional[dict]), default=None)
     reason = Column(String, default=None)

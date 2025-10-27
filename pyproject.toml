@@ -50,5 +50,6 @@ version = { attr = "plombery._version.__version__" }
 where = ["src"]
 
 [tool.pytest.ini_options]
-env = ["DATABASE_URL=sqlite:///:memory:"]
-pythonpath = [".", "src"]
+env = ["DATABASE_URL=sqlite:///:memory:", "TESTING=true"]
+
+pythonpath = ["src"]

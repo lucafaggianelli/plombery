@@ -173,8 +173,12 @@ def check_task_signature(func: Callable) -> TaskFunctionSignature:
     """
     Check if a function signature declares positional args.
 
-    This is meant to be used to check if a task function
-    accepts data inputs from another task
+    This is meant to be used to check if a task function accepts data inputs from another task.
+
+    The signature of the task run function should be:
+    `def task_fn(previous_task_output: Any, params: Model):`
+
+    Where the params argument is the Pipeline input params.
     """
 
     result = TaskFunctionSignature()

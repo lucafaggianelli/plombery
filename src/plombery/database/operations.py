@@ -1,10 +1,11 @@
+import os
 from pathlib import Path
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import inspect, and_, or_
 
 from plombery.constants import MANUAL_TRIGGER_ID
-from plombery.database.base import SessionLocal, engine
+from plombery.database.base import Base, SessionLocal, engine
 from plombery.database.models import PipelineRun
 from plombery.schemas import PipelineRunStatus
 
@@ -50,8 +51,8 @@ def _check_for_existing_db() -> bool:
     Checks if the database is present and if a critical table already exists.
     """
     try:
-        with engine.connect():
-            inspector = inspect(engine)
+        with SessionLocal() as db:
+            inspector = inspect(db.get_bind())
 
             # Check for the existence of initial schema table
             return inspector.has_table("pipeline_runs") and not inspector.has_table(
@@ -91,5 +92,8 @@ def _mark_cancelled_runs():
 
 
 def setup_database():
-    _run_migrations()
+    if os.getenv("TESTING", "false") == "true":
+        Base.metadata.create_all(bind=engine)
+    else:
+        _run_migrations()
     _mark_cancelled_runs()
