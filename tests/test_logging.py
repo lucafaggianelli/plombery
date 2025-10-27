@@ -22,7 +22,6 @@ def get_parsed_logs(run_id: int):
 
 @pytest.mark.asyncio
 async def test_pipeline_logs_are_correclty_captured(app: Plombery):
-    app.start()
     app.register_pipeline(pipeline1)
 
     await run_pipeline_now(pipeline1)

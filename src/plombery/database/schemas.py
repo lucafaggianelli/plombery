@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 from pydantic import BaseModel, Field
@@ -12,8 +12,8 @@ class PipelineRunBase(BaseModel):
     status: PipelineRunStatus
     start_time: datetime
     tasks_run: List[TaskRun] = Field(default_factory=list)
-    input_params: dict | None = None
-    reason: str | None = None
+    input_params: Optional[None] = None
+    reason: Optional[str] = None
 
     class Config:
         from_attributes = True
