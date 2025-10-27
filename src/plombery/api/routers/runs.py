@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional, Sequence
 
 from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import FileResponse
@@ -25,7 +25,7 @@ router = APIRouter(
 def list_runs(
     pipeline_id: Optional[str] = None,
     trigger_id: Optional[str] = None,
-) -> List[PipelineRun]:
+) -> Sequence[PipelineRun]:
     return list_pipeline_runs(pipeline_id=pipeline_id, trigger_id=trigger_id)
 
 

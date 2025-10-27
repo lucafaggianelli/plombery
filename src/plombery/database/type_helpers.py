@@ -46,7 +46,7 @@ class PydanticType(sa.types.TypeDecorator):
         return jsonable_encoder(value) if value is not None else None
 
     def process_result_value(self, value, dialect):
-        return self.adapter.validate_python(value)
+        return self.adapter.validate_python(value) if value is not None else None
 
 
 class AwareDateTime(sa.types.TypeDecorator):

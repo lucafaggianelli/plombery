@@ -261,6 +261,7 @@ export const runPipeline = (
       json: {
         trigger_id: triggerId,
         params,
+        reason: 'web',
       },
     })
   },

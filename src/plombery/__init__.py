@@ -42,6 +42,8 @@ class _Plombery:
         notification_manager.register_rule(notification)
 
     def start(self):
+        setup_database()
+
         try:
             orchestrator.start()
         except SchedulerAlreadyRunningError:
@@ -51,12 +53,12 @@ class _Plombery:
         orchestrator.stop()
 
 
-_app = _Plombery()
+_plombery = _Plombery()
 
 
 @app.on_event("startup")
 def on_fastapi_start():
-    _app.start()
+    _plombery.start()
 
 
 def get_app():
@@ -80,7 +82,4 @@ def register_pipeline(
         triggers=triggers or [],
     )
 
-    _app.register_pipeline(pipeline)
-
-
-setup_database()
+    _plombery.register_pipeline(pipeline)

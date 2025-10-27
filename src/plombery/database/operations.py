@@ -1,3 +1,4 @@
+from pathlib import Path
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import inspect, and_, or_
@@ -18,7 +19,11 @@ def _run_migrations():
     The strategy is
     """
 
-    alembic_cfg = Config()
+    alembic_ini = (
+        Path(__file__).parent.parent.parent.parent / "alembic.ini"
+    ).absolute()
+
+    alembic_cfg = Config(alembic_ini)
 
     db_already_exists = _check_for_existing_db()
 
@@ -33,7 +38,7 @@ def _run_migrations():
         command.stamp(alembic_cfg, INITIAL_REVISION_ID)
     else:
         # Empty DB (or table not found) - run all migrations from base to head
-        print("The Database is empty. Running all migrations from base to head...")
+        print("Running all migrations from base to head...")
 
     command.upgrade(alembic_cfg, "head")
 
@@ -49,7 +54,9 @@ def _check_for_existing_db() -> bool:
             inspector = inspect(engine)
 
             # Check for the existence of initial schema table
-            return inspector.has_table("pipeline_runs")
+            return inspector.has_table("pipeline_runs") and not inspector.has_table(
+                "alembic_version"
+            )
     except Exception:
         # This will catch errors like 'database does not exist' for some dialects
         # or connection errors. For SQLite, an empty file is often created,

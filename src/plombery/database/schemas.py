@@ -12,6 +12,8 @@ class PipelineRunBase(BaseModel):
     status: PipelineRunStatus
     start_time: datetime
     tasks_run: List[TaskRun] = Field(default_factory=list)
+    input_params: dict | None = None
+    reason: str | None = None
 
     class Config:
         from_attributes = True
