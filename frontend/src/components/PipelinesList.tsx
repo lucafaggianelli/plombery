@@ -22,39 +22,42 @@ const PipelinesList: React.FC = () => {
       <Title>Pipelines</Title>
 
       <List>
-        {pipelines.map((pipeline) => (
-          <ListItem key={pipeline.id} className="gap-x-1">
-            <div className="min-w-0">
-              <Text className="truncate">
-                <Link to={`/pipelines/${pipeline.id}`} className='font-bold'>{pipeline.name}</Link>
-              </Text>
-              {pipeline.description && (
-                <Text className="truncate text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
-                  {pipeline.description}
-                </Text>
-              )}
-            </div>
+        {pipelines.map((pipeline) => {
+          const nextFireTime = pipeline.getNextFireTime()
 
-            {pipeline.hasTrigger() && (
-              <div
-                className="min-w-0"
-                title={pipeline.getNextFireTime()?.toString()}
-              >
-                <Text className="truncate">Next fire time</Text>
+          return (
+            <ListItem key={pipeline.id} className="gap-x-1">
+              <div className="min-w-0">
                 <Text className="truncate">
-                  <Bold>
-                    {formatDistanceToNow(pipeline.getNextFireTime()!, {
-                      addSuffix: true,
-                      includeSeconds: true,
-                    })}
-                  </Bold>
+                  <Link to={`/pipelines/${pipeline.id}`} className="font-bold">
+                    {pipeline.name}
+                  </Link>
                 </Text>
+                {pipeline.description && (
+                  <Text className="truncate text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
+                    {pipeline.description}
+                  </Text>
+                )}
               </div>
-            )}
 
-            <ManualRunDialog pipeline={pipeline} />
-          </ListItem>
-        ))}
+              {pipeline.hasTrigger() && nextFireTime && (
+                <div className="min-w-0" title={nextFireTime.toString()}>
+                  <Text className="truncate">Next fire time</Text>
+                  <Text className="truncate">
+                    <Bold>
+                      {formatDistanceToNow(nextFireTime, {
+                        addSuffix: true,
+                        includeSeconds: true,
+                      })}
+                    </Bold>
+                  </Text>
+                </div>
+              )}
+
+              <ManualRunDialog pipeline={pipeline} />
+            </ListItem>
+          )
+        })}
 
         {pipelines.length === 0 && (
           <div className="mt-4">

@@ -17,6 +17,7 @@ import {
 } from '@tremor/react'
 import { BarsArrowDownIcon } from '@heroicons/react/24/outline'
 import { createRef, useCallback, useEffect, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 
 import { getLogs } from '@/repository'
 import { socket } from '@/socket'
@@ -185,7 +186,7 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
               variant="light"
               color={scrollToBottom ? 'indigo' : 'gray'}
               tooltip="Automatically scroll to the latest logs. Click to toggle"
-              className="mr-4"
+              className="mr-4 text-white"
               style={{
                 cursor: 'pointer',
               }}
@@ -245,7 +246,7 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Flex>
+                  <Flex className="justify-start truncate">
                     <div
                       className={`h-2 w-2 mr-2 rounded-full ${
                         tasksColors[log.task]
@@ -255,7 +256,14 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
                   </Flex>
                 </TableCell>
                 <TableCell className="w-full">
-                  <Text>{log.message}</Text>
+                  <Text
+                    className={twMerge(
+                      !log.task &&
+                        'font-medium text-tremor-content-subtle dark:text-dark-tremor-content-subtle'
+                    )}
+                  >
+                    {log.message}
+                  </Text>
 
                   {log.exc_info && <TracebackInfoDialog logEntry={log} />}
                 </TableCell>

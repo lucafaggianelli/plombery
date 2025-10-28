@@ -39,8 +39,6 @@ def setup_cors(app: FastAPI):
             for origin in settings.allowed_origins
         ]
 
-    print(f"Allowed origins: {origins}")
-
     # Don't use * in any header when Allow-Credentials is True
     app.add_middleware(
         CORSMiddleware,

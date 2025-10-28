@@ -1,4 +1,9 @@
 import {
+  ArrowTopRightOnSquareIcon,
+  PauseIcon,
+} from '@heroicons/react/24/outline'
+import {
+  Badge,
   Card,
   Icon,
   Table,
@@ -10,11 +15,9 @@ import {
   Text,
   Title,
 } from '@tremor/react'
-import { formatDistanceToNow } from 'date-fns'
 import { useNavigate } from 'react-router'
 
 import { Pipeline } from '@/types'
-import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 
 interface Props {
   pipeline: Pipeline
@@ -50,10 +53,13 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
                 <Text>{trigger.schedule}</Text>
               </TableCell>
               <TableCell>
-                {formatDistanceToNow(pipeline.getNextFireTime()!, {
-                  includeSeconds: true,
-                  addSuffix: true,
-                })}
+                {trigger.paused ? (
+                  <Badge color="amber" size="xs" icon={PauseIcon}>
+                    Paused
+                  </Badge>
+                ) : (
+                  pipeline.getNextFireTime()?.toLocaleString()
+                )}
               </TableCell>
             </TableRow>
           ))}
