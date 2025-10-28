@@ -33,12 +33,17 @@ def setup_cors(app: FastAPI):
     if settings.allowed_origins == "*":
         origins.append("*")
     else:
-        origins = [str(origin) for origin in settings.allowed_origins]
+        origins = [
+            # Origins must not contain any path, not even a trailing /
+            f"{origin.scheme}://{origin.host}{(':' + str(origin.port)) if origin.port else ''}"
+            for origin in settings.allowed_origins
+        ]
 
+    # Don't use * in any header when Allow-Credentials is True
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["HEAD", "GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=[],
     )

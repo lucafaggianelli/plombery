@@ -83,7 +83,10 @@ orchestrator = _Orchestrator()
 
 
 async def run_pipeline_now(
-    pipeline: Pipeline, trigger: Optional[Trigger] = None, params: Any = None
+    pipeline: Pipeline,
+    trigger: Optional[Trigger] = None,
+    params: Any = None,
+    reason: str = "api",
 ) -> PipelineRun:
     trigger_id = trigger.id if trigger else MANUAL_TRIGGER_ID
 
@@ -93,6 +96,8 @@ async def run_pipeline_now(
             pipeline_id=pipeline.id,
             trigger_id=trigger_id,
             status=PipelineRunStatus.PENDING,
+            input_params=params,
+            reason=reason,
         )
     )
 

@@ -25,12 +25,16 @@ def utcnow():
 
 
 def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
+    input_params = trigger.params.model_dump() if trigger and trigger.params else None
+
     pipeline_run = create_pipeline_run(
         PipelineRunCreate(
             start_time=utcnow(),
             pipeline_id=pipeline.id,
             trigger_id=trigger.id if trigger else MANUAL_TRIGGER_ID,
             status=PipelineRunStatus.RUNNING,
+            input_params=input_params,
+            reason="scheduled",
         )
     )
 
@@ -52,7 +56,7 @@ def _on_pipeline_status_changed(
 def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
     notify_coro = notification_manager.notify(pipeline, pipeline_run)
 
-    run = dict(
+    run_payload = dict(
         id=pipeline_run.id,
         status=pipeline_run.status,
         start_time=pipeline_run.start_time.isoformat(),
@@ -62,7 +66,7 @@ def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
     emit_coro = sio.emit(
         "run-update",
         dict(
-            run=run,
+            run=run_payload,
             pipeline=pipeline_run.pipeline_id,
             trigger=pipeline_run.trigger_id,
         ),
@@ -169,8 +173,12 @@ def check_task_signature(func: Callable) -> TaskFunctionSignature:
     """
     Check if a function signature declares positional args.
 
-    This is meant to be used to check if a task function
-    accepts data inputs from another task
+    This is meant to be used to check if a task function accepts data inputs from another task.
+
+    The signature of the task run function should be:
+    `def task_fn(previous_task_output: Any, params: Model):`
+
+    Where the params argument is the Pipeline input params.
     """
 
     result = TaskFunctionSignature()

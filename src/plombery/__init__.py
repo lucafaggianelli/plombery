@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from .api import app
 from .config import settings
+from .database.operations import setup_database
 from .logger import get_logger  # noqa F401
 from .notifications import NotificationRule, notification_manager
 from .orchestrator import orchestrator
@@ -41,6 +42,8 @@ class _Plombery:
         notification_manager.register_rule(notification)
 
     def start(self):
+        setup_database()
+
         try:
             orchestrator.start()
         except SchedulerAlreadyRunningError:
@@ -50,12 +53,12 @@ class _Plombery:
         orchestrator.stop()
 
 
-_app = _Plombery()
+_plombery = _Plombery()
 
 
 @app.on_event("startup")
 def on_fastapi_start():
-    _app.start()
+    _plombery.start()
 
 
 def get_app():
@@ -79,4 +82,4 @@ def register_pipeline(
         triggers=triggers or [],
     )
 
-    _app.register_pipeline(pipeline)
+    _plombery.register_pipeline(pipeline)

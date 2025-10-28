@@ -59,6 +59,7 @@ def get_pipeline_input_schema(pipeline_id: str):
 class PipelineRunInput(BaseModel):
     trigger_id: Optional[str] = None
     params: Optional[Dict[str, Any]] = None
+    reason: str = "api"
 
 
 @router.post("/{pipeline_id}/run")
@@ -78,7 +79,7 @@ async def run_pipeline(pipeline_id: str, body: PipelineRunInput) -> PipelineRun:
 
         trigger = triggers[0]
 
-        return await run_pipeline_now(pipeline, trigger)
+        return await run_pipeline_now(pipeline, trigger=trigger, reason=body.reason)
     else:
         if pipeline.params:
             try:
@@ -89,4 +90,8 @@ async def run_pipeline(pipeline_id: str, body: PipelineRunInput) -> PipelineRun:
                     detail=exc.errors(),
                 )
 
-        return await run_pipeline_now(pipeline, params=body.params)
+        return await run_pipeline_now(
+            pipeline,
+            params=body.params,
+            reason=body.reason,
+        )
