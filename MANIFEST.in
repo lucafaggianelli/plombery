@@ -1,3 +1,4 @@
 recursive-include src/plombery/static *
 recursive-include src/plombery/notifications/email_templates *
 include README.md
+include src/plombery/alembic/alembic.ini

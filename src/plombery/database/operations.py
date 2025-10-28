@@ -20,9 +20,7 @@ def _run_migrations():
     The strategy is
     """
 
-    alembic_ini = (
-        Path(__file__).parent.parent.parent.parent / "alembic.ini"
-    ).absolute()
+    alembic_ini = (Path(__file__).parent.parent / "alembic" / "alembic.ini").absolute()
 
     alembic_cfg = Config(alembic_ini)
 
