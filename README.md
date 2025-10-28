@@ -17,7 +17,7 @@
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![PyPI Version][pypi-shield]][pypi-url]
-[![Code Climate][CodeClimate-shield]][CodeClimate-url]
+[![Maintainability][Qlty-shield]][Qlty-url]
 
 <!-- PROJECT LOGO -->
 <br />
@@ -285,5 +285,5 @@ Plombery is built on top of amazing techs:
 [TypeScript-url]: https://www.typescriptlang.org/
 [pypi-shield]: https://img.shields.io/pypi/v/plombery.svg?style=for-the-badge
 [pypi-url]: https://pypi.python.org/pypi/plombery
-[CodeClimate-shield]: https://codeclimate.com/github/lucafaggianelli/plombery.png?style=for-the-badge
-[CodeClimate-url]: https://codeclimate.com/github/lucafaggianelli/plombery
+[Qlty-shield]: https://qlty.sh/gh/lucafaggianelli/projects/plombery/maintainability.svg
+[Qlty-url]: https://qlty.sh/gh/lucafaggianelli/projects/plombery
