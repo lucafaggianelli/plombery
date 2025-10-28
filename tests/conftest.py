@@ -22,9 +22,7 @@ def _bypass_auth():
 @pytest.fixture
 def app():
     plombery_app = _Plombery()
-    plombery_app.start()
     yield plombery_app
-    plombery_app.stop()
 
 
 @pytest.fixture

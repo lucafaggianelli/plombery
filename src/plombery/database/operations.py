@@ -93,6 +93,8 @@ def _mark_cancelled_runs():
 
 def setup_database():
     if os.getenv("TESTING", "false") == "true":
+        # During testing, Alembic migrations are not correctly applied
+        # so just skip them and create the DB from scratch
         Base.metadata.create_all(bind=engine)
     else:
         _run_migrations()
