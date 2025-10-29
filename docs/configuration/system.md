@@ -22,7 +22,11 @@ By default is set to the current working directory.
 
 ## `database_url`
 
-The Sqlite DB URI, by default `sqlite:///./plombery.db`
+The DB URI, by default `sqlite:///./plombery.db`
+
+## `database_auth_token`
+
+The auth token for libsql databases hosted on Turso cloud
 
 ## `frontend_url`
 
