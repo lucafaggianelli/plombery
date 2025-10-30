@@ -27,7 +27,7 @@ if settings.database_url.startswith("sqlite"):
 
 if settings.database_url.startswith("sqlite+libsql"):
     try:
-        import sqlalchemy_libsql
+        import sqlalchemy_libsql  # noqa: F401
     except ImportError:
         raise Exception(
             "To use libsql install the package sqlalchemy-libsql",
