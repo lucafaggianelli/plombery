@@ -12,7 +12,7 @@ config file.
 !!! tip "Pre-configured providers"
 
     This page shows how to configure a generic OAuth provider, though
-    there are some providers already preconfigured by Plombery, check
+    some providers are already preconfigured in Plombery from v0.5.0, check
     if your provider is available in the Authentication section of the docs.
 
 
@@ -20,19 +20,31 @@ config file.
 
     The auth system is based on [Authlib](https://authlib.org/)
 
-### `AuthSettings`
+## `AuthSettings`
 
 Options available
 
-#### `client_id`
+### `provider`
+
+*from v0.5.0*
+
+Can be `microsoft` of `google`, if this field is present, then the client id and secret are required.
+
+If using Microsoft, then you can also use `microsoft_tenant_id`, check the dedicated page.
+
+### `client_id`
 
 An OAuth app client ID
 
-#### `client_secret`
+### `client_secret`
 
 An OAuth app client secret
 
-#### `server_metadata_url`
+### `microsoft_tenant_id`
+
+The Microsoft tenant ID to be used when using the `provider: microsoft` option.
+
+### `server_metadata_url`
 
 This a special URL that contains information about the OAuth provider
 specific endpoints. If your provider doesn't have this URL or you don't
@@ -45,13 +57,13 @@ For example, for Google the URL is:
 https://accounts.google.com/.well-known/openid-configuration
 ```
 
-#### `access_token_url`
+### `access_token_url`
 
-#### `authorize_url`
+### `authorize_url`
 
-#### `jwks_uri`
+### `jwks_uri`
 
-#### `client_kwargs`
+### `client_kwargs`
 
 Additional values to pass to the OAuth client during the auth
 process, for example the scope:
@@ -62,7 +74,7 @@ auth:
     scope: openid email profile
 ```
 
-#### `secret_key`
+### `secret_key`
 
 Secret key used in the backend middleware, this has a dummy default value,
 but in production you should define a decent value.

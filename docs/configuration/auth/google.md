@@ -3,6 +3,8 @@ icon: material/google
 status: new
 ---
 
+*Available from v0.5.0*
+
 Google authentication is supported out-of-the-box, this is the configuration needed
 in `plombery.config.yaml`:
 

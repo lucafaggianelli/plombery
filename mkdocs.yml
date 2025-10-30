@@ -81,6 +81,7 @@ nav:
           - Generic OAuth: configuration/auth/generic-oauth.md
           - Google: configuration/auth/google.md
           - Microsoft: configuration/auth/microsoft.md
+      - Database: configuration/database.md
       - Notifications: configuration/notifications/index.md
       - System: configuration/system.md
   - Recipes:

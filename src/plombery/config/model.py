@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     allowed_origins: Union[List[AnyHttpUrl], Literal["*"]] = "*"
     data_path: Path = Field(default_factory=Path.cwd)
     database_url: str = "sqlite:///./plombery.db"
+    database_auth_token: Optional[str] = None
     frontend_url: AnyHttpUrl = Url("http://localhost:8000")
     notifications: Optional[List[NotificationRule]] = None
 
