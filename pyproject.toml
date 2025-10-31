@@ -16,7 +16,7 @@ keywords = [
 license = "MIT"
 classifiers = ["Programming Language :: Python :: 3"]
 dependencies = [
-  "apscheduler==3.11",
+  "apscheduler==3.11.1",
   "alembic>=1.16.5",
   "apprise>=1.8.0",
   "authlib==1.6.5",
