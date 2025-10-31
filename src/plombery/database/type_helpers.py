@@ -58,4 +58,4 @@ class AwareDateTime(sa.types.TypeDecorator):
     impl = DateTime
 
     def process_result_value(self, value: datetime.datetime, dialect):
-        return value.replace(tzinfo=datetime.timezone.utc)
+        return value.replace(tzinfo=datetime.timezone.utc) if value else value

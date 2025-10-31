@@ -60,9 +60,13 @@ export class Pipeline {
 
 export interface TaskRun {
   duration: number
-  has_output: boolean
+  start_time: Date
+  end_time: Date
+  id: string
+  context: any
   status: PipelineRunStatus
   task_id: string
+  task_output_id?: string
 }
 
 export interface PipelineRun {
@@ -72,7 +76,7 @@ export interface PipelineRun {
   trigger_id: string
   start_time: Date
   duration: number
-  tasks_run: TaskRun[]
+  task_runs: TaskRun[]
 }
 
 export interface WhoamiResponse {

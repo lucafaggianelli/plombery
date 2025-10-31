@@ -33,8 +33,8 @@ const RunViewPage = () => {
   const runId = parseInt(urlParams.runId as string)
 
   useEffect(() => {
-    const onRunUpdate = () => {
-      queryClient.invalidateQueries({
+    const onRunUpdate = async () => {
+      await queryClient.invalidateQueries({
         queryKey: getRun(pipelineId, triggerId, runId).queryKey,
       })
     }
@@ -48,22 +48,21 @@ const RunViewPage = () => {
   const pipelineQuery = useQuery(getPipeline(pipelineId))
   const runQuery = useQuery(getRun(pipelineId, triggerId, runId))
 
-  if (pipelineQuery.isPending) {
+  if (pipelineQuery.isPending || runQuery.isPending) {
     return <div>Loading...</div>
   }
 
   if (pipelineQuery.isError) {
-    return <div>Error</div>
+    return <div>Error loading the pipeline</div>
   }
 
   const pipeline = pipelineQuery.data
+  const run = runQuery.data
 
   const isManualTrigger = triggerId === MANUAL_TRIGGER.id
   const trigger: Trigger | undefined = !isManualTrigger
     ? pipeline.triggers.find((trigger) => trigger.id === triggerId)
     : MANUAL_TRIGGER
-
-  const run = runQuery.data
 
   if (!run) {
     return <div>Run not found</div>
@@ -73,11 +72,11 @@ const RunViewPage = () => {
     return <div>Trigger not found</div>
   }
 
-  const totalTasksDuration = (run.tasks_run || []).reduce(
+  const totalTasksDuration = (run.task_runs || []).reduce(
     (tot, cur) => tot + cur.duration,
     0
   )
-  const tasksRunDurations = (run.tasks_run || []).map((tr) =>
+  const tasksRunDurations = (run.task_runs || []).map((tr) =>
     totalTasksDuration ? (tr.duration / totalTasksDuration) * 100 : 0
   )
 
@@ -92,7 +91,7 @@ const RunViewPage = () => {
         </>
       }
     >
-      <Grid numItemsMd={3} className="gap-6 mt-6">
+      <Grid numItemsMd={2} className="gap-6 mt-6">
         <RunsTasksList pipeline={pipeline} run={run} />
 
         <Card>

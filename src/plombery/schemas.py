@@ -1,4 +1,5 @@
-from typing import List, Optional
+from datetime import datetime
+from typing import Any, List, Optional
 from enum import Enum
 
 from pydantic import BaseModel, Field, NonNegativeFloat
@@ -11,14 +12,36 @@ class PipelineRunStatus(str, Enum):
     FAILED = "failed"
     CANCELLED = "cancelled"
 
+    def is_finished(self) -> bool:
+        return self in [
+            PipelineRunStatus.COMPLETED,
+            PipelineRunStatus.FAILED,
+            PipelineRunStatus.CANCELLED,
+        ]
+
+
+class TaskOutputData(BaseModel):
+    """
+    The output of a task.
+    """
+
+    id: str
+    data: Any
+    mimetype: Optional[str]
+    size: int
+
 
 class TaskRun(BaseModel):
+    id: str
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
     duration: Optional[NonNegativeFloat] = 0
     """Task duration in milliseconds"""
-    has_output: bool = False
+    context: dict
     """True if the task generated an output"""
     status: Optional[PipelineRunStatus] = PipelineRunStatus.PENDING
     task_id: str
+    task_output_id: Optional[str]
 
     class Config:
         from_attributes = True
