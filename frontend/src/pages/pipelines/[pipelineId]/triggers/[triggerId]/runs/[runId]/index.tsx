@@ -23,7 +23,14 @@ import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun } from '@/repository'
 import { socket } from '@/socket'
 import { Trigger } from '@/types'
-import { TASKS_COLORS, formatDate, formatDateTime, formatTime } from '@/utils'
+import {
+  TASKS_COLORS,
+  formatDate,
+  formatDateTime,
+  formatDuration,
+  formatTime,
+} from '@/utils'
+import DagViewer from '@/components/DagViewer'
 
 const RunViewPage = () => {
   const queryClient = useQueryClient()
@@ -33,8 +40,8 @@ const RunViewPage = () => {
   const runId = parseInt(urlParams.runId as string)
 
   useEffect(() => {
-    const onRunUpdate = () => {
-      queryClient.invalidateQueries({
+    const onRunUpdate = async () => {
+      await queryClient.invalidateQueries({
         queryKey: getRun(pipelineId, triggerId, runId).queryKey,
       })
     }
@@ -48,22 +55,21 @@ const RunViewPage = () => {
   const pipelineQuery = useQuery(getPipeline(pipelineId))
   const runQuery = useQuery(getRun(pipelineId, triggerId, runId))
 
-  if (pipelineQuery.isPending) {
+  if (pipelineQuery.isPending || runQuery.isPending) {
     return <div>Loading...</div>
   }
 
   if (pipelineQuery.isError) {
-    return <div>Error</div>
+    return <div>Error loading the pipeline</div>
   }
 
   const pipeline = pipelineQuery.data
+  const run = runQuery.data
 
   const isManualTrigger = triggerId === MANUAL_TRIGGER.id
   const trigger: Trigger | undefined = !isManualTrigger
     ? pipeline.triggers.find((trigger) => trigger.id === triggerId)
     : MANUAL_TRIGGER
-
-  const run = runQuery.data
 
   if (!run) {
     return <div>Run not found</div>
@@ -73,11 +79,11 @@ const RunViewPage = () => {
     return <div>Trigger not found</div>
   }
 
-  const totalTasksDuration = (run.tasks_run || []).reduce(
+  const totalTasksDuration = (run.task_runs || []).reduce(
     (tot, cur) => tot + cur.duration,
     0
   )
-  const tasksRunDurations = (run.tasks_run || []).map((tr) =>
+  const tasksRunDurations = (run.task_runs || []).map((tr) =>
     totalTasksDuration ? (tr.duration / totalTasksDuration) * 100 : 0
   )
 
@@ -92,7 +98,7 @@ const RunViewPage = () => {
         </>
       }
     >
-      <Grid numItemsMd={3} className="gap-6 mt-6">
+      <Grid numItemsMd={2} className="gap-6 mt-6">
         <RunsTasksList pipeline={pipeline} run={run} />
 
         <Card>
@@ -102,13 +108,12 @@ const RunViewPage = () => {
           </Flex>
 
           <Flex className="justify-start items-baseline space-x-3 truncate">
-            <Metric>
+            <Metric className="tabular-nums">
               {run.status !== 'running' ? (
-                (run.duration / 1000).toFixed(2)
+                formatDuration(run.duration)
               ) : (
                 <Timer startTime={run.start_time} />
-              )}{' '}
-              s
+              )}
             </Metric>
           </Flex>
 
@@ -140,6 +145,49 @@ const RunViewPage = () => {
               )}
             </div>
           </Flex>
+        </Card>
+
+        <Card className="col-span-2 p-0">
+          <DagViewer pipeline={pipeline} run={run}>
+            <Card className="p-3">
+              <Flex className="items-start">
+                <Text className="text-xs">Duration</Text>
+                <StatusBadge status={run.status} />
+              </Flex>
+
+              <Flex className="justify-start items-baseline space-x-3 truncate">
+                <Metric className="tabular-nums text-lg">
+                  {run.status !== 'running' ? (
+                    formatDuration(run.duration)
+                  ) : (
+                    <Timer startTime={run.start_time} />
+                  )}
+                </Metric>
+              </Flex>
+
+              <Flex className="items-start mt-2 gap-4">
+                <div>
+                  <Text>
+                    <Bold title={formatDateTime(run.start_time, true)}>
+                      {formatTime(run.start_time)}
+                    </Bold>
+                  </Text>
+                  <Text className="mt-1">{formatDate(run.start_time)}</Text>
+                </div>
+
+                <div className="text-right">
+                  <Text>
+                    <Bold title={formatDateTime(runEndTime, true)}>
+                      {formatTime(runEndTime)}
+                    </Bold>
+                  </Text>
+                  {!isSameDay(run.start_time, runEndTime) && (
+                    <Text>{formatDate(runEndTime)}</Text>
+                  )}
+                </div>
+              </Flex>
+            </Card>
+          </DagViewer>
         </Card>
       </Grid>
 

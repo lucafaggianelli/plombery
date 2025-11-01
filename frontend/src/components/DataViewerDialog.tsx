@@ -117,7 +117,7 @@ const DataViewerDialog: React.FC<Props> = ({
             </Text>
           ))}
 
-        {!query.isPending && !query.isError && <DataViewer data={query.data} />}
+        {!query.isPending && !query.isError && <DataViewer data={query.data.data} />}
       </Dialog>
     </>
   )

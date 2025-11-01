@@ -13,11 +13,18 @@ jobs:
   deploy-docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
-          cache: 'pip'
-          cache-dependency-path: pyproject.toml
-      - run: pip install .[docs]
+          python-version: 3.13
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked --extra docs
+
       - run: mkdocs gh-deploy --force

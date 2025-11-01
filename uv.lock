@@ -980,6 +980,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "python-socketio" },
     { name = "sqlalchemy" },
+    { name = "uuid6" },
     { name = "uvicorn" },
 ]
 
@@ -1010,6 +1011,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.6.0" },
     { name = "python-socketio", specifier = ">=5.14.2" },
     { name = "sqlalchemy", specifier = ">=2.0.40" },
+    { name = "uuid6", specifier = ">=2025.0.1" },
     { name = "uvicorn", specifier = ">=0.32.0" },
 ]
 
@@ -1687,6 +1689,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/15/22/9ee70a2574a4f4599c47dd506532914ce044817c7752a79b6a51286319bc/urllib3-2.5.0.tar.gz", hash = "sha256:3fc47733c7e419d4bc3f6b3dc2b4f890bb743906a30d56ba4a5bfa4bbff92760", size = 393185, upload-time = "2025-06-18T14:07:41.644Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/c2/fe1e52489ae3122415c51f387e221dd0773709bad6c6cdaa599e8a2c5185/urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc", size = 129795, upload-time = "2025-06-18T14:07:40.39Z" },
+]
+
+[[package]]
+name = "uuid6"
+version = "2025.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/b7/4c0f736ca824b3a25b15e8213d1bcfc15f8ac2ae48d1b445b310892dc4da/uuid6-2025.0.1.tar.gz", hash = "sha256:cd0af94fa428675a44e32c5319ec5a3485225ba2179eefcf4c3f205ae30a81bd", size = 13932, upload-time = "2025-07-04T18:30:35.186Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3d/b2/93faaab7962e2aa8d6e174afb6f76be2ca0ce89fde14d3af835acebcaa59/uuid6-2025.0.1-py3-none-any.whl", hash = "sha256:80530ce4d02a93cdf82e7122ca0da3ebbbc269790ec1cb902481fa3e9cc9ff99", size = 6979, upload-time = "2025-07-04T18:30:34.001Z" },
 ]
 
 [[package]]

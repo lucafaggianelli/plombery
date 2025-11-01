@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 
+import { formatDuration } from '@/utils'
+
 interface Props {
   startTime: Date
 }
@@ -10,14 +12,15 @@ const Timer: React.FC<Props> = ({ startTime }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       setTime(Date.now() - startTime.getTime())
-    }, 500)
+      // The value is pretty random so to have an uneven and more natural timer
+    }, 237)
 
     return () => {
       clearInterval(interval)
     }
   })
 
-  return <span>{(time / 1000).toFixed(2)}</span>
+  return <span>{formatDuration(time)}</span>
 }
 
 export default Timer

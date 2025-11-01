@@ -20,6 +20,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^1.1.5",
     "@floating-ui/react": "^0.27.16",
     "@handsontable/react-wrapper": "^16.1.1",
     "@headlessui/react": "^2.2.9",
@@ -27,6 +28,7 @@
     "@microlink/react-json-view": "^1.27.0",
     "@tanstack/react-query": "^5.90.5",
     "@tremor/react": "^3.18.7",
+    "@xyflow/react": "^12.9.2",
     "date-fns": "^4.1.0",
     "handsontable": "^16.1.1",
     "ky": "^1.13.0",

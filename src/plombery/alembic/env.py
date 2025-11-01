@@ -1,11 +1,20 @@
 from logging.config import fileConfig
 
-from sqlalchemy import pool
-
 from alembic import context
-
+from alembic.autogenerate import rewriter
+from alembic.operations import ops
 from plombery.database.base import Base, get_engine
 from plombery.config import settings
+from sqlalchemy import pool
+
+writer = rewriter.Rewriter()
+
+
+@writer.rewrites(ops.MigrationScript)
+def add_imports(context, revision, op: ops.MigrationScript):
+    op.imports.add("import plombery.database.type_helpers")
+    return [op]
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -49,6 +58,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        process_revision_directives=writer,
     )
 
     with context.begin_transaction():
@@ -65,7 +75,11 @@ def run_migrations_online() -> None:
     connectable = get_engine(poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            process_revision_directives=writer,
+        )
 
         with context.begin_transaction():
             context.run_migrations()

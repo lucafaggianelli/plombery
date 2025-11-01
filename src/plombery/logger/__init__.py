@@ -1,9 +1,11 @@
 import logging
 
+from plombery.database.models import PipelineRun
 from plombery.logger.formatter import JsonFormatter
 from plombery.logger.web_socket_handler import queue_handler
 from plombery.orchestrator.data_storage import get_logs_filename
 from plombery.pipeline.context import task_context, run_context, pipeline_context
+from plombery.pipeline.pipeline import Pipeline
 
 
 def get_logger() -> logging.LoggerAdapter:
@@ -63,7 +65,7 @@ def get_logger() -> logging.LoggerAdapter:
     return logging.LoggerAdapter(logger, extra_log_info)
 
 
-def close_logger(logger: logging.LoggerAdapter):
+def close_logger(pipeline: Pipeline, pipeline_run: PipelineRun):
     """
     Close all the resources and file descriptors opened by the logger.
     Solves issue 491: https://github.com/lucafaggianelli/plombery/issues/491
@@ -71,6 +73,14 @@ def close_logger(logger: logging.LoggerAdapter):
     Args:
         logger (logging.LoggerAdapter): logger obtained with get_logger
     """
+    pt = pipeline_context.set(pipeline)
+    rt = run_context.set(pipeline_run)
+
+    logger = get_logger()
+
     for handler in logger.logger.handlers:
         logger.logger.removeHandler(handler)
         handler.close()
+
+    pipeline_context.reset(pt)
+    run_context.reset(rt)
