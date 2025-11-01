@@ -5,7 +5,7 @@ from datetime import datetime
 from apscheduler.triggers.interval import IntervalTrigger
 from plombery import register_pipeline
 from plombery.logger import get_logger
-from plombery.pipeline import task
+from plombery import task
 from plombery.pipeline.trigger import Trigger
 from pydantic import BaseModel, Field
 

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from plombery import register_pipeline
 from plombery.logger import get_logger
 from plombery.orchestrator.context import TaskRuntimeContext
-from plombery.pipeline import task
+from plombery.pipeline.tasks import MappingMode, task
 
 
 class PipelineInputParams(BaseModel):
@@ -13,7 +13,7 @@ class PipelineInputParams(BaseModel):
     data_source: str = "default_api"
 
 
-@task
+@task()
 async def fetch_data(params: PipelineInputParams) -> Dict[str, Any]:
     """Task A: The start node."""
     await sleep(10)
@@ -22,13 +22,14 @@ async def fetch_data(params: PipelineInputParams) -> Dict[str, Any]:
         "fetch_timestamp": "2025-10-31T10:00:00Z",
     }
     get_logger().info("Fetch data its me")
-    return user_data
+    return user_data["user_list"]
 
 
 @task
-def process_list(context: TaskRuntimeContext) -> Dict[str, Any]:
+async def process_list(context: TaskRuntimeContext) -> Dict[str, Any]:
     """Task B: Processes data from Task A."""
-    user_list: list[int] | None = context.get_output_data("fetch_data")["user_list"]
+    user_list: list[int] | None = context.get_output_data("fetch_data")
+    await sleep(6)
 
     processed_count = len(user_list)
     processed_result = {
@@ -40,10 +41,12 @@ def process_list(context: TaskRuntimeContext) -> Dict[str, Any]:
     return processed_result
 
 
-@task
+@task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="fetch_data")
 async def parallel_task(context: TaskRuntimeContext):
-    get_logger().info("Starting parallel task")
-    await sleep(10)
+    user: int | None = context.get_output_data("fetch_data")
+
+    get_logger().info(f"Starting parallel task for user {user}")
+    await sleep(5)
     get_logger().info("Done")
 
 

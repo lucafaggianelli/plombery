@@ -1,9 +1,10 @@
 from typing import Collection, Optional
 from datetime import datetime
 
+from sqlalchemy import update
 from sqlalchemy.orm import selectinload
 
-from plombery.schemas import PipelineRunStatus
+from plombery.schemas import ACTIVE_STATUS, FINISHED_STATUS, PipelineRunStatus
 from .base import SessionLocal
 from .schemas import (
     PipelineRunCreate,
@@ -97,24 +98,6 @@ def get_latest_pipeline_run(pipeline_id, trigger_id):
     return pipeline_run
 
 
-def get_active_task_runs(run_id: int) -> list[models.TaskRun]:
-    """
-    Retrieves all TaskRuns for a given PipelineRun that are still active (not COMPLETED/FAILED).
-    Used by the Orchestrator to determine pipeline completion.
-    """
-    with SessionLocal() as db:
-        active_statuses = [PipelineRunStatus.PENDING, PipelineRunStatus.RUNNING]
-
-        return (
-            db.query(models.TaskRun)
-            .where(
-                models.TaskRun.pipeline_run_id == run_id,
-                models.TaskRun.status.in_(active_statuses),
-            )
-            .all()
-        )
-
-
 def create_task_run(task_run: TaskRunCreate) -> models.TaskRun:
     """Creates a new TaskRun record."""
     with SessionLocal() as session:
@@ -133,38 +116,30 @@ def update_task_run(
 ) -> Optional[models.TaskRun]:
     """Updates an existing TaskRun record."""
     with SessionLocal() as session:
-        # Fetch by primary key ID (task_run_id)
-        db_task_run = session.get(models.TaskRun, task_run_id)
-
-        if not db_task_run:
-            return None
-
-        # Apply updates
-        for field, value in update_data.model_dump(exclude_none=True).items():
-            setattr(db_task_run, field, value)
+        session.execute(
+            update(models.TaskRun)
+            .where(models.TaskRun.id == task_run_id)
+            .values(**update_data.model_dump(exclude_none=True))
+        )
 
         session.commit()
-        session.refresh(db_task_run)
-        return db_task_run
+        return get_task_run_by_id(task_run_id)
 
 
-def get_task_run_by_id_and_run_id(
-    task_id: str, run_id: int
-) -> Optional[models.TaskRun]:
-    """Retrieves a specific TaskRun by task_id and pipeline_run_id."""
+def get_task_run_by_id(task_run_id: str) -> Optional[models.TaskRun]:
+    """Retrieves a specific TaskRun by ID."""
     with SessionLocal() as db:
         return (
             db.query(models.TaskRun)
-            .where(
-                models.TaskRun.task_id == task_id,
-                models.TaskRun.pipeline_run_id == run_id,
-            )
-            .first()
+            .options(selectinload(models.TaskRun.pipeline_run))
+            .get(task_run_id)
         )
 
 
 def get_task_runs_for_pipeline_run(
-    run_id: int, task_ids: Optional[Collection[str]] = None
+    run_id: int,
+    task_ids: Optional[Collection[str]] = None,
+    status: Optional[list[PipelineRunStatus]] = None,
 ) -> list[models.TaskRun]:
     """
     Retrieves TaskRuns for a specific PipelineRun, optionally filtered by a list of task IDs.
@@ -176,7 +151,34 @@ def get_task_runs_for_pipeline_run(
         if task_ids:
             stmt = stmt.where(models.TaskRun.task_id.in_(task_ids))
 
+        if status:
+            stmt = stmt.where(models.TaskRun.status.in_(status))
+
         return stmt.all()
+
+
+def get_active_task_runs(pipeline_run_id: int) -> list[models.TaskRun]:
+    """
+    Retrieves all TaskRuns for a given PipelineRun that are still active (not COMPLETED/FAILED).
+    Used by the Orchestrator to determine pipeline completion.
+
+    Active means:
+        * PipelineRunStatus.PENDING
+        * PipelineRunStatus.RUNNING
+    """
+    return get_task_runs_for_pipeline_run(pipeline_run_id, status=ACTIVE_STATUS)
+
+
+def get_finished_task_runs(pipeline_run_id: int) -> list[models.TaskRun]:
+    """
+    Retrieves all finished TaskRuns for a given Pipeline.
+
+    Finished means:
+        * PipelineRunStatus.COMPLETED
+        * PipelineRunStatus.FAILED
+        * PipelineRunStatus.CANCELLED
+    """
+    return get_task_runs_for_pipeline_run(pipeline_run_id, status=FINISHED_STATUS)
 
 
 def create_task_run_output(

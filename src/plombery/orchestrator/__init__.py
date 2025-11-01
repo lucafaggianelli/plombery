@@ -7,15 +7,15 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.date import DateTrigger
 
 from plombery.constants import MANUAL_TRIGGER_ID
-from plombery.database.models import PipelineRun
+from plombery.database.models import PipelineRun, TaskRun
 from plombery.database.repository import (
     create_pipeline_run,
     create_task_run,
-    get_active_task_runs,
-    get_task_run_by_id_and_run_id,
+    get_task_run_output_by_id,
     get_task_runs_for_pipeline_run,
 )
 from plombery.database.schemas import PipelineRunCreate, TaskRunCreate
+from plombery.orchestrator.dag import is_mappable_list
 from plombery.orchestrator.executor import (
     Pipeline,
     execute_task_instance,
@@ -25,8 +25,8 @@ from plombery.orchestrator.executor import (
     utcnow,
 )
 from plombery.pipeline._utils import get_job_id
-from plombery.pipeline.task import Task
-from plombery.schemas import PipelineRunStatus
+from plombery.pipeline.tasks import MappingMode, Task
+from plombery.schemas import FINISHED_STATUS, PipelineRunStatus
 from plombery.websocket import sio
 
 
@@ -91,9 +91,7 @@ class _Orchestrator:
                 resolved_context={"params": initial_params},
             )
 
-    async def handle_task_completion(
-        self, pipeline_run: PipelineRun, completed_task_id: str
-    ):
+    async def handle_task_completion(self, task_run: TaskRun):
         """
         Checks dependencies for downstream tasks and schedules them if ready.
         Also checks if the entire pipeline run is complete.
@@ -101,40 +99,46 @@ class _Orchestrator:
         await sio.emit(
             "run-update",
             dict(
-                pipeline=pipeline_run.pipeline_id,
-                trigger=pipeline_run.trigger_id,
+                pipeline=task_run.pipeline_run.pipeline_id,
+                trigger=task_run.pipeline_run.trigger_id,
             ),
         )
 
-        pipeline = self.get_pipeline(pipeline_run.pipeline_id)
+        pipeline = self.get_pipeline(task_run.pipeline_run.pipeline_id)
         if not pipeline:
-            raise ValueError(f"Pipeline {pipeline_run.pipeline_id} not found")
+            raise ValueError(f"Pipeline {task_run.pipeline_run.pipeline_id} not found")
 
-        completed_task = pipeline.get_task_by_id(completed_task_id)
+        completed_task = pipeline.get_task_by_id(task_run.task_id)
         if not completed_task:
-            raise ValueError(f"Task {completed_task_id} not found")
+            raise ValueError(f"Task {task_run.task_id} not found")
 
         # If the pipeline was already marked FAILED by a previous task, stop.
-        if pipeline_run.status != PipelineRunStatus.RUNNING:
+        if task_run.pipeline_run.status != PipelineRunStatus.RUNNING:
             return
 
-        completed_task_run = get_task_run_by_id_and_run_id(
-            completed_task_id, pipeline_run.id
-        )
-        if not completed_task_run:
-            raise ValueError(
-                f"TaskRun {completed_task_id} not found for run {pipeline_run.id}"
-            )
+        if task_run.task_output_id:
+            task_output = get_task_run_output_by_id(task_run.task_output_id)
+            output_data = task_output.data if task_output else None
+            mappable_list = is_mappable_list(output_data)
+        else:
+            output_data = None
+            mappable_list = False
 
-        if completed_task_run.status == PipelineRunStatus.FAILED:
+        # Metadata about the run instance that just completed
+        completed_was_mapped_instance = task_run.map_index is not None
+        instance_map_index = task_run.map_index
+
+        if task_run.status == PipelineRunStatus.FAILED:
             # Mark the entire pipeline as failed and stop
-            on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.FAILED)
+            on_pipeline_status_changed(
+                pipeline, task_run.pipeline_run, PipelineRunStatus.FAILED
+            )
             return
 
         downstream_task_ids = [
             task.id
             for task in pipeline.tasks
-            if completed_task_run.task_id in task.upstream_task_ids
+            if task_run.task_id in task.upstream_task_ids
         ]
 
         # Process Downstream Tasks
@@ -144,41 +148,104 @@ class _Orchestrator:
             if not downstream_task:
                 raise ValueError(f"Task {downstream_task_id} not found")
 
-            # Check if ALL upstream tasks for the downstream task are complete
-            if self._are_upstream_tasks_complete(pipeline_run.id, downstream_task):
-                self._schedule_task_instance(
-                    pipeline, pipeline_run, downstream_task, {}
-                )
-
-        # 4. Final Pipeline Run Completion Check
-        active_tasks = get_active_task_runs(
-            pipeline_run.id
-        )  # Assuming a repo method for this
-        if not active_tasks:
-            # No more running, scheduled, or pending tasks left
-            on_pipeline_status_changed(
-                pipeline, pipeline_run, PipelineRunStatus.COMPLETED
+            # Check if Downstream task is explicitly configured to map
+            # using Completed Task's output
+            is_mapped_downstream = (
+                downstream_task.mapping_mode is not None
+                and downstream_task.map_upstream_id == task_run.task_id
             )
 
-    def _are_upstream_tasks_complete(self, run_id: int, task: Task) -> bool:
+            # TODO: What if a mapped task has more than 1 upstream?
+            if is_mapped_downstream:
+
+                # Case A: Fan-Out Per Item (Initial or Nested):
+                # The completed task output is an array and the downstream
+                # task will run 1 time per each item of the array
+                if downstream_task.mapping_mode == MappingMode.FAN_OUT:
+
+                    if not mappable_list:
+                        # List required for fan-out: this is an error
+                        raise ValueError(
+                            f"Task {downstream_task.id} expected a collection for fan-out, but got {type(output_data)}"
+                        )
+
+                    # Schedule a new run for each item in the output list.
+                    for index, _ in enumerate(output_data):
+                        self._schedule_task_instance(
+                            pipeline,
+                            task_run.pipeline_run,
+                            downstream_task,
+                            parent_task_run_id=task_run.task_id,
+                            map_index=index,
+                        )
+
+                # Case B: Chained Fan-Out (Inheriting the Index)
+                # The completed task was fan-out from an array (Case A) so
+                # instead of fan-in, this task keep inheriting the mapping index from
+                # the parent and will process 1 item at a time
+                elif downstream_task.mapping_mode == MappingMode.CHAINED_FAN_OUT:
+
+                    if not completed_was_mapped_instance:
+                        raise ValueError(
+                            f"Task {downstream_task.id} expected upstream task {completed_task.id} to be a mapped instance: cannot chain."
+                        )
+
+                    # Schedule EXACTLY ONE run, inheriting the index from the parent instance
+                    self._schedule_task_instance(
+                        pipeline,
+                        task_run.pipeline_run,
+                        downstream_task,
+                        parent_task_run_id=task_run.task_id,
+                        map_index=instance_map_index,  # Inherit the map_index
+                    )
+
+                else:
+                    raise ValueError(
+                        f"Invalid mapping mode {downstream_task.mapping_mode}"
+                    )
+
+            # Check if ALL upstream tasks for the downstream task are complete
+            elif self._are_upstream_tasks_complete(
+                task_run.pipeline_run_id, downstream_task
+            ):
+                self._schedule_task_instance(
+                    pipeline,
+                    task_run.pipeline_run,
+                    downstream_task,
+                )
+
+            else:
+                print(f"Downstream task {downstream_task.id} not ready")
+                # Instantiate the task anyway so the it's marked into the DB
+
+        # Check if the pipeline has finished running, checking if all the tasks have finished
+        #
+        # The check is pretty tricky as tasks get scheduled dynamically and task runs are
+        # inserted in the DB just before the task is queued.
+        # Even more, some tasks are mapped so their task runs appear more than once.
+
+        finished_tasks = get_finished_tasks_ids(task_run.pipeline_run_id)
+
+        if len(finished_tasks) == len(pipeline.tasks):
+            # No more running, scheduled, or pending tasks left
+            on_pipeline_status_changed(
+                pipeline, task_run.pipeline_run, PipelineRunStatus.COMPLETED
+            )
+
+    def _are_upstream_tasks_complete(self, pipeline_run_id: int, task: Task) -> bool:
         """Verifies all dependencies are met."""
-        upstream_runs = get_task_runs_for_pipeline_run(run_id, task.upstream_task_ids)
+        finished_tasks = get_finished_tasks_ids(pipeline_run_id, task.upstream_task_ids)
 
-        # If any required upstream run is missing or not 'COMPLETED', return False
-        if len(upstream_runs) != len(task.upstream_task_ids):
-            return False  # Not all upstream tasks have even started/finished yet
-
-        for up_run in upstream_runs:
-            if up_run.status != PipelineRunStatus.COMPLETED:
-                return False
-        return True
+        return len(finished_tasks) == len(task.upstream_task_ids)
 
     def _schedule_task_instance(
         self,
         pipeline: Pipeline,
         pipeline_run: PipelineRun,
         task: Task,
-        resolved_context: Dict[str, Any],
+        resolved_context: Optional[Dict[str, Any]] = None,
+        parent_task_run_id: Optional[str] = None,
+        map_index: Optional[int] = None,
     ):
         """Creates TaskRun record and submits job to executor."""
 
@@ -188,8 +255,9 @@ class _Orchestrator:
                 pipeline_run_id=pipeline_run.id,
                 task_id=task.id,
                 status=PipelineRunStatus.PENDING,
-                # Store resolved inputs for the executor to use
                 context=resolved_context,
+                parent_task_run_id=parent_task_run_id,
+                map_index=map_index,
             )
         )
 
@@ -208,7 +276,7 @@ class _Orchestrator:
                     "pipeline": pipeline,
                     "task": task,
                     "pipeline_run": pipeline_run,
-                    # "task_run_id": task_run_db.id,
+                    "task_run_id": task_run_db.id,
                 },
                 max_instances=10_000,
                 misfire_grace_time=None,
@@ -243,6 +311,18 @@ class _Orchestrator:
 
 
 orchestrator = _Orchestrator()
+
+
+def get_finished_tasks_ids(pipeline_run_id: int, task_ids: Optional[list[str]] = None):
+    tasks_status: dict[str, bool] = {}
+
+    for r in get_task_runs_for_pipeline_run(pipeline_run_id, task_ids):
+        if tasks_status.get(r.task_id) is not False:
+            tasks_status[r.task_id] = r.status in FINISHED_STATUS
+
+    finished_tasks = [task_id for task_id, finished in tasks_status.items() if finished]
+
+    return finished_tasks
 
 
 async def run_pipeline_now(

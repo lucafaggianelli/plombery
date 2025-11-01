@@ -1,12 +1,12 @@
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  NoSymbolIcon,
+  ClockIcon,
   StopCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline'
 import { Color } from '@tremor/react'
-import { format, addMinutes } from 'date-fns'
+import { format, addMinutes, intervalToDuration } from 'date-fns'
 
 import { PipelineRunStatus, Task } from './types'
 import { RunningIcon } from './components/RunningIcon'
@@ -23,7 +23,7 @@ export const STATUS_COLORS: Record<ExtendedStatus, Color> = {
 }
 
 export const STATUS_ICONS: Record<ExtendedStatus, React.ElementType<any>> = {
-  pending: NoSymbolIcon,
+  pending: ClockIcon,
   completed: CheckCircleIcon,
   failed: XCircleIcon,
   cancelled: StopCircleIcon,
@@ -73,3 +73,18 @@ export const formatDate = (date: Date) => format(date, 'd MMM yyyy')
 const numberFormatter = new Intl.NumberFormat()
 
 export const formatNumber = (value: number) => numberFormatter.format(value)
+
+export const formatDuration = (durationMs: number) => {
+  const parts = intervalToDuration({ start: 0, end: durationMs })
+  const ms = durationMs % 1000
+
+  return [
+    parts.hours && `${parts.hours}h`,
+    (parts.minutes || parts.hours) && `${parts.minutes || 0}m`,
+    (parts.seconds || parts.minutes || parts.hours) &&
+      `${(parts.seconds || 0).toString().padStart(2, '0')}s`,
+    ms && `${(ms || 0).toFixed().padStart(3, '0')}ms`,
+  ]
+    .filter(Boolean)
+    .join(' ')
+}

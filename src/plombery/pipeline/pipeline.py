@@ -3,7 +3,7 @@ from typing import Any, Optional, Type
 from pydantic import BaseModel, Field, model_validator
 
 from plombery.orchestrator.dag import is_graph_acyclic
-from .task import Task
+from .tasks import Task
 from .trigger import Trigger
 from ._utils import prettify_name
 

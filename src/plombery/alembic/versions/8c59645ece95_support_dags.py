@@ -1,8 +1,8 @@
 """support dags
 
-Revision ID: 31fec9d2c5ba
+Revision ID: 8c59645ece95
 Revises: c2a3cb9f639e
-Create Date: 2025-10-31 21:06:24.047306
+Create Date: 2025-11-01 12:21:50.793835
 
 """
 
@@ -14,7 +14,7 @@ from sqlalchemy.dialects import sqlite
 import plombery.database.type_helpers
 
 # revision identifiers, used by Alembic.
-revision: str = "31fec9d2c5ba"
+revision: str = "8c59645ece95"
 down_revision: Union[str, Sequence[str], None] = "c2a3cb9f639e"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -47,6 +47,12 @@ def upgrade() -> None:
         sa.Column("duration", sa.Float(), nullable=True),
         sa.Column("context", sa.JSON(), nullable=True),
         sa.Column("task_output_id", sa.String(), nullable=True),
+        sa.Column("map_index", sa.Integer(), nullable=True),
+        sa.Column("parent_task_run_id", sa.String(length=36), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["parent_task_run_id"],
+            ["task_runs.id"],
+        ),
         sa.ForeignKeyConstraint(
             ["pipeline_run_id"],
             ["pipeline_runs.id"],
@@ -58,9 +64,15 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
-        "idx_taskrun_pipeline", "task_runs", ["pipeline_run_id", "task_id"], unique=True
+        "idx_taskrun_pipeline",
+        "task_runs",
+        ["pipeline_run_id", "task_id", "map_index"],
+        unique=True,
     )
     op.create_index("idx_taskrun_status", "task_runs", ["status"], unique=False)
+    op.create_index(
+        op.f("ix_task_runs_map_index"), "task_runs", ["map_index"], unique=False
+    )
     op.add_column(
         "pipeline_runs",
         sa.Column(
@@ -80,6 +92,7 @@ def downgrade() -> None:
     op.add_column("pipeline_runs", sa.Column("tasks_run", sqlite.JSON(), nullable=True))
     op.drop_index("idx_pipeline_status", table_name="pipeline_runs")
     op.drop_column("pipeline_runs", "end_time")
+    op.drop_index(op.f("ix_task_runs_map_index"), table_name="task_runs")
     op.drop_index("idx_taskrun_status", table_name="task_runs")
     op.drop_index("idx_taskrun_pipeline", table_name="task_runs")
     op.drop_table("task_runs")

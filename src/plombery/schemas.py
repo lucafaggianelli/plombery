@@ -20,6 +20,14 @@ class PipelineRunStatus(str, Enum):
         ]
 
 
+ACTIVE_STATUS = [PipelineRunStatus.PENDING, PipelineRunStatus.RUNNING]
+FINISHED_STATUS = [
+    PipelineRunStatus.COMPLETED,
+    PipelineRunStatus.FAILED,
+    PipelineRunStatus.CANCELLED,
+]
+
+
 class TaskOutputData(BaseModel):
     """
     The output of a task.
@@ -37,7 +45,7 @@ class TaskRun(BaseModel):
     end_time: Optional[datetime] = None
     duration: Optional[NonNegativeFloat] = 0
     """Task duration in milliseconds"""
-    context: dict
+    context: Optional[dict]
     """True if the task generated an output"""
     status: Optional[PipelineRunStatus] = PipelineRunStatus.PENDING
     task_id: str

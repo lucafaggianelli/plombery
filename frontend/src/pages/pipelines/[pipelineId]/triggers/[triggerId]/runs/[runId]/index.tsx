@@ -23,7 +23,13 @@ import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun } from '@/repository'
 import { socket } from '@/socket'
 import { Trigger } from '@/types'
-import { TASKS_COLORS, formatDate, formatDateTime, formatTime } from '@/utils'
+import {
+  TASKS_COLORS,
+  formatDate,
+  formatDateTime,
+  formatDuration,
+  formatTime,
+} from '@/utils'
 import DagViewer from '@/components/DagViewer'
 
 const RunViewPage = () => {
@@ -102,13 +108,12 @@ const RunViewPage = () => {
           </Flex>
 
           <Flex className="justify-start items-baseline space-x-3 truncate">
-            <Metric>
+            <Metric className="tabular-nums">
               {run.status !== 'running' ? (
-                (run.duration / 1000).toFixed(2)
+                formatDuration(run.duration)
               ) : (
                 <Timer startTime={run.start_time} />
-              )}{' '}
-              s
+              )}
             </Metric>
           </Flex>
 
@@ -143,7 +148,46 @@ const RunViewPage = () => {
         </Card>
 
         <Card className="col-span-2 p-0">
-          <DagViewer pipeline={pipeline} run={run} />
+          <DagViewer pipeline={pipeline} run={run}>
+            <Card className="p-3">
+              <Flex className="items-start">
+                <Text className="text-xs">Duration</Text>
+                <StatusBadge status={run.status} />
+              </Flex>
+
+              <Flex className="justify-start items-baseline space-x-3 truncate">
+                <Metric className="tabular-nums text-lg">
+                  {run.status !== 'running' ? (
+                    formatDuration(run.duration)
+                  ) : (
+                    <Timer startTime={run.start_time} />
+                  )}
+                </Metric>
+              </Flex>
+
+              <Flex className="items-start mt-2 gap-4">
+                <div>
+                  <Text>
+                    <Bold title={formatDateTime(run.start_time, true)}>
+                      {formatTime(run.start_time)}
+                    </Bold>
+                  </Text>
+                  <Text className="mt-1">{formatDate(run.start_time)}</Text>
+                </div>
+
+                <div className="text-right">
+                  <Text>
+                    <Bold title={formatDateTime(runEndTime, true)}>
+                      {formatTime(runEndTime)}
+                    </Bold>
+                  </Text>
+                  {!isSameDay(run.start_time, runEndTime) && (
+                    <Text>{formatDate(runEndTime)}</Text>
+                  )}
+                </div>
+              </Flex>
+            </Card>
+          </DagViewer>
         </Card>
       </Grid>
 

@@ -32,6 +32,8 @@ export interface Task {
   description: string
   upstream_task_ids: string[]
   downstream_task_ids: string[]
+  mapping_mode: 'fan_out' | 'chained_fan_out' | null
+  map_upstream_id: string | null
 }
 
 export class Pipeline {

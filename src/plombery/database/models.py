@@ -65,6 +65,7 @@ class TaskRun(Base):
     # Relationship back to the PipelineRun
     pipeline_run: Mapped[PipelineRun] = relationship(back_populates="task_runs")
 
+    # Task output
     task_output_id: Mapped[Optional[str]] = mapped_column(
         String, ForeignKey("task_run_outputs.id"), nullable=True
     )
@@ -72,8 +73,30 @@ class TaskRun(Base):
         back_populates="task_run", uselist=False
     )
 
+    # Mapping or Fan-in/out
+
+    # Index for dynamic mapping (NULL if not a mapped task)
+    map_index: Mapped[Optional[int]] = mapped_column(nullable=True, index=True)
+
+    # The ID of the specific TaskRun instance that generated the input list/item.
+    parent_task_run_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("task_runs.id"), nullable=True
+    )
+    parent_task_run: Mapped[Optional["TaskRun"]] = relationship(
+        back_populates="mapped_task_runs", remote_side=[id]
+    )
+    mapped_task_runs: Mapped[list["TaskRun"]] = relationship(
+        back_populates="parent_task_run"
+    )
+
     __table_args__ = (
-        Index("idx_taskrun_pipeline", "pipeline_run_id", "task_id", unique=True),
+        Index(
+            "idx_taskrun_pipeline",
+            "pipeline_run_id",
+            "task_id",
+            "map_index",
+            unique=True,
+        ),
         Index("idx_taskrun_status", "status"),
     )
 

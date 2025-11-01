@@ -40,6 +40,8 @@ class TaskRunCreate(BaseModel):
     status: PipelineRunStatus
     start_time: Optional[datetime] = None
     context: Optional[dict[str, Any]] = None
+    parent_task_run_id: Optional[str] = None
+    map_index: Optional[int] = None
 
 
 class TaskRunUpdate(BaseModel):

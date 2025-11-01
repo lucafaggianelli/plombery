@@ -1,40 +1,56 @@
 import Dagre from '@dagrejs/dagre'
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useEffect, PropsWithChildren } from 'react'
 import {
   ReactFlow,
   applyNodeChanges,
   applyEdgeChanges,
-  addEdge,
   Node,
   Edge,
   Background,
   Handle,
   Position,
+  NodeProps,
+  OnNodesChange,
+  OnEdgesChange,
+  Controls,
+  Panel,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
 import { Pipeline, PipelineRun, Task, TaskRun } from '@/types'
 import TaskRunStatusIcon from './TaskRunStatusIcon'
 
-interface TaskWithRun extends Record<string, any> {
+interface Props extends PropsWithChildren {
+  pipeline: Pipeline
+  run: PipelineRun
+}
+
+type TaskWithRun = {
   task: Task
   run?: TaskRun
 }
 
-export function TaskNode({ data }: Node<TaskWithRun>) {
+export function TaskNode({ data }: NodeProps<Node<TaskWithRun, 'task'>>) {
   return (
-    <div className="bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle">
-      <div className="flex gap-2 items-center">
-        <TaskRunStatusIcon status={data.run?.status} />
-        <div className="text-xs">{data.task.name}</div>
+    <div className="relative">
+      <div className="bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle">
+        <div className="flex gap-2 items-center">
+          <TaskRunStatusIcon status={data.run?.status} />
+          <div className="text-xs">{data.task.name}</div>
+        </div>
+        {data.task.downstream_task_ids.length > 0 && (
+          <Handle type="source" position={Position.Right} />
+        )}
+        {data.task.upstream_task_ids.length > 0 && (
+          <Handle type="target" position={Position.Left} />
+        )}
       </div>
 
-      {data.task.downstream_task_ids.length > 0 && (
-        <Handle type="source" position={Position.Right} />
-      )}
-
-      {data.task.upstream_task_ids.length > 0 && (
-        <Handle type="target" position={Position.Left} />
+      {data.task.mapping_mode === 'fan_out' && (
+        <>
+          <div className="absolute -z-10 size-full scale-75 -bottom-4 bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle" />
+          <div className="absolute -z-10 size-full scale-90 -bottom-2 bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle" />
+        </>
       )}
     </div>
   )
@@ -73,13 +89,7 @@ const getLayoutedElements = (
   }
 }
 
-export default function DagViewer({
-  pipeline,
-  run,
-}: {
-  pipeline: Pipeline
-  run: PipelineRun
-}) {
+export default function DagViewer({ pipeline, run, children }: Props) {
   useEffect(() => {
     const taskRunsMap = Object.fromEntries(
       run.task_runs.map((taskRun) => [taskRun.task_id, taskRun])
@@ -115,18 +125,14 @@ export default function DagViewer({
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
 
-  const onNodesChange = useCallback(
+  const onNodesChange: OnNodesChange = useCallback(
     (changes) =>
       setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
     []
   )
-  const onEdgesChange = useCallback(
+  const onEdgesChange: OnEdgesChange = useCallback(
     (changes) =>
       setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot)),
-    []
-  )
-  const onConnect = useCallback(
-    (params) => setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot)),
     []
   )
 
@@ -137,7 +143,7 @@ export default function DagViewer({
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
+        connectOnClick={false}
         nodeTypes={{
           task: TaskNode,
         }}
@@ -145,6 +151,8 @@ export default function DagViewer({
         colorMode="system"
       >
         <Background />
+        <Controls />
+        <Panel position="top-right">{children}</Panel>
       </ReactFlow>
     </div>
   )
