@@ -27,6 +27,7 @@ from plombery.orchestrator.executor import (
 from plombery.pipeline._utils import get_job_id
 from plombery.pipeline.task import Task
 from plombery.schemas import PipelineRunStatus
+from plombery.websocket import sio
 
 
 class _Orchestrator:
@@ -90,11 +91,21 @@ class _Orchestrator:
                 resolved_context={"params": initial_params},
             )
 
-    def handle_task_completion(self, pipeline_run: PipelineRun, completed_task_id: str):
+    async def handle_task_completion(
+        self, pipeline_run: PipelineRun, completed_task_id: str
+    ):
         """
         Checks dependencies for downstream tasks and schedules them if ready.
         Also checks if the entire pipeline run is complete.
         """
+        await sio.emit(
+            "run-update",
+            dict(
+                pipeline=pipeline_run.pipeline_id,
+                trigger=pipeline_run.trigger_id,
+            ),
+        )
+
         pipeline = self.get_pipeline(pipeline_run.pipeline_id)
         if not pipeline:
             raise ValueError(f"Pipeline {pipeline_run.pipeline_id} not found")

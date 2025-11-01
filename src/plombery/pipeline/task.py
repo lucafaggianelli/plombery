@@ -13,7 +13,7 @@ class Task(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
 
-    # downstream_tasks: list["Task"] = list()
+    downstream_task_ids: set["str"] = set()
     upstream_task_ids: set[str] = set()
 
     @model_validator(mode="before")
@@ -46,7 +46,7 @@ class Task(BaseModel):
 
     def _set_downstream(self, task: "Task"):
         # A runs before B: A is UPSTREAM of B; B is DOWNSTREAM of A
-        # self.downstream_tasks.append(task)
+        self.downstream_task_ids.add(task.id)
         task.upstream_task_ids.add(self.id)
 
     # Optional: Implement the reverse operator << (left shift) via __lshift__

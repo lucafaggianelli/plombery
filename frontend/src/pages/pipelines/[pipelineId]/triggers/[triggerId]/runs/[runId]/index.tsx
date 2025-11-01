@@ -24,6 +24,7 @@ import { getPipeline, getRun } from '@/repository'
 import { socket } from '@/socket'
 import { Trigger } from '@/types'
 import { TASKS_COLORS, formatDate, formatDateTime, formatTime } from '@/utils'
+import DagViewer from '@/components/DagViewer'
 
 const RunViewPage = () => {
   const queryClient = useQueryClient()
@@ -139,6 +140,10 @@ const RunViewPage = () => {
               )}
             </div>
           </Flex>
+        </Card>
+
+        <Card className="col-span-2 p-0">
+          <DagViewer pipeline={pipeline} run={run} />
         </Card>
       </Grid>
 

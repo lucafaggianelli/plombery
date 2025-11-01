@@ -30,6 +30,8 @@ export interface Task {
   id: string
   name: string
   description: string
+  upstream_task_ids: string[]
+  downstream_task_ids: string[]
 }
 
 export class Pipeline {

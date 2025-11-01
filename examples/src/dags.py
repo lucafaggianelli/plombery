@@ -14,8 +14,9 @@ class PipelineInputParams(BaseModel):
 
 
 @task
-def fetch_data(params: PipelineInputParams) -> Dict[str, Any]:
+async def fetch_data(params: PipelineInputParams) -> Dict[str, Any]:
     """Task A: The start node."""
+    await sleep(10)
     user_data = {
         "user_list": [101, 102, 103],
         "fetch_timestamp": "2025-10-31T10:00:00Z",
@@ -42,7 +43,7 @@ def process_list(context: TaskRuntimeContext) -> Dict[str, Any]:
 @task
 async def parallel_task(context: TaskRuntimeContext):
     get_logger().info("Starting parallel task")
-    await sleep(3)
+    await sleep(10)
     get_logger().info("Done")
 
 
@@ -58,6 +59,7 @@ def report_success():
 # NOTE: Executing this dependency line populates the upstream_task_ids property
 # of the task objects within the TaskWrapper instances.
 fetch_data >> [process_list, parallel_task] >> report_success
+process_list >> report_success
 
 example_dag_pipeline = register_pipeline(
     id="etl_user_processor_decorated",

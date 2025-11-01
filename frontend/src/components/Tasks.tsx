@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import {
-  Bold,
   Button,
   Card,
   Flex,
-  Icon,
   List,
   ListItem,
   Subtitle,
@@ -14,8 +12,9 @@ import {
 import { TableCellsIcon } from '@heroicons/react/24/outline'
 
 import { Pipeline, PipelineRun } from '@/types'
-import { STATUS_COLORS, STATUS_ICONS, getTasksColors } from '@/utils'
+import { getTasksColors } from '@/utils'
 import DataViewerDialog from './DataViewerDialog'
+import TaskRunStatusIcon from './TaskRunStatusIcon'
 
 interface Props {
   pipeline: Pipeline
@@ -36,7 +35,7 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
         onClose={() => setViewDataDialog(undefined)}
       />
 
-      <Title>Tasks</Title>
+      <Title className="mb-4">Tasks</Title>
 
       <List>
         {pipeline.tasks.map((task, i) => {
@@ -44,19 +43,8 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
 
           return (
             <ListItem key={task.id} className="space-x-4">
-              {run.task_runs && run.task_runs[i] ? (
-                <Icon
-                  variant="light"
-                  icon={STATUS_ICONS[run.task_runs[i].status]}
-                  color={STATUS_COLORS[run.task_runs[i].status]}
-                />
-              ) : (
-                <Icon
-                  variant="light"
-                  icon={STATUS_ICONS.pending}
-                  color={STATUS_COLORS.pending}
-                />
-              )}
+              <TaskRunStatusIcon status={taskRun?.status} />
+
               <div className="truncate flex-grow">
                 <Flex className="justify-start">
                   <div

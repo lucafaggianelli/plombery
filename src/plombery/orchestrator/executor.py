@@ -102,7 +102,6 @@ async def execute_task_instance(
     """
     logger = get_logger()
 
-    # 1. Retrieve the TaskRun record (for context and status updates)
     task_run = get_task_run_by_id_and_run_id(task.id, pipeline_run.id)
     if not task_run:
         raise ValueError(f"TaskRun {pipeline_run.id}.{task.id} not found")
@@ -111,6 +110,21 @@ async def execute_task_instance(
 
     task_start_time = utcnow()
     task_run_status = PipelineRunStatus.FAILED  # Assume failure until success
+
+    update_task_run(
+        task_run.id,
+        TaskRunUpdate(
+            status=PipelineRunStatus.RUNNING,
+        ),
+    )
+
+    await sio.emit(
+        "run-update",
+        dict(
+            pipeline=pipeline_run.pipeline_id,
+            trigger=pipeline_run.trigger_id,
+        ),
+    )
 
     # Prepare arguments using the TaskRun's context/inputs determined by the Orchestrator
     # The Orchestrator should have resolved all upstream tasks' data into task_run.context
@@ -153,10 +167,18 @@ async def execute_task_instance(
             ),
         )
 
+        await sio.emit(
+            "run-update",
+            dict(
+                pipeline=pipeline_run.pipeline_id,
+                trigger=pipeline_run.trigger_id,
+            ),
+        )
+
         # Avoid circular import
         from plombery.orchestrator import orchestrator
 
-        orchestrator.handle_task_completion(pipeline_run, task.id)
+        await orchestrator.handle_task_completion(pipeline_run, task.id)
 
 
 async def run(
