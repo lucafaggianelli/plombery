@@ -29,7 +29,7 @@ const RunsTasksList: React.FC<Props> = ({ pipeline, run }) => {
   return (
     <Card>
       <DataViewerDialog
-        runId={run.id}
+        runId={'' + run.id}
         taskId={viewDataDialog || ''}
         open={!!viewDataDialog}
         onClose={() => setViewDataDialog(undefined)}
