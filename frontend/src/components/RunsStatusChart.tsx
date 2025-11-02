@@ -72,9 +72,9 @@ const RunsStatusChart: React.FC<Props> = ({ query, subject }) => {
             data={runs.map((run) => ({
               key: run.id,
               color: STATUS_COLORS[run.status],
-              tooltip: `#${run.id} - ${run.start_time.toLocaleString()}: ${
-                run.status
-              }`,
+              tooltip: `#${run.id} - ${
+                run.start_time ? run.start_time.toLocaleString() : ''
+              }: ${run.status}`,
             }))}
           />
         </>

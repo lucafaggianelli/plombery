@@ -131,21 +131,31 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
                   </Link>
                 </TableCell>
               )}
-              <TableCell title={formatDateTime(run.start_time, true)}>
+              <TableCell
+                title={
+                  run.start_time
+                    ? formatDateTime(run.start_time, true)
+                    : undefined
+                }
+              >
                 <Text>
-                  {differenceInDays(new Date(), run.start_time) <= 1
-                    ? formatDistanceToNow(run.start_time, {
-                        addSuffix: true,
-                        includeSeconds: true,
-                      })
-                    : formatDateTime(run.start_time)}
+                  {run.start_time
+                    ? differenceInDays(new Date(), run.start_time) <= 1
+                      ? formatDistanceToNow(run.start_time, {
+                          addSuffix: true,
+                          includeSeconds: true,
+                        })
+                      : formatDateTime(run.start_time)
+                    : '-'}
                 </Text>
               </TableCell>
               <TableCell className="text-right">
                 {run.status !== 'running' ? (
                   (run.duration / 1000).toFixed(2)
-                ) : (
+                ) : run.start_time ? (
                   <Timer startTime={run.start_time} />
+                ) : (
+                  '-'
                 )}{' '}
                 s
               </TableCell>
