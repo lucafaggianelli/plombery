@@ -42,6 +42,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
             "message": "Executing pipeline `pipeline1` #1 via trigger `_manual`",
             "pipeline": "pipeline1",
             "task": None,
+            "map_index": None,
         },
         {
             "level": "INFO",
@@ -49,6 +50,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
             "loggerName": "plombery.1",
             "pipeline": "pipeline1",
             "task": None,
+            "map_index": None,
         },
         {
             "level": "DEBUG",
@@ -56,6 +58,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
             "loggerName": "plombery.1-pipe_1_task_1",
             "pipeline": "pipeline1",
             "task": "pipe_1_task_1",
+            "map_index": None,
         },
         {
             "level": "INFO",
@@ -63,6 +66,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
             "loggerName": "plombery.1-pipe_1_task_1",
             "pipeline": "pipeline1",
             "task": "pipe_1_task_1",
+            "map_index": None,
         },
         {
             "level": "WARNING",
@@ -70,6 +74,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
             "loggerName": "plombery.1-pipe_1_task_1",
             "pipeline": "pipeline1",
             "task": "pipe_1_task_1",
+            "map_index": None,
         },
         {
             "level": "ERROR",
@@ -77,6 +82,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
             "loggerName": "plombery.1-pipe_1_task_1",
             "pipeline": "pipeline1",
             "task": "pipe_1_task_1",
+            "map_index": None,
         },
         {
             "level": "CRITICAL",
@@ -84,5 +90,6 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
             "loggerName": "plombery.1-pipe_1_task_1",
             "pipeline": "pipeline1",
             "task": "pipe_1_task_1",
+            "map_index": None,
         },
     ]

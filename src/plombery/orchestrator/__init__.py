@@ -23,11 +23,11 @@ from plombery.orchestrator.executor import (
     on_pipeline_status_changed,
     run,
     Trigger,
-    utcnow,
 )
 from plombery.pipeline._utils import get_job_id
 from plombery.pipeline.tasks import MappingMode, Task
 from plombery.schemas import FINISHED_STATUS, PipelineRunStatus
+from plombery.utils import utcnow
 from plombery.websocket import sio
 
 

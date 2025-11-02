@@ -1,7 +1,6 @@
 import asyncio
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional
-from datetime import datetime, timezone
 import inspect
 
 from pydantic import BaseModel
@@ -11,7 +10,7 @@ from plombery.exceptions import InvalidDataPath
 from plombery.logger import close_logger, get_logger
 from plombery.notifications import notification_manager
 from plombery.orchestrator.context import Context
-from plombery.utils import run_all_coroutines
+from plombery.utils import run_all_coroutines, utcnow
 from plombery.websocket import sio
 from plombery.database.models import PipelineRun, TaskRun
 from plombery.database.repository import (
@@ -35,10 +34,6 @@ from plombery.pipeline.context import (
     task_run_context,
 )
 from plombery.schemas import PipelineRunStatus
-
-
-def utcnow():
-    return datetime.now(tz=timezone.utc)
 
 
 def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):

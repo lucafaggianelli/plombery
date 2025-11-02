@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timezone
 from typing import Coroutine, List
 
 
@@ -19,3 +20,7 @@ def run_all_coroutines(coroutines: List[Coroutine]):
 
         tasks.add(task)
         task.add_done_callback(_on_task_done)
+
+
+def utcnow():
+    return datetime.now(tz=timezone.utc)

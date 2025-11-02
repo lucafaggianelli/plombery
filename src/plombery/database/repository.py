@@ -5,6 +5,7 @@ from sqlalchemy import update
 from sqlalchemy.orm import selectinload
 
 from plombery.schemas import ACTIVE_STATUS, FINISHED_STATUS, PipelineRunStatus
+from plombery.utils import utcnow
 from .base import SessionLocal
 from .schemas import (
     PipelineRunCreate,
@@ -103,7 +104,7 @@ def create_task_run(task_run: TaskRunCreate) -> models.TaskRun:
     with SessionLocal() as session:
         db_task_run = models.TaskRun(
             **task_run.model_dump(exclude_none=True),
-            start_time=task_run.start_time or datetime.now(),
+            start_time=task_run.start_time or utcnow(),
         )
         session.add(db_task_run)
         session.commit()
