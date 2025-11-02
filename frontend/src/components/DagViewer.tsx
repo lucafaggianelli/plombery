@@ -74,8 +74,11 @@ export function TaskNode({
           <Handle type="source" position={Position.Right} />
         )}
 
-        {/* The target handle always exists as there's always a trigger that connects to it */}
-        <Handle type="target" position={Position.Left} />
+        {/* The target handle exists also if there's a trigger to show (in the run page) */}
+        {((data.runs?.length ?? 0) > 0 ||
+          data.task.upstream_task_ids.length > 0) && (
+          <Handle type="target" position={Position.Left} />
+        )}
 
         {numberInstances > 1 && (
           <div className="absolute -top-2 -left-2 text-xs flex size-5 items-center justify-center rounded-full bg-sky-800 text-white">

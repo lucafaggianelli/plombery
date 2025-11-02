@@ -12,6 +12,7 @@ import { socket } from '@/socket'
 import { Trigger } from '@/types'
 import DagViewer from '@/components/DagViewer'
 import DagDetailsPanel from '@/components/DagDetailsPanel'
+import ManualRunDialog from '@/components/ManualRunDialog'
 
 const RunViewPage = () => {
   const queryClient = useQueryClient()
@@ -63,10 +64,14 @@ const RunViewPage = () => {
   return (
     <PageLayout
       header={
-        <>
-          <Title>Run #{runId}</Title>
-          <Breadcrumbs pipeline={pipeline} trigger={trigger} run={run} />
-        </>
+        <div className="flex gap-4 items-start justify-between">
+          <div>
+            <Title>Run #{runId}</Title>
+            <Breadcrumbs pipeline={pipeline} trigger={trigger} run={run} />
+          </div>
+
+          <ManualRunDialog pipeline={pipeline} trigger={trigger} />
+        </div>
       }
     >
       <Grid numItemsMd={2} className="gap-6 mt-6">

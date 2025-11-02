@@ -65,8 +65,8 @@ export class Pipeline {
 
 export interface TaskRun {
   duration: number
-  start_time: Date
-  end_time: Date
+  start_time?: Date
+  end_time?: Date
   id: string
   context: any
   status: PipelineRunStatus
@@ -81,7 +81,8 @@ export interface PipelineRun {
   status: PipelineRunStatus
   pipeline_id: string
   trigger_id: string
-  start_time: Date
+  start_time?: Date
+  end_time?: Date
   duration: number
   task_runs: TaskRun[]
   input_params: Record<string, any>

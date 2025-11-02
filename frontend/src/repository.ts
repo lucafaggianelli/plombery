@@ -188,7 +188,8 @@ export const listRuns = (
     })
 
     runs.forEach((run) => {
-      run.start_time = new Date(run.start_time)
+      run.start_time = run.start_time ? new Date(run.start_time) : undefined
+      run.end_time = run.end_time ? new Date(run.end_time) : undefined
     })
 
     return runs as PipelineRun[]
@@ -208,8 +209,12 @@ export const getRun = (
     run.end_time = new Date(run.end_time)
 
     run.task_runs.forEach((taskRun: any) => {
-      taskRun.start_time = new Date(taskRun.start_time)
-      taskRun.end_time = new Date(taskRun.end_time)
+      taskRun.start_time = taskRun.start_time
+        ? new Date(taskRun.start_time)
+        : undefined
+      taskRun.end_time = taskRun.end_time
+        ? new Date(taskRun.end_time)
+        : undefined
     })
 
     return run as PipelineRun

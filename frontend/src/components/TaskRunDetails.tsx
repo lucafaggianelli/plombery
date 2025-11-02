@@ -19,11 +19,10 @@ export default function TaskRunDetails({ pipeline, runs }: Props) {
 
   const run = runs[0]
 
-  const runEndTime = addMilliseconds(run.start_time, run.duration)
   const mapping_index = runs.length > 1 ? `[${run.map_index}]` : ''
 
   return (
-    <Card className="p-3">
+    <Card className="p-3 max-w-[350px]">
       <DataViewerDialog
         runId={run.id}
         taskId={viewDataDialog || ''}
@@ -31,59 +30,64 @@ export default function TaskRunDetails({ pipeline, runs }: Props) {
         onClose={() => setViewDataDialog(undefined)}
       />
 
-      <Title>
-        {run.task_id}
-        {mapping_index}
-      </Title>
-
-      <div className="flex items-start">
-        <div className="text-xs">Duration</div>
+      <header className="flex items-start gap-4 justify-between">
+        <Title className="mb-4">
+          {run.task_id}
+          {mapping_index}
+        </Title>
         <StatusBadge status={run.status} />
-      </div>
+      </header>
 
-      <div className="flex justify-start items-baseline space-x-3 truncate">
+      <div>
+        <div className="text-xs">Duration</div>
         <Metric className="tabular-nums text-lg">
           {run.status !== 'running' ? (
             formatDuration(run.duration)
-          ) : (
+          ) : run.start_time ? (
             <Timer startTime={run.start_time} />
+          ) : (
+            '-'
           )}
         </Metric>
       </div>
 
-      <div className="flex items-start mt-2 gap-4">
+      <div className="space-y-4 mt-4">
         <div>
-          <p
-            className="font-medium"
-            title={formatDateTime(run.start_time, true)}
-          >
-            {formatTime(run.start_time)}
-          </p>
+          <div className="text-xs">Started at</div>
 
-          <p className="mt-1">{formatDate(run.start_time)}</p>
+          <div className="flex gap-2 justify-between">
+            <p className="tabular-nums">
+              {run.start_time ? formatTime(run.start_time) : '-'}
+            </p>
+            <p>{run.end_time ? formatDate(run.end_time) : '-'}</p>
+          </div>
         </div>
 
-        <div className="text-right">
-          <p className="font-medium" title={formatDateTime(runEndTime, true)}>
-            {formatTime(runEndTime)}
+        <div>
+          <div className="text-xs">Finished at</div>
+
+          <p className="tabular-nums">
+            {run.end_time ? formatTime(run.end_time) : '-'}
           </p>
 
-          {!isSameDay(run.start_time, runEndTime) && (
-            <p>{formatDate(runEndTime)}</p>
-          )}
+          {run.start_time &&
+            run.end_time &&
+            !isSameDay(run.start_time, run.end_time) && (
+              <p>{formatDate(run.end_time)}</p>
+            )}
         </div>
       </div>
 
       {run?.task_output_id && (
         <Button
-          variant="light"
+          variant="secondary"
           color="indigo"
           size="xs"
           icon={TableCellsIcon}
-          tooltip="View task output data"
           onClick={() => setViewDataDialog(run.task_output_id)}
+          className="w-full mt-4"
         >
-          View data
+          View output data
         </Button>
       )}
     </Card>
