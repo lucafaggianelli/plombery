@@ -3,6 +3,7 @@ import json
 import pytest
 
 from plombery import _Plombery as Plombery
+from plombery.database.repository import get_pipeline_run
 from plombery.orchestrator import run_pipeline_now
 from plombery.orchestrator.data_storage import read_logs_file
 from .pipeline_1 import pipeline1
@@ -29,6 +30,9 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
 
     await sleep(1)
 
+    pipeline_run = get_pipeline_run(1)
+    task_run_id = pipeline_run.task_runs[0].id
+
     logs = get_parsed_logs(1)
 
     assert logs == [
@@ -41,7 +45,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
         },
         {
             "level": "INFO",
-            "message": "Executing task pipe_1_task_1",
+            "message": f"Executing task pipe_1_task_1 in pipeline pipeline1 (id={task_run_id})",
             "loggerName": "plombery.1",
             "pipeline": "pipeline1",
             "task": None,

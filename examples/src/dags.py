@@ -14,7 +14,7 @@ class PipelineInputParams(BaseModel):
 
 
 @task()
-async def fetch_data(params: PipelineInputParams) -> Dict[str, Any]:
+async def fetch_user_data(params: PipelineInputParams) -> Dict[str, Any]:
     """Task A: The start node."""
     await sleep(10)
     user_data = {
@@ -26,29 +26,37 @@ async def fetch_data(params: PipelineInputParams) -> Dict[str, Any]:
 
 
 @task
-async def process_list(context: TaskRuntimeContext) -> Dict[str, Any]:
+async def process_list(
+    fetch_user_data: list[int], context: TaskRuntimeContext
+) -> Dict[str, Any]:
     """Task B: Processes data from Task A."""
-    user_list: list[int] | None = context.get_output_data("fetch_data")
     await sleep(6)
 
-    processed_count = len(user_list)
+    processed_count = len(fetch_user_data)
     processed_result = {
         "status": "SUCCESS",
         "total_processed": processed_count,
-        "summary_data": [i * 2 for i in user_list],
+        "summary_data": [i * 2 for i in fetch_user_data],
     }
     get_logger().info("Processed some data")
     return processed_result
 
 
-@task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="fetch_data")
-async def parallel_task(context: TaskRuntimeContext):
+@task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="fetch_user_data")
+async def parallel_task(fetch_user_data: int, context: TaskRuntimeContext):
     """Task B: Processes data from Task A one at a time."""
-    user: int | None = context.get_output_data("fetch_data")
-
-    get_logger().info(f"Starting parallel task for user {user}")
+    get_logger().info(f"Starting parallel task for user {fetch_user_data}")
     await sleep(5)
+
+    # if fetch_user_data % 2 == 0:
+    #     raise ValueError("Decided to fail")
+
     get_logger().info("Done")
+
+
+@task(mapping_mode=MappingMode.CHAINED_FAN_OUT, map_upstream_id="parallel_task")
+async def finalize_user(parallel_task: int):
+    get_logger().info(f"Finalizing user {parallel_task}")
 
 
 @task
@@ -62,12 +70,14 @@ def report_success():
 
 # NOTE: Executing this dependency line populates the upstream_task_ids property
 # of the task objects within the TaskWrapper instances.
-fetch_data >> [process_list, parallel_task] >> report_success
+fetch_user_data >> [process_list, parallel_task]
 process_list >> report_success
+parallel_task >> finalize_user >> report_success
+
 
 example_dag_pipeline = register_pipeline(
     id="etl_user_processor_decorated",
     name="User Data Processor DAG (Decorated)",
     params=PipelineInputParams,
-    tasks=[fetch_data, process_list, report_success, parallel_task],
+    tasks=[fetch_user_data, process_list, report_success, parallel_task, finalize_user],
 )

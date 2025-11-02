@@ -51,11 +51,9 @@ class Task(BaseModel, Generic[P, R]):
 
         return data
 
-    # TODO Check later
-    # @model_validator(mode="after")
     def validate_mapping(self):
         # Check for required map_upstream_id when mapping_mode is active
-        if self.mapping_mode is not None and not self.map_upstream_id:
+        if self.mapping_mode and not self.map_upstream_id:
             raise ValueError(
                 f"Task {self.id} with mapping mode must specify 'map_upstream_id'."
             )

@@ -54,6 +54,9 @@ class Pipeline(BaseModel):
                 f"Pipeline '{self.id}' contains a cyclic dependency and cannot run."
             )
 
+        for task in self.tasks:
+            task.validate_mapping()
+
         return self
 
     def get_task_by_id(self, task_id: str):

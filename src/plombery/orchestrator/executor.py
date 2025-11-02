@@ -1,5 +1,5 @@
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional
 from datetime import datetime, timezone
 import inspect
@@ -228,9 +228,9 @@ async def run(
 
 @dataclass
 class TaskFunctionSignature:
-    has_positional_args: bool = False
     has_params_arg: bool = False
     has_context_arg: bool = False
+    input_arg_names: list[str] = field(default_factory=list)
 
 
 def check_task_signature(func: Callable) -> TaskFunctionSignature:
@@ -248,24 +248,23 @@ def check_task_signature(func: Callable) -> TaskFunctionSignature:
     result = TaskFunctionSignature()
 
     for name, parameter in inspect.signature(func).parameters.items():
-        # Check for positional data inputs (old sequential flow, may be obsolete)
-        if (
-            parameter.kind == inspect.Parameter.POSITIONAL_ONLY
-            or parameter.kind == inspect.Parameter.VAR_POSITIONAL
-        ) and name != "params":
-            result.has_positional_args = True
+        # Check for special arguments
+        if name == "params":
+            result.has_params_arg = True
+        elif name == "context":
+            result.has_context_arg = True
 
-        # Check for keyword arguments
-        if (
-            parameter.VAR_KEYWORD
-            or parameter.KEYWORD_ONLY
-            or parameter.POSITIONAL_OR_KEYWORD
-        ):
-
-            if name == "params":
-                result.has_params_arg = True
-            elif name == "context":  # Detect the new context injection point
-                result.has_context_arg = True
+        # Check for input data arguments (any other argument)
+        else:
+            # We treat all non-special arguments as input data to be resolved
+            # from upstream tasks, enforcing name-based resolution.
+            # We also exclude VAR_KEYWORD and VAR_POSITIONAL (like **kwargs or *args)
+            # since they don't map to a single upstream task.
+            if parameter.kind not in (
+                inspect.Parameter.VAR_KEYWORD,
+                inspect.Parameter.VAR_POSITIONAL,
+            ):
+                result.input_arg_names.append(name)
 
     return result
 
@@ -292,19 +291,27 @@ async def _execute_task(
 
     kwargs = {}
 
+    # Load the TaskRuns for all upstream dependencies
+    upstream_runs_metadata = get_task_runs_for_pipeline_run(
+        task_run.pipeline_run_id, task.upstream_task_ids
+    )
+
+    # Build the map of task_id -> TaskRun model instance
+    metadata_map = {run.task_id: run for run in upstream_runs_metadata}
+    runtime_context = TaskRuntimeContext(task_run, metadata_map)
+
+    # Iterate over arguments required by the function signature
+    for arg_name in result.input_arg_names:
+        # The context handles the mapping logic:
+        # - If mapped, resolves to single item if arg_name == map_upstream_id.
+        # - Otherwise, resolves to the full output of the upstream task named arg_name.
+        input_data = runtime_context.get_output_data(task_id=arg_name)
+        kwargs[arg_name] = input_data
+
     if pipeline_params and result.has_params_arg:
         kwargs["params"] = pipeline_params
 
     if result.has_context_arg:
-        # Load the TaskRuns for all upstream dependencies
-        upstream_runs_metadata = get_task_runs_for_pipeline_run(
-            task_run.pipeline_run_id, task.upstream_task_ids
-        )
-
-        # Build the map of task_id -> TaskRun model instance
-        metadata_map = {run.task_id: run for run in upstream_runs_metadata}
-
-        runtime_context = TaskRuntimeContext(task_run, metadata_map)
         kwargs["context"] = runtime_context
 
     if asyncio.iscoroutinefunction(task.run):
