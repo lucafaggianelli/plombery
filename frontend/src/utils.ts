@@ -2,8 +2,8 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   ClockIcon,
-  StopCircleIcon,
   XCircleIcon,
+  NoSymbolIcon,
 } from '@heroicons/react/24/outline'
 import { Color } from '@tremor/react'
 import { format, addMinutes, intervalToDuration } from 'date-fns'
@@ -26,7 +26,7 @@ export const STATUS_ICONS: Record<ExtendedStatus, React.ElementType<any>> = {
   pending: ClockIcon,
   completed: CheckCircleIcon,
   failed: XCircleIcon,
-  cancelled: StopCircleIcon,
+  cancelled: NoSymbolIcon,
   running: RunningIcon,
   warning: ExclamationTriangleIcon,
 }

@@ -13,6 +13,7 @@ from plombery.database.repository import (
     create_task_run,
     get_task_run_output_by_id,
     get_task_runs_for_pipeline_run,
+    mark_tasks_as_skipped,
 )
 from plombery.database.schemas import PipelineRunCreate, TaskRunCreate
 from plombery.orchestrator.dag import is_mappable_list
@@ -141,8 +142,7 @@ class _Orchestrator:
             if task_run.task_id in task.upstream_task_ids
         ]
 
-        skipped_tasks = []
-        any_new_runs_scheduled = False
+        skipped_tasks: list[Task] = []
 
         # Process Downstream Tasks
         for downstream_task_id in downstream_task_ids:
@@ -173,8 +173,9 @@ class _Orchestrator:
                         )
 
                     if not output_data:
-                        # Empty list
-                        skipped_tasks.append(downstream_task.id)
+                        # The upstream task returned an empty list so
+                        # the downstream mapped tasks cannot instantiated
+                        skipped_tasks.append(downstream_task)
                         continue
 
                     # Schedule a new run for each item in the output list.
@@ -186,7 +187,6 @@ class _Orchestrator:
                             parent_task_run_id=task_run.task_id,
                             map_index=index,
                         )
-                        any_new_runs_scheduled = True
 
                 # Case B: Chained Fan-Out (Inheriting the Index)
                 # The completed task was fan-out from an array (Case A) so
@@ -207,7 +207,6 @@ class _Orchestrator:
                         parent_task_run_id=task_run.task_id,
                         map_index=instance_map_index,  # Inherit the map_index
                     )
-                    any_new_runs_scheduled = True
 
                 else:
                     raise ValueError(
@@ -223,7 +222,6 @@ class _Orchestrator:
                     task_run.pipeline_run,
                     downstream_task,
                 )
-                any_new_runs_scheduled = True
 
             else:
                 print(f"Downstream task {downstream_task.id} not ready")
@@ -236,11 +234,22 @@ class _Orchestrator:
         # Even more, some tasks are mapped so their task runs appear more than once.
 
         finished_tasks = get_finished_tasks_ids(task_run.pipeline_run_id)
+
         # Skipped tasks for the moment are mapped tasks whose upstream output is an empty list
         # so they cannot be scheduled
-        finished_tasks += skipped_tasks
 
-        if len(finished_tasks) == len(pipeline.tasks) or not any_new_runs_scheduled:
+        all_skipped_tasks: set[str] = set()
+
+        for task in skipped_tasks:
+            all_skipped_tasks.add(task.id)
+            all_skipped_tasks = all_skipped_tasks.union(
+                get_downstream_task_ids(task.id, pipeline)
+            )
+            finished_tasks.extend(all_skipped_tasks)
+
+        mark_tasks_as_skipped(all_skipped_tasks, task_run.pipeline_run_id)
+
+        if len(finished_tasks) == len(pipeline.tasks):
             # No more running, scheduled, or pending tasks left
             on_pipeline_status_changed(
                 pipeline, task_run.pipeline_run, PipelineRunStatus.COMPLETED
@@ -248,9 +257,21 @@ class _Orchestrator:
 
     def _are_upstream_tasks_complete(self, pipeline_run_id: int, task: Task) -> bool:
         """Verifies all dependencies are met."""
-        finished_tasks = get_finished_tasks_ids(pipeline_run_id, task.upstream_task_ids)
+        finished_tasks = get_task_runs_for_pipeline_run(
+            pipeline_run_id,
+            task.upstream_task_ids,
+            status=[PipelineRunStatus.COMPLETED],
+        )
 
-        return len(finished_tasks) == len(task.upstream_task_ids)
+        ready = len(finished_tasks) == len(task.upstream_task_ids)
+
+        if not ready:
+            print(
+                f"Upstream tasks of {task.id} not ready because",
+                set(task.upstream_task_ids) - set(finished_tasks),
+            )
+
+        return ready
 
     def _schedule_task_instance(
         self,
@@ -325,6 +346,23 @@ class _Orchestrator:
 
 
 orchestrator = _Orchestrator()
+
+
+def get_downstream_task_ids(task_id: str, pipeline: Pipeline):
+    """Given a task ID it finds all downstream tasks at any level in a pipeline"""
+
+    task = pipeline.get_task_by_id(task_id)
+    if not task:
+        raise ValueError(f"Task {task_id} not found")
+
+    downstream_tasks = task.downstream_task_ids.copy()
+
+    for ds_task in task.downstream_task_ids:
+        downstream_tasks = downstream_tasks.union(
+            get_downstream_task_ids(ds_task, pipeline)
+        )
+
+    return downstream_tasks
 
 
 def get_finished_tasks_ids(pipeline_run_id: int, task_ids: Optional[list[str]] = None):

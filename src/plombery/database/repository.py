@@ -209,3 +209,17 @@ def get_task_run_output_by_id(task_output_id: str) -> Optional[models.TaskRunOut
     """Retrieves an TaskRunOutput record by Task Run ID."""
     with SessionLocal() as session:
         return session.query(models.TaskRunOutput).get(task_output_id)
+
+
+def mark_tasks_as_skipped(task_ids: set[str], pipeline_run_id: int):
+    with SessionLocal() as session:
+        for task_id in task_ids:
+            session.add(
+                models.TaskRun(
+                    task_id=task_id,
+                    status=PipelineRunStatus.CANCELLED,
+                    pipeline_run_id=pipeline_run_id,
+                )
+            )
+
+        session.commit()

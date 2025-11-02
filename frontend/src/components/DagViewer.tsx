@@ -157,6 +157,10 @@ const getTaskRunsStatus = (taskRuns: TaskRun[]): PipelineRunStatus => {
     return 'failed'
   }
 
+  if (taskRuns.some((taskRun) => taskRun.status === 'cancelled')) {
+    return 'cancelled'
+  }
+
   if (taskRuns.some((taskRun) => taskRun.status === 'running')) {
     return 'running'
   }
