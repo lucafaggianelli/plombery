@@ -156,9 +156,10 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
               onFilterChange({ tasks })
             }}
           >
-            {pipeline.tasks.map((task) => (
-              <MultiSelectItem value={task.id} key={task.id}>
-                {task.name}
+            {run.task_runs.map((task) => (
+              <MultiSelectItem value={task.task_id} key={task.id}>
+                {task.task_id}
+                {task.map_index !== null && `[${task.map_index}]`}
               </MultiSelectItem>
             ))}
           </MultiSelect>
@@ -253,6 +254,7 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
                       }`}
                     />
                     {log.task}
+                    {log.map_index !== null && `[${log.map_index}]`}
                   </Flex>
                 </TableCell>
                 <TableCell className="w-full">

@@ -10,7 +10,7 @@ from plombery.constants import MANUAL_TRIGGER_ID
 from plombery.exceptions import InvalidDataPath
 from plombery.logger import close_logger, get_logger
 from plombery.notifications import notification_manager
-from plombery.orchestrator.context import TaskRuntimeContext
+from plombery.orchestrator.context import Context
 from plombery.utils import run_all_coroutines
 from plombery.websocket import sio
 from plombery.database.models import PipelineRun, TaskRun
@@ -28,7 +28,12 @@ from plombery.database.schemas import (
     TaskRunUpdate,
 )
 from plombery.pipeline.pipeline import Pipeline, Trigger, Task
-from plombery.pipeline.context import pipeline_context, task_context, run_context
+from plombery.pipeline.context import (
+    pipeline_context,
+    task_context,
+    run_context,
+    task_run_context,
+)
 from plombery.schemas import PipelineRunStatus
 
 
@@ -229,7 +234,7 @@ async def run(
 @dataclass
 class TaskFunctionSignature:
     has_params_arg: bool = False
-    has_context_arg: bool = False
+    context_arg: Optional[str] = None
     input_arg_names: list[str] = field(default_factory=list)
 
 
@@ -251,8 +256,8 @@ def check_task_signature(func: Callable) -> TaskFunctionSignature:
         # Check for special arguments
         if name == "params":
             result.has_params_arg = True
-        elif name == "context":
-            result.has_context_arg = True
+        elif name in ["context", "ctx"]:
+            result.context_arg = name
 
         # Check for input data arguments (any other argument)
         else:
@@ -286,6 +291,7 @@ async def _execute_task(
     """
 
     token = task_context.set(task)
+    tr_token = task_run_context.set(task_run)
 
     result = check_task_signature(task.run)
 
@@ -298,7 +304,7 @@ async def _execute_task(
 
     # Build the map of task_id -> TaskRun model instance
     metadata_map = {run.task_id: run for run in upstream_runs_metadata}
-    runtime_context = TaskRuntimeContext(task_run, metadata_map)
+    runtime_context = Context(task_run, metadata_map)
 
     # Iterate over arguments required by the function signature
     for arg_name in result.input_arg_names:
@@ -311,8 +317,8 @@ async def _execute_task(
     if pipeline_params and result.has_params_arg:
         kwargs["params"] = pipeline_params
 
-    if result.has_context_arg:
-        kwargs["context"] = runtime_context
+    if result.context_arg:
+        kwargs[result.context_arg] = runtime_context
 
     if asyncio.iscoroutinefunction(task.run):
         task_output = await task.run(**kwargs)
@@ -325,5 +331,6 @@ async def _execute_task(
         task_output = await asyncio.to_thread(task.run, **kwargs)
 
     task_context.reset(token)
+    task_run_context.reset(tr_token)
 
     return task_output

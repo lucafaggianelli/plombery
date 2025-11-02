@@ -14,6 +14,7 @@ export interface LogEntry {
   timestamp: Date
   exc_info?: string
   loggerName: string
+  map_index: number | null
 }
 
 export interface Trigger {

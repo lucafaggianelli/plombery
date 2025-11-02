@@ -1,9 +1,10 @@
 from typing import Any, Optional
 from plombery.database.repository import get_task_run_output_by_id
 from plombery.database.models import TaskRun
+from plombery.logger import get_logger
 
 
-class TaskRuntimeContext:
+class Context:
     """
     Provides runtime information and dependency data access to a running task.
     """
@@ -11,6 +12,7 @@ class TaskRuntimeContext:
     def __init__(self, _task_run: TaskRun, upstream_task_runs: dict[str, TaskRun]):
         self._task_run = _task_run
         self._upstream_task_runs = upstream_task_runs
+        self.logger = get_logger()
 
     def get_output_data(self, task_id: str) -> Optional[Any]:
         """
