@@ -4,11 +4,13 @@ from typing import (
     Callable,
     Generic,
     Optional,
-    ParamSpec,
     TypeVar,
     Union,
     overload,
 )
+
+# TODO: Remove python3.9
+from typing_extensions import ParamSpec
 
 from pydantic import BaseModel, model_validator, Field
 
