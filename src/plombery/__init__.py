@@ -12,7 +12,7 @@ from .logger import get_logger  # noqa F401
 from .notifications import NotificationRule, notification_manager
 from .orchestrator import orchestrator
 from .pipeline import Task  # noqa F401
-from .pipeline.tasks import task  # noqa F401
+from .pipeline.tasks import task, MappingMode  # noqa F401
 from .pipeline.pipeline import Pipeline, Trigger  # noqa F401
 from .schemas import PipelineRunStatus  # noqa F401
 from ._version import __version__  # noqa F401

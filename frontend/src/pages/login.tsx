@@ -6,6 +6,8 @@ import { getApiUrl, getAuthProviders } from '@/repository'
 import MicrosoftIcon from '@/components/icons/microsoft'
 import GoogleIcon from '@/components/icons/google'
 import { twMerge } from 'tailwind-merge'
+import { useAuthState } from '@/contexts/AuthContext'
+import { Navigate } from 'react-router'
 
 const ICONS: Record<string, React.FC<SVGProps<SVGSVGElement>>> = {
   google: GoogleIcon,
@@ -14,6 +16,11 @@ const ICONS: Record<string, React.FC<SVGProps<SVGSVGElement>>> = {
 
 const LoginPage: React.FC = () => {
   const providersQuery = useQuery(getAuthProviders())
+  const { isAuthenticated } = useAuthState()
+
+  if (isAuthenticated) {
+    return <Navigate to="/" />
+  }
 
   return (
     <div

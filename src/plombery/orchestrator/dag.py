@@ -67,5 +67,4 @@ def is_graph_acyclic(all_tasks: List) -> bool:
 
 def is_mappable_list(data: Any) -> bool:
     """Checks if the output is a list suitable for fan-out mapping."""
-    # Ensure it's a non-empty list of items (not just an empty list)
-    return isinstance(data, (list, set, tuple)) and len(data) > 0
+    return isinstance(data, (list, set, tuple))

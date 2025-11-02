@@ -142,7 +142,7 @@ async def execute_task_instance(
         task_output = await _execute_task(task, task_run, pipeline_params)
 
         # Store output and set success status
-        if task_output:
+        if task_output is not None:
             task_run_output = create_task_run_output(
                 TaskRunOutputCreate(
                     data=task_output,

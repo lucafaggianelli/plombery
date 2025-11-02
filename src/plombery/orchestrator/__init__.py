@@ -141,6 +141,9 @@ class _Orchestrator:
             if task_run.task_id in task.upstream_task_ids
         ]
 
+        skipped_tasks = []
+        any_new_runs_scheduled = False
+
         # Process Downstream Tasks
         for downstream_task_id in downstream_task_ids:
             downstream_task = pipeline.get_task_by_id(downstream_task_id)
@@ -151,7 +154,7 @@ class _Orchestrator:
             # Check if Downstream task is explicitly configured to map
             # using Completed Task's output
             is_mapped_downstream = (
-                downstream_task.mapping_mode is not None
+                downstream_task.mapping_mode
                 and downstream_task.map_upstream_id == task_run.task_id
             )
 
@@ -169,6 +172,11 @@ class _Orchestrator:
                             f"Task {downstream_task.id} expected a collection for fan-out, but got {type(output_data)}"
                         )
 
+                    if not output_data:
+                        # Empty list
+                        skipped_tasks.append(downstream_task.id)
+                        continue
+
                     # Schedule a new run for each item in the output list.
                     for index, _ in enumerate(output_data):
                         self._schedule_task_instance(
@@ -178,6 +186,7 @@ class _Orchestrator:
                             parent_task_run_id=task_run.task_id,
                             map_index=index,
                         )
+                        any_new_runs_scheduled = True
 
                 # Case B: Chained Fan-Out (Inheriting the Index)
                 # The completed task was fan-out from an array (Case A) so
@@ -198,6 +207,7 @@ class _Orchestrator:
                         parent_task_run_id=task_run.task_id,
                         map_index=instance_map_index,  # Inherit the map_index
                     )
+                    any_new_runs_scheduled = True
 
                 else:
                     raise ValueError(
@@ -213,6 +223,7 @@ class _Orchestrator:
                     task_run.pipeline_run,
                     downstream_task,
                 )
+                any_new_runs_scheduled = True
 
             else:
                 print(f"Downstream task {downstream_task.id} not ready")
@@ -225,8 +236,11 @@ class _Orchestrator:
         # Even more, some tasks are mapped so their task runs appear more than once.
 
         finished_tasks = get_finished_tasks_ids(task_run.pipeline_run_id)
+        # Skipped tasks for the moment are mapped tasks whose upstream output is an empty list
+        # so they cannot be scheduled
+        finished_tasks += skipped_tasks
 
-        if len(finished_tasks) == len(pipeline.tasks):
+        if len(finished_tasks) == len(pipeline.tasks) or not any_new_runs_scheduled:
             # No more running, scheduled, or pending tasks left
             on_pipeline_status_changed(
                 pipeline, task_run.pipeline_run, PipelineRunStatus.COMPLETED
