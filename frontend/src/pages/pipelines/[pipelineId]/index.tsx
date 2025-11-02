@@ -24,6 +24,7 @@ import ManualRunDialog from '@/components/ManualRunDialog'
 import TriggersList from '@/components/TriggersList'
 import PageLayout from '@/components/PageLayout'
 import PipelineHttpRun from '@/components/help/PipelineHttpRun'
+import DagViewer from '@/components/DagViewer'
 
 const PipelineView: React.FC = () => {
   const urlParams = useParams()
@@ -63,6 +64,10 @@ const PipelineView: React.FC = () => {
       }
     >
       <Grid numItemsMd={2} numItemsLg={3} className="gap-6 mt-6">
+        <Card className="md:col-span-2 lg:col-span-3 p-0">
+          <DagViewer pipeline={pipeline} />
+        </Card>
+
         <Card className="flex flex-col h-full">
           <Title>Tasks</Title>
 

@@ -26,8 +26,8 @@ const PipelinesList: React.FC = () => {
           const nextFireTime = pipeline.getNextFireTime()
 
           return (
-            <ListItem key={pipeline.id} className="gap-x-1">
-              <div className="min-w-0">
+            <ListItem key={pipeline.id} className="gap-x-4">
+              <div className="min-w-0 grow">
                 <Text className="truncate">
                   <Link to={`/pipelines/${pipeline.id}`} className="font-bold">
                     {pipeline.name}

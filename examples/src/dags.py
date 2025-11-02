@@ -43,6 +43,7 @@ async def process_list(context: TaskRuntimeContext) -> Dict[str, Any]:
 
 @task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="fetch_data")
 async def parallel_task(context: TaskRuntimeContext):
+    """Task B: Processes data from Task A one at a time."""
     user: int | None = context.get_output_data("fetch_data")
 
     get_logger().info(f"Starting parallel task for user {user}")

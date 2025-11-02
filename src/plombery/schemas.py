@@ -50,6 +50,8 @@ class TaskRun(BaseModel):
     status: Optional[PipelineRunStatus] = PipelineRunStatus.PENDING
     task_id: str
     task_output_id: Optional[str]
+    map_index: Optional[int] = None
+    parent_task_run_id: Optional[str] = None
 
     class Config:
         from_attributes = True

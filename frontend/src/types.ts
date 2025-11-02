@@ -71,6 +71,8 @@ export interface TaskRun {
   status: PipelineRunStatus
   task_id: string
   task_output_id?: string
+  map_index?: number
+  parent_task_run_id?: string
 }
 
 export interface PipelineRun {
@@ -81,6 +83,7 @@ export interface PipelineRun {
   start_time: Date
   duration: number
   task_runs: TaskRun[]
+  input_params: Record<string, any>
 }
 
 export interface WhoamiResponse {

@@ -17,32 +17,60 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
-import { Pipeline, PipelineRun, Task, TaskRun } from '@/types'
+import {
+  Pipeline,
+  PipelineRun,
+  PipelineRunStatus,
+  Task,
+  TaskRun,
+} from '@/types'
 import TaskRunStatusIcon from './TaskRunStatusIcon'
 
 interface Props extends PropsWithChildren {
   pipeline: Pipeline
-  run: PipelineRun
+  run?: PipelineRun
+  className?: string
 }
 
 type TaskWithRun = {
   task: Task
-  run?: TaskRun
+  runs?: TaskRun[]
+  status?: PipelineRunStatus
+}
+
+type TriggerWithParams = {
+  trigger: { id: string }
+  inputParams: Record<string, any>
 }
 
 export function TaskNode({ data }: NodeProps<Node<TaskWithRun, 'task'>>) {
+  const numberInstances = data.runs?.length ?? 0
+
   return (
     <div className="relative">
-      <div className="bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle">
+      <div className="max-w-[250px] bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle">
         <div className="flex gap-2 items-center">
-          <TaskRunStatusIcon status={data.run?.status} />
-          <div className="text-xs">{data.task.name}</div>
+          {data.status && <TaskRunStatusIcon status={data.status} />}
+
+          <div className="overflow-hidden">
+            <div className="text-sm truncate">{data.task.name}</div>
+            <div className="text-xs truncate text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
+              {data.task.description}
+            </div>
+          </div>
         </div>
+
         {data.task.downstream_task_ids.length > 0 && (
           <Handle type="source" position={Position.Right} />
         )}
-        {data.task.upstream_task_ids.length > 0 && (
-          <Handle type="target" position={Position.Left} />
+
+        {/* The target handle always exists as there's always a trigger that connects to it */}
+        <Handle type="target" position={Position.Left} />
+
+        {numberInstances > 1 && (
+          <div className="absolute -top-2 -left-2 text-xs flex size-5 items-center justify-center rounded-full bg-sky-800 text-white">
+            {numberInstances}&times;
+          </div>
         )}
       </div>
 
@@ -52,6 +80,18 @@ export function TaskNode({ data }: NodeProps<Node<TaskWithRun, 'task'>>) {
           <div className="absolute -z-10 size-full scale-90 -bottom-2 bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle" />
         </>
       )}
+    </div>
+  )
+}
+
+export function TriggerNode({
+  data,
+}: NodeProps<Node<TriggerWithParams, 'trigger'>>) {
+  return (
+    <div className="bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle">
+      <div className="flex gap-2 items-center">{data.trigger.id}</div>
+
+      <Handle type="source" position={Position.Right} />
     </div>
   )
 }
@@ -89,18 +129,65 @@ const getLayoutedElements = (
   }
 }
 
-export default function DagViewer({ pipeline, run, children }: Props) {
+const getTaskRunsStatus = (taskRuns: TaskRun[]): PipelineRunStatus => {
+  if (taskRuns.length === 0) {
+    return 'pending'
+  }
+
+  if (taskRuns.every((taskRun) => taskRun.status === 'completed')) {
+    return 'completed'
+  }
+
+  if (taskRuns.some((taskRun) => taskRun.status === 'failed')) {
+    return 'failed'
+  }
+
+  if (taskRuns.some((taskRun) => taskRun.status === 'running')) {
+    return 'running'
+  }
+
+  if (taskRuns.some((taskRun) => taskRun.status === 'pending')) {
+    return 'pending'
+  }
+
+  return 'running'
+}
+
+export default function DagViewer({
+  pipeline,
+  run,
+  children,
+  className,
+}: Props) {
+  const isDark = document.documentElement.classList.contains('dark')
+
   useEffect(() => {
-    const taskRunsMap = Object.fromEntries(
-      run.task_runs.map((taskRun) => [taskRun.task_id, taskRun])
+    const groupedTaskRuns = run
+      ? (Object.groupBy(run.task_runs, (taskRun) => taskRun.task_id) as Record<
+          string,
+          TaskRun[]
+        >)
+      : {}
+
+    const tasksMap: Record<string, TaskWithRun> = Object.fromEntries(
+      pipeline.tasks.map((task) => [
+        task.id,
+        {
+          task,
+          runs: groupedTaskRuns[task.id],
+          status: groupedTaskRuns[task.id]
+            ? getTaskRunsStatus(groupedTaskRuns[task.id])
+            : undefined,
+        },
+      ])
     )
 
     const initialNodes: Node[] = pipeline.tasks.map((task) => ({
       id: task.id,
       type: 'task',
       position: { x: 0, y: 0 },
-      data: { task, run: taskRunsMap[task.id] },
-      measured: { height: 60, width: 150 },
+      data: tasksMap[task.id],
+      measured: { height: 60, width: 250 },
     }))
 
     const initialEdges: Edge[] = pipeline.tasks.flatMap((task) =>
@@ -108,11 +195,36 @@ export default function DagViewer({ pipeline, run, children }: Props) {
         id: `${task.id}-${upstream}`,
         source: upstream,
         target: task.id,
-        animated:
-          !taskRunsMap[upstream] ||
-          ['running', 'pending'].includes(taskRunsMap[upstream]?.status),
+        animated: run
+          ? !tasksMap[upstream]?.status ||
+            ['running', 'pending'].includes(tasksMap[upstream]?.status)
+          : false,
       }))
     )
+
+    if (run) {
+      initialNodes.push({
+        id: 'trigger',
+        type: 'trigger',
+        position: { x: 0, y: 0 },
+        data: {
+          inputParams: run.input_params,
+          trigger: { id: run.trigger_id },
+        },
+        measured: { height: 60, width: 200 },
+      })
+
+      pipeline.tasks
+        .filter((task) => task.upstream_task_ids.length === 0)
+        .forEach((task) =>
+          initialEdges.push({
+            id: `trigger-${task.id}`,
+            source: 'trigger',
+            target: task.id,
+            animated: false,
+          })
+        )
+    }
 
     const layouted = getLayoutedElements(initialNodes, initialEdges, {
       direction: 'LR',
@@ -137,7 +249,7 @@ export default function DagViewer({ pipeline, run, children }: Props) {
   )
 
   return (
-    <div style={{ width: '100%', height: '500px' }}>
+    <div style={{ width: '100%', height: '500px' }} className={className}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -146,9 +258,10 @@ export default function DagViewer({ pipeline, run, children }: Props) {
         connectOnClick={false}
         nodeTypes={{
           task: TaskNode,
+          trigger: TriggerNode,
         }}
         fitView
-        colorMode="system"
+        colorMode={isDark ? 'dark' : 'light'}
       >
         <Background />
         <Controls />

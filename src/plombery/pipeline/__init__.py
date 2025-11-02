@@ -2,7 +2,7 @@ import asyncio
 import functools
 from typing import Callable, Union
 
-from .task import Task
+from .tasks import Task
 from .context import task_context
 
 

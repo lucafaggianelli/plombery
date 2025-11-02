@@ -1,14 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  Bold,
-  Card,
-  CategoryBar,
-  Flex,
-  Grid,
-  Metric,
-  Text,
-  Title,
-} from '@tremor/react'
+import { Bold, Card, Flex, Grid, Metric, Text, Title } from '@tremor/react'
 import { addMilliseconds, isSameDay } from 'date-fns'
 import { useParams } from 'react-router'
 import { useEffect } from 'react'
@@ -17,19 +8,12 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import LogViewer from '@/components/LogViewer'
 import PageLayout from '@/components/PageLayout'
 import StatusBadge from '@/components/StatusBadge'
-import RunsTasksList from '@/components/Tasks'
 import Timer from '@/components/Timer'
 import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun } from '@/repository'
 import { socket } from '@/socket'
 import { Trigger } from '@/types'
-import {
-  TASKS_COLORS,
-  formatDate,
-  formatDateTime,
-  formatDuration,
-  formatTime,
-} from '@/utils'
+import { formatDate, formatDateTime, formatDuration, formatTime } from '@/utils'
 import DagViewer from '@/components/DagViewer'
 
 const RunViewPage = () => {
@@ -99,54 +83,6 @@ const RunViewPage = () => {
       }
     >
       <Grid numItemsMd={2} className="gap-6 mt-6">
-        <RunsTasksList pipeline={pipeline} run={run} />
-
-        <Card>
-          <Flex className="items-start">
-            <Text>Duration</Text>
-            <StatusBadge status={run.status} />
-          </Flex>
-
-          <Flex className="justify-start items-baseline space-x-3 truncate">
-            <Metric className="tabular-nums">
-              {run.status !== 'running' ? (
-                formatDuration(run.duration)
-              ) : (
-                <Timer startTime={run.start_time} />
-              )}
-            </Metric>
-          </Flex>
-
-          <CategoryBar
-            values={tasksRunDurations}
-            colors={TASKS_COLORS}
-            showLabels={false}
-            className="mt-3"
-          />
-
-          <Flex alignItems="start" className="mt-2">
-            <div>
-              <Text>
-                <Bold title={formatDateTime(run.start_time, true)}>
-                  {formatTime(run.start_time)}
-                </Bold>
-              </Text>
-              <Text className="mt-1">{formatDate(run.start_time)}</Text>
-            </div>
-
-            <div className="text-right">
-              <Text>
-                <Bold title={formatDateTime(runEndTime, true)}>
-                  {formatTime(runEndTime)}
-                </Bold>
-              </Text>
-              {!isSameDay(run.start_time, runEndTime) && (
-                <Text>{formatDate(runEndTime)}</Text>
-              )}
-            </div>
-          </Flex>
-        </Card>
-
         <Card className="col-span-2 p-0">
           <DagViewer pipeline={pipeline} run={run}>
             <Card className="p-3">
