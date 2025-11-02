@@ -1,20 +1,17 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bold, Card, Flex, Grid, Metric, Text, Title } from '@tremor/react'
-import { addMilliseconds, isSameDay } from 'date-fns'
+import { Card, Grid, Title } from '@tremor/react'
 import { useParams } from 'react-router'
 import { useEffect } from 'react'
 
 import Breadcrumbs from '@/components/Breadcrumbs'
 import LogViewer from '@/components/LogViewer'
 import PageLayout from '@/components/PageLayout'
-import StatusBadge from '@/components/StatusBadge'
-import Timer from '@/components/Timer'
 import { MANUAL_TRIGGER } from '@/constants'
 import { getPipeline, getRun } from '@/repository'
 import { socket } from '@/socket'
 import { Trigger } from '@/types'
-import { formatDate, formatDateTime, formatDuration, formatTime } from '@/utils'
 import DagViewer from '@/components/DagViewer'
+import DagDetailsPanel from '@/components/DagDetailsPanel'
 
 const RunViewPage = () => {
   const queryClient = useQueryClient()
@@ -63,16 +60,6 @@ const RunViewPage = () => {
     return <div>Trigger not found</div>
   }
 
-  const totalTasksDuration = (run.task_runs || []).reduce(
-    (tot, cur) => tot + cur.duration,
-    0
-  )
-  const tasksRunDurations = (run.task_runs || []).map((tr) =>
-    totalTasksDuration ? (tr.duration / totalTasksDuration) * 100 : 0
-  )
-
-  const runEndTime = addMilliseconds(run.start_time, run.duration)
-
   return (
     <PageLayout
       header={
@@ -85,44 +72,7 @@ const RunViewPage = () => {
       <Grid numItemsMd={2} className="gap-6 mt-6">
         <Card className="col-span-2 p-0">
           <DagViewer pipeline={pipeline} run={run}>
-            <Card className="p-3">
-              <Flex className="items-start">
-                <Text className="text-xs">Duration</Text>
-                <StatusBadge status={run.status} />
-              </Flex>
-
-              <Flex className="justify-start items-baseline space-x-3 truncate">
-                <Metric className="tabular-nums text-lg">
-                  {run.status !== 'running' ? (
-                    formatDuration(run.duration)
-                  ) : (
-                    <Timer startTime={run.start_time} />
-                  )}
-                </Metric>
-              </Flex>
-
-              <Flex className="items-start mt-2 gap-4">
-                <div>
-                  <Text>
-                    <Bold title={formatDateTime(run.start_time, true)}>
-                      {formatTime(run.start_time)}
-                    </Bold>
-                  </Text>
-                  <Text className="mt-1">{formatDate(run.start_time)}</Text>
-                </div>
-
-                <div className="text-right">
-                  <Text>
-                    <Bold title={formatDateTime(runEndTime, true)}>
-                      {formatTime(runEndTime)}
-                    </Bold>
-                  </Text>
-                  {!isSameDay(run.start_time, runEndTime) && (
-                    <Text>{formatDate(runEndTime)}</Text>
-                  )}
-                </div>
-              </Flex>
-            </Card>
+            <DagDetailsPanel pipeline={pipeline} run={run} />
           </DagViewer>
         </Card>
       </Grid>

@@ -6,7 +6,7 @@ import {
   TabPanel,
   TabPanels,
 } from '@tremor/react'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
+import { CodeBracketIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import {
@@ -66,8 +66,9 @@ httpx.post('${getPipelineRunUrl(pipelineId)}', json={${
       <Button
         color="indigo"
         variant="light"
-        size="xs"
-        icon={QuestionMarkCircleIcon}
+        // size="xs"
+        icon={CodeBracketIcon}
+        tooltip="See code to run this pipeline"
         onClick={() => setOpen(true)}
       />
 

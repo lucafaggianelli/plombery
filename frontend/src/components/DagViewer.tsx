@@ -25,6 +25,7 @@ import {
   TaskRun,
 } from '@/types'
 import TaskRunStatusIcon from './TaskRunStatusIcon'
+import { twMerge } from 'tailwind-merge'
 
 interface Props extends PropsWithChildren {
   pipeline: Pipeline
@@ -43,12 +44,21 @@ type TriggerWithParams = {
   inputParams: Record<string, any>
 }
 
-export function TaskNode({ data }: NodeProps<Node<TaskWithRun, 'task'>>) {
+export function TaskNode({
+  data,
+  selected,
+}: NodeProps<Node<TaskWithRun, 'task'>>) {
   const numberInstances = data.runs?.length ?? 0
 
   return (
     <div className="relative">
-      <div className="max-w-[250px] bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle">
+      <div
+        className={twMerge(
+          'max-w-[250px] bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle cursor-pointer hover:dark:border-dark-tremor-background-emphasis hover:border-tremor-background-emphasis transition-colors',
+          selected &&
+            'dark:border-dark-tremor-background-emphasis border-tremor-background-emphasis'
+        )}
+      >
         <div className="flex gap-2 items-center">
           {data.status && <TaskRunStatusIcon status={data.status} />}
 
@@ -94,6 +104,11 @@ export function TriggerNode({
       <Handle type="source" position={Position.Right} />
     </div>
   )
+}
+
+const nodeTypes = {
+  task: TaskNode,
+  trigger: TriggerNode,
 }
 
 const getLayoutedElements = (
@@ -256,10 +271,8 @@ export default function DagViewer({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         connectOnClick={false}
-        nodeTypes={{
-          task: TaskNode,
-          trigger: TriggerNode,
-        }}
+        multiSelectionKeyCode={null}
+        nodeTypes={nodeTypes}
         fitView
         colorMode={isDark ? 'dark' : 'light'}
       >

@@ -1,19 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  Card,
-  Title,
-  Col,
-  Text,
-  ListItem,
-  Flex,
-  Icon,
-  List,
-  Bold,
-  Grid,
-} from '@tremor/react'
+import { Card, Title, Col, Text, Flex, Grid } from '@tremor/react'
 import { useParams } from 'react-router'
 import React from 'react'
-import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 
 import Breadcrumbs from '@/components/Breadcrumbs'
 import RunsDurationChart from '@/components/RunsDurationChart'
@@ -23,7 +11,6 @@ import { getPipeline, listRuns } from '@/repository'
 import ManualRunDialog from '@/components/ManualRunDialog'
 import TriggersList from '@/components/TriggersList'
 import PageLayout from '@/components/PageLayout'
-import PipelineHttpRun from '@/components/help/PipelineHttpRun'
 import DagViewer from '@/components/DagViewer'
 
 const PipelineView: React.FC = () => {
@@ -66,60 +53,6 @@ const PipelineView: React.FC = () => {
       <Grid numItemsMd={2} numItemsLg={3} className="gap-6 mt-6">
         <Card className="md:col-span-2 lg:col-span-3 p-0">
           <DagViewer pipeline={pipeline} />
-        </Card>
-
-        <Card className="flex flex-col h-full">
-          <Title>Tasks</Title>
-
-          <List>
-            {pipeline.tasks.map((task) => (
-              <ListItem key={task.id}>
-                <div className="max-w-full">
-                  <Text>
-                    <Bold>{task.name}</Bold>
-                  </Text>
-                  {task.description && (
-                    <div className="truncate" title={task.description}>
-                      {task.description}
-                    </div>
-                  )}
-                </div>
-              </ListItem>
-            ))}
-
-            {pipeline.tasks.length === 0 && (
-              <div className="mt-4">
-                <Text className="text-center italic">
-                  This pipeline has no tasks so it can't be run.
-                </Text>
-
-                <div className="text-center mt-2 text-sm">
-                  <a
-                    href="https://lucafaggianelli.github.io/plombery/tasks/"
-                    target="_blank"
-                    className="inline-flex items-center gap-2 bg-indigo-50/30 hover:bg-indigo-50 dark:bg-indigo-950/50 dark:hover:bg-indigo-950 rounded-sm px-4 py-2 text-indigo-500 transition-colors duration-300 cursor-pointer no-underline"
-                    rel="noopener noreferrer"
-                  >
-                    How to create tasks
-                    <Icon
-                      icon={ArrowTopRightOnSquareIcon}
-                      size="sm"
-                      className="p-0"
-                      color="indigo"
-                    />
-                  </a>
-                </div>
-              </div>
-            )}
-          </List>
-
-          <div style={{ flexGrow: 1 }} />
-
-          <Flex className="justify-between gap-8">
-            <Text>Run URL</Text>
-
-            <PipelineHttpRun pipelineId={pipelineId} />
-          </Flex>
         </Card>
 
         <RunsStatusChart subject="Pipeline" query={runsQuery} />

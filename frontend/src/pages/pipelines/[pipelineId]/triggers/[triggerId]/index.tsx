@@ -9,6 +9,7 @@ import {
   Button,
   Flex,
   Grid,
+  List,
 } from '@tremor/react'
 import { PlayIcon } from '@heroicons/react/24/outline'
 import { useNavigate, useParams } from 'react-router'
@@ -110,33 +111,36 @@ const TriggerView: React.FC = () => {
       <Grid numItemsMd={2} numItemsLg={3} className="gap-6 mt-6">
         <Card className="flex flex-col h-full">
           <Title>{trigger.name}</Title>
-          <Subtitle>{trigger.description}</Subtitle>
+          {trigger.description && (
+            <Subtitle className="text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
+              {trigger.description}
+            </Subtitle>
+          )}
 
           <div style={{ flexGrow: 1 }} />
 
-          <ListItem>
-            <Text>Schedule</Text>
-            <Text>
-              <Bold>{trigger.schedule}</Bold>
-            </Text>
-          </ListItem>
-
-          <ListItem>
-            <Text>Params</Text>
-            {trigger.params ? (
-              <TriggerParamsDialog trigger={trigger} />
-            ) : (
+          <List className="mt-4">
+            <ListItem>
+              <Text>Schedule</Text>
               <Text>
-                <em>No params</em>
+                <Bold>{trigger.schedule || '-'}</Bold>
               </Text>
-            )}
-          </ListItem>
-
-          <Flex className="">
-            <Text>Run URL</Text>
-
-            <PipelineHttpRun pipelineId={pipelineId} triggerId={triggerId} />
-          </Flex>
+            </ListItem>
+            <ListItem>
+              <Text>Params</Text>
+              {trigger.params ? (
+                <TriggerParamsDialog trigger={trigger} />
+              ) : (
+                <Text>
+                  <em>-</em>
+                </Text>
+              )}
+            </ListItem>
+            <ListItem>
+              <Text>Run URL</Text>
+              <PipelineHttpRun pipelineId={pipelineId} triggerId={triggerId} />
+            </ListItem>
+          </List>
         </Card>
 
         <RunsStatusChart subject="Trigger" query={runsQuery} />

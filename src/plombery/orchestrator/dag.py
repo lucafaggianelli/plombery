@@ -1,4 +1,6 @@
 from typing import Any, List, Dict, Set
+
+# Can't import it due to circular deps
 # from plombery.pipeline.task import Task
 
 # Constants
@@ -7,14 +9,14 @@ VISITING = 1
 VISITED = 2
 
 
-def is_graph_acyclic(all_tasks: List["Task"]) -> bool:
+def is_graph_acyclic(all_tasks: List) -> bool:
     """
     Checks for cycles in the pipeline's task structure using Depth First Search (DFS).
     The graph structure is implicitly defined by the Task objects' upstream_task_ids.
     """
 
     # 1. Map ID to Task Object and initialize state
-    task_map: Dict[str, "Task"] = {task.id: task for task in all_tasks}
+    task_map: Dict[str, Any] = {task.id: task for task in all_tasks}
     states: Dict[str, int] = {task_id: UNVISITED for task_id in task_map.keys()}
 
     # 2. Build the Downstream Map (Adjacency List)

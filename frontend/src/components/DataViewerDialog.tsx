@@ -7,7 +7,7 @@ import { getApiUrl, getRunData, getRunDataUrl } from '@/repository'
 import Dialog from './Dialog'
 
 interface Props {
-  runId: number
+  runId: string
   taskId: string
   open: boolean
   onClose: () => any
