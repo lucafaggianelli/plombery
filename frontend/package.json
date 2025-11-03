@@ -40,7 +40,7 @@
   "devDependencies": {
     "@headlessui/tailwindcss": "^0.2.2",
     "@types/json-schema": "^7.0.15",
-    "@types/node": "^24.9.1",
+    "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@types/react-syntax-highlighter": "^15.5.13",
