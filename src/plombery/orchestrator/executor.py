@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Any, Callable, Dict, Optional
 import inspect
 
@@ -131,7 +132,16 @@ async def execute_task_instance(
 
     # Prepare arguments using the TaskRun's context/inputs determined by the Orchestrator
     # The Orchestrator should have resolved all upstream tasks' data into task_run.context
-    pipeline_params = task_run.context.get("params", None) if task_run.context else None
+    if task_run.context:
+        dict_params = task_run.context.get("params", None)
+
+        if pipeline.params:
+            pipeline_params = pipeline.params.model_validate(dict_params)
+        else:
+            # TODO: This should raise at least a warning
+            pipeline_params = dict_params
+    else:
+        pipeline_params = None
 
     task_start_time = utcnow()
     task_run_status = PipelineRunStatus.FAILED  # Assume failure until success
@@ -228,6 +238,7 @@ async def run(
 
 @dataclass
 class TaskFunctionSignature:
+    func_params: MappingProxyType[str, inspect.Parameter]
     has_params_arg: bool = False
     context_arg: Optional[str] = None
     input_arg_names: list[str] = field(default_factory=list)
@@ -245,9 +256,9 @@ def check_task_signature(func: Callable) -> TaskFunctionSignature:
     Where the params argument is the Pipeline input params.
     """
 
-    result = TaskFunctionSignature()
+    result = TaskFunctionSignature(inspect.signature(func).parameters)
 
-    for name, parameter in inspect.signature(func).parameters.items():
+    for name, parameter in result.func_params.items():
         # Check for special arguments
         if name == "params":
             result.has_params_arg = True
@@ -294,11 +305,18 @@ async def _execute_task(
 
     # Load the TaskRuns for all upstream dependencies
     upstream_runs_metadata = get_task_runs_for_pipeline_run(
-        task_run.pipeline_run_id, task.upstream_task_ids
+        task_run.pipeline_run_id, task_ids=task.upstream_task_ids
     )
 
     # Build the map of task_id -> TaskRun model instance
-    metadata_map = {run.task_id: run for run in upstream_runs_metadata}
+    metadata_map = {
+        (
+            f"{run.task_id}.{run.map_index}"
+            if run.map_index is not None
+            else run.task_id
+        ): run
+        for run in upstream_runs_metadata
+    }
     runtime_context = Context(task_run, metadata_map)
 
     # Iterate over arguments required by the function signature
@@ -307,6 +325,13 @@ async def _execute_task(
         # - If mapped, resolves to single item if arg_name == map_upstream_id.
         # - Otherwise, resolves to the full output of the upstream task named arg_name.
         input_data = runtime_context.get_output_data(task_id=arg_name)
+
+        arg_annotation = result.func_params[arg_name].annotation
+
+        # If the argument is a Pydantic Model, we parse it
+        if issubclass(arg_annotation, BaseModel):
+            input_data = arg_annotation.model_validate(input_data)
+
         kwargs[arg_name] = input_data
 
     if pipeline_params and result.has_params_arg:

@@ -187,8 +187,17 @@ def create_task_run_output(
 ) -> models.TaskRunOutput:
     """Creates a new TaskRunOutput record and returns the instance."""
     with SessionLocal() as session:
+        data = (
+            task_output.data.__dict__
+            if hasattr(task_output.data, "__dict__")
+            else task_output.data
+        )
+
         db_output = models.TaskRunOutput(
-            **task_output.model_dump(), size=len(task_output.data)
+            mimetype=task_output.mimetype,
+            encoding=task_output.encoding,
+            data=data,
+            size=0,
         )
         session.add(db_output)
         session.flush()
