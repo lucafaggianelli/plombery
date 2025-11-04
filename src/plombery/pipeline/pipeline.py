@@ -1,6 +1,6 @@
 from typing import Any, Optional, Type
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from plombery.orchestrator.dag import is_graph_acyclic
 from .tasks import Task
@@ -10,14 +10,13 @@ from ._utils import prettify_name
 
 class Pipeline(BaseModel):
     id: str
-    tasks: list[Task]
+    tasks: list[Task] = Field(default_factory=list)
     name: Optional[str] = None
     description: Optional[str] = None
     params: Optional[Type[BaseModel]] = Field(exclude=True, default=None)
     triggers: list[Trigger] = Field(default_factory=list)
 
-    class Config:
-        validate_assignment = True
+    model_config = ConfigDict(validate_assignment=True)
 
     @model_validator(mode="before")
     @classmethod
@@ -63,3 +62,19 @@ class Pipeline(BaseModel):
         for task in self.tasks:
             if task.id == task_id:
                 return task
+
+    def __enter__(self):
+        from .context import pipeline_context
+
+        self._p_token = pipeline_context.set(self)
+        return self
+
+    def __exit__(self, type, value, traceback):
+        from .context import pipeline_context
+
+        pipeline_context.reset(self._p_token)
+
+        if not is_graph_acyclic(self.tasks):
+            raise ValueError(
+                f"Pipeline '{self.id}' contains a cyclic dependency and cannot run."
+            )

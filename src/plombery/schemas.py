@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 from enum import Enum
 
-from pydantic import BaseModel, Field, NonNegativeFloat
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeFloat
 
 
 class PipelineRunStatus(str, Enum):
@@ -53,8 +53,7 @@ class TaskRun(BaseModel):
     map_index: Optional[int] = None
     parent_task_run_id: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class NotificationRule(BaseModel):

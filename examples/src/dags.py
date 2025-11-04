@@ -1,8 +1,10 @@
 from asyncio import sleep
+from datetime import datetime
 from typing import Dict, Any
 
+from apscheduler.triggers.interval import IntervalTrigger
 from pydantic import BaseModel
-from plombery import register_pipeline, MappingMode, task, Context
+from plombery import register_pipeline, MappingMode, task, Context, Trigger
 
 
 class PipelineInputParams(BaseModel):
@@ -11,7 +13,7 @@ class PipelineInputParams(BaseModel):
 
 
 @task()
-async def fetch_user_data(ctx: Context) -> Dict[str, Any]:
+async def fetch_user_data(ctx: Context, params: PipelineInputParams) -> Dict[str, Any]:
     """Task A: The start node."""
     await sleep(10)
     user_data = {
@@ -75,4 +77,16 @@ example_dag_pipeline = register_pipeline(
     name="User Data Processor DAG (Decorated)",
     params=PipelineInputParams,
     tasks=[fetch_user_data, process_list, report_success, parallel_task, finalize_user],
+    triggers=[
+        Trigger(
+            id="daily",
+            name="Daily",
+            schedule=IntervalTrigger(
+                hours=1,
+                start_date=datetime.now(),
+                timezone="Europe/Rome",
+            ),
+            params=PipelineInputParams(),
+        )
+    ],
 )

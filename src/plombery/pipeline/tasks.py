@@ -68,6 +68,16 @@ class Task(BaseModel, Generic[P, R]):
 
         return self
 
+    @model_validator(mode="after")
+    def add_task_to_pipeline(self):
+        from .context import pipeline_context
+
+        pipeline = pipeline_context.get(None)
+        if pipeline:
+            pipeline.tasks.append(self)
+
+        return self
+
     def __rshift__(self, other):
         # Handle single task dependency: self >> other
         if isinstance(other, Task):
