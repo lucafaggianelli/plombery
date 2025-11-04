@@ -11,7 +11,7 @@ from ._utils import prettify_name
 class Pipeline(BaseModel):
     id: str
     tasks: list[Task]
-    name: Optional[str]
+    name: Optional[str] = None
     description: Optional[str] = None
     params: Optional[Type[BaseModel]] = Field(exclude=True, default=None)
     triggers: list[Trigger] = Field(default_factory=list)

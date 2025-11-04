@@ -56,12 +56,27 @@ class _Orchestrator:
                 print(f"Job {job_id} already added")
                 continue
 
+            input_params = None
+
+            if trigger and trigger.params:
+                if not pipeline.params:
+                    raise ValueError(
+                        f"Pipeline {pipeline.id} has no input params but trigger {trigger.id} does."
+                    )
+
+                if not isinstance(trigger.params, pipeline.params):
+                    raise ValueError(
+                        f"Trigger params must be of type {pipeline.params}, ex: params={pipeline.params}()."
+                    )
+
+                input_params = trigger.params.model_dump()
+
             self.scheduler.add_job(
                 id=job_id,
                 name=job_id,
                 func=run,
                 trigger=trigger.schedule,
-                kwargs=dict(pipeline=pipeline, trigger=trigger),
+                kwargs=dict(pipeline=pipeline, trigger=trigger, params=input_params),
                 # run once instead of many times if the scheduler determines that the
                 # job should be run more than once in succession
                 coalesce=True,

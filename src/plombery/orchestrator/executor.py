@@ -37,9 +37,11 @@ from plombery.pipeline.context import (
 from plombery.schemas import PipelineRunStatus
 
 
-def _on_pipeline_start(pipeline: Pipeline, trigger: Optional[Trigger] = None):
-    input_params = trigger.params.model_dump() if trigger and trigger.params else None
-
+def _on_pipeline_start(
+    pipeline: Pipeline,
+    trigger: Optional[Trigger] = None,
+    input_params: Optional[Dict[str, Any]] = None,
+):
     pipeline_run = create_pipeline_run(
         PipelineRunCreate(
             start_time=utcnow(),
@@ -136,7 +138,9 @@ async def execute_task_instance(
         dict_params = task_run.context.get("params", None)
 
         if pipeline.params:
-            pipeline_params = pipeline.params.model_validate(dict_params)
+            # Pydantic models always need a dict input, so provide one as default if the dict_params is None
+            # typically because the pipeline was triggered by a trigger with no params
+            pipeline_params = pipeline.params.model_validate(dict_params or {})
         else:
             # TODO: This should raise at least a warning
             pipeline_params = dict_params
@@ -212,9 +216,13 @@ async def run(
     """
 
     if pipeline_run:
+        # Typically started manually
         on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.RUNNING)
     else:
-        pipeline_run = _on_pipeline_start(pipeline, trigger)
+        # Typically triggered by a schedule
+        pipeline_run = _on_pipeline_start(
+            pipeline, trigger=trigger, input_params=params
+        )
 
     pipeline_token = pipeline_context.set(pipeline)
     run_token = run_context.set(pipeline_run)
@@ -330,7 +338,7 @@ async def _execute_task(
 
         # If the argument is a Pydantic Model, we parse it
         if issubclass(arg_annotation, BaseModel):
-            input_data = arg_annotation.model_validate(input_data)
+            input_data = arg_annotation.model_validate(input_data or {})
 
         kwargs[arg_name] = input_data
 
