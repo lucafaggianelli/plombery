@@ -199,7 +199,7 @@ class _Orchestrator:
                             pipeline,
                             task_run.pipeline_run,
                             downstream_task,
-                            parent_task_run_id=task_run.task_id,
+                            parent_task_run_id=task_run.id,
                             map_index=index,
                         )
 
@@ -219,7 +219,7 @@ class _Orchestrator:
                         pipeline,
                         task_run.pipeline_run,
                         downstream_task,
-                        parent_task_run_id=task_run.task_id,
+                        parent_task_run_id=task_run.id,
                         map_index=instance_map_index,  # Inherit the map_index
                     )
 
