@@ -5,15 +5,17 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { getPipelineInputSchema, runPipeline } from '../repository'
-import { Pipeline } from '../types'
+import { Pipeline, Trigger } from '../types'
 import Dialog from './Dialog'
 import JsonSchemaForm from './JsonSchemaForm'
+import { MANUAL_TRIGGER } from '@/constants'
 
 interface Props {
   pipeline: Pipeline
+  trigger?: Trigger
 }
 
-const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
+const ManualRunDialog: React.FC<Props> = ({ pipeline, trigger }) => {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -22,7 +24,12 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline }) => {
     enabled: open,
   })
 
-  const runPipelineMutation = useMutation(runPipeline(pipeline.id))
+  const runPipelineMutation = useMutation(
+    runPipeline(
+      pipeline.id,
+      trigger && trigger.id !== MANUAL_TRIGGER.id ? trigger.id : undefined
+    )
+  )
 
   const formErrors =
     runPipelineMutation.isError && runPipelineMutation.error.status === 422

@@ -1,7 +1,7 @@
-from typing import List, Optional
+from typing import Any, Optional
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from plombery.schemas import PipelineRunStatus, TaskRun
 
@@ -11,12 +11,11 @@ class PipelineRunBase(BaseModel):
     trigger_id: str
     status: PipelineRunStatus
     start_time: datetime
-    tasks_run: List[TaskRun] = Field(default_factory=list)
+    end_time: Optional[datetime] = None
     input_params: Optional[dict] = None
     reason: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PipelineRun(PipelineRunBase):
@@ -24,5 +23,38 @@ class PipelineRun(PipelineRunBase):
     duration: float
 
 
+class PipelineRunWithTaskRuns(PipelineRun):
+    task_runs: list[TaskRun] = Field(default_factory=list)
+
+
 class PipelineRunCreate(PipelineRunBase):
     pass
+
+
+class TaskRunCreate(BaseModel):
+    """Schema for creating a new TaskRun record."""
+
+    pipeline_run_id: int
+    task_id: str
+    status: PipelineRunStatus
+    start_time: Optional[datetime] = None
+    context: Optional[dict[str, Any]] = None
+    parent_task_run_id: Optional[str] = None
+    map_index: Optional[int] = None
+
+
+class TaskRunUpdate(BaseModel):
+    """Schema for updating an existing TaskRun record after execution."""
+
+    status: PipelineRunStatus
+    end_time: Optional[datetime] = None
+    duration: Optional[float] = None
+    task_output_id: Optional[str] = None
+
+
+class TaskRunOutputCreate(BaseModel):
+    """Schema for creating a new Task Run Output record."""
+
+    data: Any
+    mimetype: Optional[str] = "application/json"
+    encoding: Optional[str] = "utf-8"

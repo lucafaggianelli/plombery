@@ -188,7 +188,8 @@ export const listRuns = (
     })
 
     runs.forEach((run) => {
-      run.start_time = new Date(run.start_time)
+      run.start_time = run.start_time ? new Date(run.start_time) : undefined
+      run.end_time = run.end_time ? new Date(run.end_time) : undefined
     })
 
     return runs as PipelineRun[]
@@ -205,6 +206,17 @@ export const getRun = (
   queryFn: async () => {
     const run = await get(`runs/${runId}`)
     run.start_time = new Date(run.start_time)
+    run.end_time = new Date(run.end_time)
+
+    run.task_runs.forEach((taskRun: any) => {
+      taskRun.start_time = taskRun.start_time
+        ? new Date(taskRun.start_time)
+        : undefined
+      taskRun.end_time = taskRun.end_time
+        ? new Date(taskRun.end_time)
+        : undefined
+    })
+    run.updatedAt = new Date()
 
     return run as PipelineRun
   },
@@ -228,6 +240,11 @@ export const getLogs = (
       // Add a unique id to be used as key for React
       parsed.id = i
       parsed.timestamp = new Date(parsed.timestamp)
+      parsed.task_with_index = parsed.task
+        ? parsed.task +
+          (parsed.map_index !== null ? `[${parsed.map_index}]` : '')
+        : null
+
       return parsed
     })
   },
@@ -235,11 +252,11 @@ export const getLogs = (
   initialData: [],
 })
 
-export const getRunDataUrl = (runId: number, taskId: string) =>
+export const getRunDataUrl = (runId: string, taskId: string) =>
   `runs/${runId}/data/${taskId}`
 
 export const getRunData = (
-  runId: number,
+  runId: string,
   taskId: string
 ): UseQueryOptions<any, HTTPError> => ({
   queryKey: ['getRunData', { runId, taskId }],

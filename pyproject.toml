@@ -29,6 +29,7 @@ dependencies = [
   "pydantic-settings>=2.6.0",
   "SQLAlchemy>=2.0.40",
   "uvicorn>=0.32.0",
+  "uuid6>=2025.0.1",
 ]
 dynamic = ["version"]
 

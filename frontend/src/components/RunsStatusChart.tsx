@@ -68,11 +68,13 @@ const RunsStatusChart: React.FC<Props> = ({ query, subject }) => {
             <Text>{subject} health</Text>
           </Flex>
           <Tracker
-            className="mt-2"
+            className="mt-2 h-6"
             data={runs.map((run) => ({
               key: run.id,
               color: STATUS_COLORS[run.status],
-              tooltip: `#${run.id} ${run.status}`,
+              tooltip: `#${run.id} - ${
+                run.start_time ? run.start_time.toLocaleString() : ''
+              }: ${run.status}`,
             }))}
           />
         </>

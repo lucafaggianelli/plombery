@@ -7,7 +7,7 @@ import { getApiUrl, getRunData, getRunDataUrl } from '@/repository'
 import Dialog from './Dialog'
 
 interface Props {
-  runId: number
+  runId: string
   taskId: string
   open: boolean
   onClose: () => any
@@ -117,7 +117,7 @@ const DataViewerDialog: React.FC<Props> = ({
             </Text>
           ))}
 
-        {!query.isPending && !query.isError && <DataViewer data={query.data} />}
+        {!query.isPending && !query.isError && <DataViewer data={query.data.data} />}
       </Dialog>
     </>
   )

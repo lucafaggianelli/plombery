@@ -8,12 +8,14 @@ export type LogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR'
 
 export interface LogEntry {
   id: number
-  task: string
+  task: string | null
+  task_with_index: string | null
   level: LogLevel
   message: string
   timestamp: Date
   exc_info?: string
   loggerName: string
+  map_index: number | null
 }
 
 export interface Trigger {
@@ -30,6 +32,10 @@ export interface Task {
   id: string
   name: string
   description: string
+  upstream_task_ids: string[]
+  downstream_task_ids: string[]
+  mapping_mode: 'fan_out' | 'chained_fan_out' | null
+  map_upstream_id: string | null
 }
 
 export class Pipeline {
@@ -60,9 +66,15 @@ export class Pipeline {
 
 export interface TaskRun {
   duration: number
-  has_output: boolean
+  start_time?: Date
+  end_time?: Date
+  id: string
+  context: any
   status: PipelineRunStatus
   task_id: string
+  task_output_id?: string
+  map_index?: number
+  parent_task_run_id?: string
 }
 
 export interface PipelineRun {
@@ -70,9 +82,11 @@ export interface PipelineRun {
   status: PipelineRunStatus
   pipeline_id: string
   trigger_id: string
-  start_time: Date
+  start_time?: Date
+  end_time?: Date
   duration: number
-  tasks_run: TaskRun[]
+  task_runs: TaskRun[]
+  input_params: Record<string, any>
 }
 
 export interface WhoamiResponse {

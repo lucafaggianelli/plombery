@@ -1,13 +1,16 @@
 from typing import Optional, Sequence
 
 from fastapi import APIRouter, HTTPException, Response
-from fastapi.responses import FileResponse
 
 from plombery.api.authentication import NeedsAuth
-from plombery.database.schemas import PipelineRun
+from plombery.database.schemas import PipelineRun, PipelineRunWithTaskRuns
 from plombery.exceptions import InvalidDataPath
-from plombery.orchestrator.data_storage import get_task_run_data_file, read_logs_file
-from plombery.database.repository import list_pipeline_runs, get_pipeline_run
+from plombery.orchestrator.data_storage import read_logs_file
+from plombery.database.repository import (
+    get_task_run_output_by_id,
+    list_pipeline_runs,
+    get_pipeline_run,
+)
 
 
 class JSONLResponse(Response):
@@ -30,7 +33,7 @@ def list_runs(
 
 
 @router.get("/{run_id}")
-def get_run(run_id: int) -> PipelineRun:
+def get_run(run_id: int) -> PipelineRunWithTaskRuns:
     if not (pipeline_run := get_pipeline_run(run_id)):
         raise HTTPException(404, f"The pipeline run {run_id} doesn't exist")
 
@@ -47,14 +50,6 @@ def get_run_logs(run_id: int):
     return Response(content=logs, media_type="application/jsonl")
 
 
-@router.get("/{run_id}/data/{task}")
-def get_run_data(run_id: int, task: str):
-    try:
-        data_file = get_task_run_data_file(run_id, task)
-    except InvalidDataPath:
-        raise HTTPException(status_code=400, detail="Invalid run or task ID")
-
-    if not data_file.exists():
-        raise HTTPException(status_code=404, detail="Task has no data")
-
-    return FileResponse(path=data_file, filename=f"run-{run_id}-{task}-data.json")
+@router.get("/{run_id}/data/{task_run_id}")
+def get_run_data(task_run_id: str):
+    return get_task_run_output_by_id(task_run_id)

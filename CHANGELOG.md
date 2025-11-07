@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Added
 
 - Add libsql database support (#525)
+- Support for DAGs and Fan-out / Dynamic Mapping tasks (#529)
+- Add context arg to tasks
+- Show pipelines tasks as graph
+
+## Changed
+
+- (breaking) Task dependencies must be defined explicitely
 
 ## [0.5.1] - 2025-10-28
 
