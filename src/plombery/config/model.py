@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any, List, Literal, Optional, Tuple, Type, Union
 
-from pydantic import AnyHttpUrl, BaseModel, Field, HttpUrl, SecretStr
+from pydantic import AnyHttpUrl, AnyUrl, BaseModel, Field, HttpUrl, SecretStr
 from pydantic_core import Url
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic_settings.sources import PydanticBaseSettingsSource
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     auth: Optional[AuthSettings] = None
     allowed_origins: Union[List[AnyHttpUrl], Literal["*"]] = "*"
     data_path: Path = Field(default_factory=Path.cwd)
-    database_url: str = "sqlite:///./plombery.db"
+    database_url: AnyUrl = AnyUrl("sqlite:///./plombery.db")
     database_auth_token: Optional[str] = None
     frontend_url: AnyHttpUrl = Url("http://localhost:8000")
     notifications: Optional[List[NotificationRule]] = None
