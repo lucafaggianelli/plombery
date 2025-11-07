@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Card, Grid, Title } from '@tremor/react'
 import { useParams } from 'react-router'
 import { useEffect } from 'react'
@@ -15,7 +15,6 @@ import DagDetailsPanel from '@/components/DagDetailsPanel'
 import ManualRunDialog from '@/components/ManualRunDialog'
 
 const RunViewPage = () => {
-  const queryClient = useQueryClient()
   const urlParams = useParams()
   const pipelineId = urlParams.pipelineId as string
   const triggerId = urlParams.triggerId as string
@@ -23,9 +22,7 @@ const RunViewPage = () => {
 
   useEffect(() => {
     const onRunUpdate = async () => {
-      await queryClient.invalidateQueries({
-        queryKey: getRun(pipelineId, triggerId, runId).queryKey,
-      })
+      await runQuery.refetch()
     }
     socket.on('run-update', onRunUpdate)
 

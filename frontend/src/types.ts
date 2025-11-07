@@ -8,7 +8,8 @@ export type LogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR'
 
 export interface LogEntry {
   id: number
-  task: string
+  task: string | null
+  task_with_index: string | null
   level: LogLevel
   message: string
   timestamp: Date

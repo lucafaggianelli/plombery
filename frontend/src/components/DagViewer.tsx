@@ -1,21 +1,22 @@
 import Dagre from '@dagrejs/dagre'
-import { useState, useCallback, useEffect, PropsWithChildren } from 'react'
+import { useEffect, PropsWithChildren } from 'react'
 import {
   ReactFlow,
-  applyNodeChanges,
-  applyEdgeChanges,
   Node,
   Edge,
   Background,
   Handle,
   Position,
   NodeProps,
-  OnNodesChange,
-  OnEdgesChange,
   Controls,
   Panel,
+  useNodesState,
+  useEdgesState,
+  FitViewOptions,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import { twMerge } from 'tailwind-merge'
+import { SplitIcon, ArrowsUpFromLineIcon } from 'lucide-react'
 
 import {
   Pipeline,
@@ -25,7 +26,6 @@ import {
   TaskRun,
 } from '@/types'
 import TaskRunStatusIcon from './TaskRunStatusIcon'
-import { twMerge } from 'tailwind-merge'
 
 interface Props extends PropsWithChildren {
   pipeline: Pipeline
@@ -77,7 +77,22 @@ export function TaskNode({
         {/* The target handle exists also if there's a trigger to show (in the run page) */}
         {((data.runs?.length ?? 0) > 0 ||
           data.task.upstream_task_ids.length > 0) && (
-          <Handle type="target" position={Position.Left} />
+          <Handle
+            type="target"
+            position={Position.Left}
+            className={twMerge(
+              data.task.mapping_mode &&
+                '!size-5 flex items-center justify-center !-translate-x-full !-translate-y-1/2 text-tremor-content-inverted dark:text-dark-tremor-content-inverted'
+            )}
+          >
+            {data.task.mapping_mode === 'fan_out' && (
+              <SplitIcon className="size-3 rotate-90" />
+            )}
+
+            {data.task.mapping_mode === 'chained_fan_out' && (
+              <ArrowsUpFromLineIcon className="size-3 rotate-90" />
+            )}
+          </Handle>
         )}
 
         {numberInstances > 1 && (
@@ -87,7 +102,7 @@ export function TaskNode({
         )}
       </div>
 
-      {data.task.mapping_mode === 'fan_out' && (
+      {data.task.mapping_mode && (
         <>
           <div className="absolute -z-10 size-full scale-75 -bottom-4 bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle" />
           <div className="absolute -z-10 size-full scale-90 -bottom-2 bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle" />
@@ -256,19 +271,14 @@ export default function DagViewer({
     setEdges(layouted.edges)
   }, [pipeline, run])
 
-  const [nodes, setNodes] = useState<Node[]>([])
-  const [edges, setEdges] = useState<Edge[]>([])
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
 
-  const onNodesChange: OnNodesChange = useCallback(
-    (changes) =>
-      setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
-    []
-  )
-  const onEdgesChange: OnEdgesChange = useCallback(
-    (changes) =>
-      setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot)),
-    []
-  )
+  const fitViewOptions: FitViewOptions | undefined = run
+    ? {
+        padding: { right: '382px', left: '16px', y: '16px' },
+      }
+    : undefined
 
   return (
     <div style={{ width: '100%', height: '500px' }} className={className}>
@@ -281,10 +291,11 @@ export default function DagViewer({
         multiSelectionKeyCode={null}
         nodeTypes={nodeTypes}
         fitView
+        fitViewOptions={fitViewOptions}
         colorMode={isDark ? 'dark' : 'light'}
       >
         <Background />
-        <Controls />
+        <Controls fitViewOptions={fitViewOptions} />
         <Panel position="top-right">{children}</Panel>
       </ReactFlow>
     </div>

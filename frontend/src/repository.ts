@@ -216,6 +216,7 @@ export const getRun = (
         ? new Date(taskRun.end_time)
         : undefined
     })
+    run.updatedAt = new Date()
 
     return run as PipelineRun
   },
@@ -239,6 +240,11 @@ export const getLogs = (
       // Add a unique id to be used as key for React
       parsed.id = i
       parsed.timestamp = new Date(parsed.timestamp)
+      parsed.task_with_index = parsed.task
+        ? parsed.task +
+          (parsed.map_index !== null ? `[${parsed.map_index}]` : '')
+        : null
+
       return parsed
     })
   },

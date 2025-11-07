@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Collection, Dict, Optional, Tuple
 from datetime import datetime, timedelta
 
 from apscheduler.executors.asyncio import AsyncIOExecutor
@@ -272,10 +272,9 @@ class _Orchestrator:
 
     def _are_upstream_tasks_complete(self, pipeline_run_id: int, task: Task) -> bool:
         """Verifies all dependencies are met."""
-        finished_tasks = get_task_runs_for_pipeline_run(
+        finished_tasks = get_finished_tasks_ids(
             pipeline_run_id,
             task.upstream_task_ids,
-            status=[PipelineRunStatus.COMPLETED],
         )
 
         ready = len(finished_tasks) == len(task.upstream_task_ids)
@@ -380,7 +379,9 @@ def get_downstream_task_ids(task_id: str, pipeline: Pipeline):
     return downstream_tasks
 
 
-def get_finished_tasks_ids(pipeline_run_id: int, task_ids: Optional[list[str]] = None):
+def get_finished_tasks_ids(
+    pipeline_run_id: int, task_ids: Optional[Collection[str]] = None
+):
     tasks_status: dict[str, bool] = {}
 
     for r in get_task_runs_for_pipeline_run(pipeline_run_id, task_ids):
