@@ -2,9 +2,9 @@
 icon: material/lock
 ---
 
-Plombery has a buil-in and ready-to-use authentication system
+Plombery has a built-in and ready-to-use authentication system
 based on OAuth providers, so you can use your corporate auth system
-or Google, Github, etc. as long as they're compatible with OAuth.
+or Google, GitHub, etc. as long as they're compatible with OAuth.
 
 To enable the auth system you just need to configure it via the `yml`
 config file.
@@ -28,9 +28,8 @@ Options available
 
 *from v0.5.0*
 
-Can be `microsoft` of `google`, if this field is present, then the client id and secret are required.
-
-If using Microsoft, then you can also use `microsoft_tenant_id`, check the dedicated page.
+Provider is `generic`
+See dedicated pages for others providers on how to configure them.
 
 ### `client_id`
 
@@ -39,10 +38,6 @@ An OAuth app client ID
 ### `client_secret`
 
 An OAuth app client secret
-
-### `microsoft_tenant_id`
-
-The Microsoft tenant ID to be used when using the `provider: microsoft` option.
 
 ### `server_metadata_url`
 
