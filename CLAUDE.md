@@ -14,7 +14,7 @@ Stack: FastAPI + APScheduler + SQLAlchemy (SQLite default) + Socket.IO on the ba
 
 ```sh
 # Install with dev dependencies
-pip install ".[dev]"
+uv sync --dev
 
 # Run all tests
 pytest
