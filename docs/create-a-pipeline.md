@@ -39,7 +39,7 @@ from datetime import datetime
 from random import randint
 
 from apscheduler.triggers.interval import IntervalTrigger
-from plombery import task, get_logger, Trigger, register_pipeline
+from plombery import task, get_app, get_logger, Trigger, register_pipeline
 
 
 @task
@@ -95,6 +95,8 @@ register_pipeline(
 Finally add this at the bottom of your file to start the app:
 
 ```py title="src/app.py"
+app = get_app()
+
 if __name__ == "__main__":
     import uvicorn
 
@@ -110,7 +112,7 @@ Now your `src/app.py` should look like this:
     from random import randint
 
     from apscheduler.triggers.interval import IntervalTrigger
-    from plombery import task, get_logger, Trigger, register_pipeline
+    from plombery import task, get_app, get_logger, Trigger, register_pipeline
 
 
     @task
@@ -153,6 +155,8 @@ Now your `src/app.py` should look like this:
             ),
         ],
     )
+
+    app = get_app()
 
     if __name__ == "__main__":
         import uvicorn
