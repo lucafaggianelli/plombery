@@ -49,6 +49,13 @@ version = { attr = "plombery._version.__version__" }
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+plombery = [
+  "static/**/*",
+  "notifications/email_templates/**/*",
+  "alembic/alembic.ini",
+]
+
 [tool.pytest.ini_options]
 env = ["DATABASE_URL=sqlite:///:memory:", "TESTING=true"]
 
