@@ -325,3 +325,45 @@ async def test_generic_type_annotations_are_supported(app: Plombery):
 
     assert run.status == PipelineRunStatus.COMPLETED
     assert received == [[1, 2, 3]]
+
+
+@pytest.mark.asyncio
+async def test_wide_fan_in_schedules_the_join_task_once(app: Plombery):
+    """Many branches completing at the same time must not schedule the join
+    task more than once: every branch reaches `handle_task_completion` and
+    checks the very same set of upstream dependencies."""
+
+    app.start()
+
+    with Pipeline(id="wide-fan-in") as pipeline:
+
+        @task
+        def start():
+            return 1
+
+        branches = []
+
+        for index in range(8):
+
+            @task(id=f"branch_{index}")
+            async def branch(start):
+                await asyncio.sleep(0.02)
+                return "done"
+
+            branches.append(branch)
+
+        @task
+        def join(**kwargs):
+            return "joined"
+
+        start >> branches
+
+        for branch_task in branches:
+            branch_task >> join
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert count_task_runs(run)["join"] == 1
