@@ -7,16 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## Added
+### Added
 
-- Add libsql database support (#525)
-- Support for DAGs and Fan-out / Dynamic Mapping tasks (#529)
-- Add context arg to tasks
-- Show pipelines tasks as graph
+- Support for DAGs and Fan-out / Dynamic Mapping tasks ([#529](https://github.com/lucafaggianelli/plombery/issues/529))
+- Add `context` arg to tasks
+- Show pipeline tasks as an interactive graph
 
-## Changed
+### Changed
 
-- (breaking) Task dependencies must be defined explicitely
+- (breaking) Task dependencies must be defined explicitly
+
+## [0.5.2] - 2025-11-30
+
+### Added
+
+- Add libsql database support ([#525](https://github.com/lucafaggianelli/plombery/issues/525))
+
+### Fixed
+
+- Fix Select field in pipeline run dialog ([#537](https://github.com/lucafaggianelli/plombery/issues/537))
 
 ## [0.5.1] - 2025-10-28
 

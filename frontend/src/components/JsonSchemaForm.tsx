@@ -1,18 +1,13 @@
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
+import { Field, Label, Select } from '@headlessui/react'
 import {
-  Flex,
-  Icon,
-  NumberInput,
-  Select,
-  SelectItem,
-  Text,
-  TextInput,
-} from '@tremor/react'
+  ChevronDownIcon,
+  QuestionMarkCircleIcon,
+} from '@heroicons/react/24/outline'
+import { Flex, Icon, NumberInput, Text, TextInput } from '@tremor/react'
 import { JSONSchema7, JSONSchema7TypeName } from 'json-schema'
-import { useCallback, useState } from 'react'
+import React, { useCallback } from 'react'
 
 import RangeSlider from './RangeSlider'
-import React from 'react'
 
 interface Props {
   schema: JSONSchema7
@@ -91,23 +86,23 @@ const renderers: Record<
     )
   },
   select: (field: FieldDefinition) => {
-    const [value, setValue] = useState<string>(field.defaultValue || '')
-
     return (
-      <div>
+      <div className="relative">
         <Select
+          name={field.name}
           defaultValue={field.defaultValue}
-          onValueChange={setValue}
-          value={value}
+          className="appearance-none text-sm/6 w-full outline-none text-left whitespace-nowrap truncate rounded-tremor-default focus:ring-2 transition duration-100 border px-3 py-1.5 shadow-tremor-input focus:border-tremor-brand-subtle focus:ring-tremor-brand-muted dark:shadow-dark-tremor-input dark:focus:border-dark-tremor-brand-subtle dark:focus:ring-dark-tremor-brand-muted pl-3 bg-tremor-background dark:bg-dark-tremor-background hover:bg-tremor-background-muted dark:hover:bg-dark-tremor-background-muted text-tremor-content dark:text-dark-tremor-content border-tremor-border dark:border-dark-tremor-border"
         >
           {field.value.enum!.map((item) => (
-            <SelectItem key={item?.toString()} value={item!.toString()}>
+            <option key={item?.toString()} value={item!.toString()}>
               {item?.toString()}
-            </SelectItem>
+            </option>
           ))}
         </Select>
-
-        <input type="hidden" name={field.name} value={value} />
+        <ChevronDownIcon
+          className="group pointer-events-none absolute top-2.5 right-2.5 size-4"
+          aria-hidden="true"
+        />
       </div>
     )
   },
@@ -216,12 +211,12 @@ const JsonSchemaForm: React.FC<Props> = ({ errors = {}, schema }) => {
     })
 
     return (
-      <div key={key}>
-        <Flex className="justify-between">
-          <Text className="mb-2">
+      <Field key={key}>
+        <Flex className="mb-2 justify-between">
+          <Label className="text-sm font-medium">
             {label}
             {required && ' *'}
-          </Text>
+          </Label>
 
           {value.description && (
             <Icon
@@ -238,11 +233,11 @@ const JsonSchemaForm: React.FC<Props> = ({ errors = {}, schema }) => {
             {errors[key]}
           </Text>
         )}
-      </div>
+      </Field>
     )
   })
 
-  return <Flex className="gap-4 flex-col items-stretch">{inputFields}</Flex>
+  return <Flex className="gap-6 flex-col items-stretch">{inputFields}</Flex>
 }
 
 export default JsonSchemaForm
