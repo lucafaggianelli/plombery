@@ -26,20 +26,21 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
     app.start()
     app.register_pipeline(pipeline1)
 
-    await run_pipeline_now(pipeline1)
+    run = await run_pipeline_now(pipeline1)
+    run_id = run.id
 
     await sleep(1)
 
-    pipeline_run = get_pipeline_run(1)
+    pipeline_run = get_pipeline_run(run_id)
     task_run_id = pipeline_run.task_runs[0].id
 
-    logs = get_parsed_logs(1)
+    logs = get_parsed_logs(run_id)
 
     assert logs == [
         {
             "level": "INFO",
-            "loggerName": "plombery.1",
-            "message": "Executing pipeline `pipeline1` #1 via trigger `_manual`",
+            "loggerName": f"plombery.{run_id}",
+            "message": f"Executing pipeline `pipeline1` #{run_id} via trigger `_manual`",
             "pipeline": "pipeline1",
             "task": None,
             "map_index": None,
@@ -47,7 +48,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
         {
             "level": "INFO",
             "message": f"Executing task pipe_1_task_1 in pipeline pipeline1 (id={task_run_id})",
-            "loggerName": "plombery.1",
+            "loggerName": f"plombery.{run_id}",
             "pipeline": "pipeline1",
             "task": None,
             "map_index": None,
@@ -55,7 +56,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
         {
             "level": "DEBUG",
             "message": "a debug log",
-            "loggerName": "plombery.1-pipe_1_task_1",
+            "loggerName": f"plombery.{run_id}-pipe_1_task_1",
             "pipeline": "pipeline1",
             "task": "pipe_1_task_1",
             "map_index": None,
@@ -63,7 +64,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
         {
             "level": "INFO",
             "message": "an info log",
-            "loggerName": "plombery.1-pipe_1_task_1",
+            "loggerName": f"plombery.{run_id}-pipe_1_task_1",
             "pipeline": "pipeline1",
             "task": "pipe_1_task_1",
             "map_index": None,
@@ -71,7 +72,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
         {
             "level": "WARNING",
             "message": "a warning log",
-            "loggerName": "plombery.1-pipe_1_task_1",
+            "loggerName": f"plombery.{run_id}-pipe_1_task_1",
             "pipeline": "pipeline1",
             "task": "pipe_1_task_1",
             "map_index": None,
@@ -79,7 +80,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
         {
             "level": "ERROR",
             "message": "an error log",
-            "loggerName": "plombery.1-pipe_1_task_1",
+            "loggerName": f"plombery.{run_id}-pipe_1_task_1",
             "pipeline": "pipeline1",
             "task": "pipe_1_task_1",
             "map_index": None,
@@ -87,7 +88,7 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
         {
             "level": "CRITICAL",
             "message": "a critical log",
-            "loggerName": "plombery.1-pipe_1_task_1",
+            "loggerName": f"plombery.{run_id}-pipe_1_task_1",
             "pipeline": "pipeline1",
             "task": "pipe_1_task_1",
             "map_index": None,

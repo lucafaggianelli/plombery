@@ -66,7 +66,7 @@ def on_pipeline_status_changed(
     _send_pipeline_event(pipeline, pipeline_run)
 
     if status.is_finished():
-        close_logger(pipeline, pipeline_run)
+        close_logger(pipeline_run)
 
     return pipeline_run
 
@@ -198,7 +198,17 @@ async def execute_task_instance(
         # Avoid circular import
         from plombery.orchestrator import orchestrator
 
-        await orchestrator.handle_task_completion(task_run)
+        try:
+            await orchestrator.handle_task_completion(task_run)
+        except Exception as error:
+            # Orchestration itself failed (bad fan-out input, missing task, ...).
+            # Without this guard the exception escapes into the executor and the
+            # pipeline run stays RUNNING forever, as nothing else will ever
+            # advance the DAG.
+            logger.error(
+                "Cannot schedule the tasks downstream of %s", task.id, exc_info=error
+            )
+            on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.FAILED)
 
 
 async def run(
@@ -329,15 +339,28 @@ async def _execute_task(
 
     # Iterate over arguments required by the function signature
     for arg_name in result.input_arg_names:
+        parameter = result.func_params[arg_name]
+
+        # An argument that doesn't name an upstream task but declares a default
+        # is a plain optional argument of the function: leave the default alone
+        # rather than overwriting it with None.
+        if (
+            arg_name not in task.upstream_task_ids
+            and parameter.default is not inspect.Parameter.empty
+        ):
+            continue
+
         # The context handles the mapping logic:
         # - If mapped, resolves to single item if arg_name == map_upstream_id.
         # - Otherwise, resolves to the full output of the upstream task named arg_name.
         input_data = runtime_context.get_output_data(task_id=arg_name)
 
-        arg_annotation = result.func_params[arg_name].annotation
+        arg_annotation = parameter.annotation
 
-        # If the argument is a Pydantic Model, we parse it
-        if issubclass(arg_annotation, BaseModel):
+        # If the argument is a Pydantic Model, we parse it. `isinstance(..., type)`
+        # guards against generic annotations such as `List[int]` or `Optional[str]`,
+        # which are not classes and would make `issubclass` raise a TypeError.
+        if isinstance(arg_annotation, type) and issubclass(arg_annotation, BaseModel):
             input_data = arg_annotation.model_validate(input_data or {})
 
         kwargs[arg_name] = input_data

@@ -12,6 +12,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Support for DAGs and Fan-out / Dynamic Mapping tasks ([#529](https://github.com/lucafaggianelli/plombery/issues/529))
 - Add `context` arg to tasks
 - Show pipeline tasks as an interactive graph
+- Deployment documentation
+
+### Fixed
+
+- A task downstream of a fan-out now receives the output of every mapped
+  instance, instead of `None`
+- An orchestration error, such as a fan-out over a non collection, now fails the
+  run instead of leaving it running forever
+- A task argument with a default value is no longer overwritten with `None` when
+  it doesn't name an upstream task
+- Tasks annotated with generic types, such as `List[int]`, no longer fail
+- Close the log file descriptors of every task and mapped instance, not only the
+  ones of the pipeline logger
 
 ### Changed
 

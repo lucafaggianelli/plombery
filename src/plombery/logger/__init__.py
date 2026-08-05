@@ -6,10 +6,8 @@ from plombery.logger.web_socket_handler import queue_handler
 from plombery.orchestrator.data_storage import get_logs_filename
 from plombery.pipeline.context import (
     run_context,
-    pipeline_context,
     task_run_context,
 )
-from plombery.pipeline.pipeline import Pipeline
 
 
 def get_logger() -> logging.LoggerAdapter:
@@ -76,22 +74,43 @@ def get_logger() -> logging.LoggerAdapter:
     return logging.LoggerAdapter(logger, extra_log_info)
 
 
-def close_logger(pipeline: Pipeline, pipeline_run: PipelineRun):
+def close_logger(pipeline_run: PipelineRun):
     """
     Close all the resources and file descriptors opened by the logger.
     Solves issue 491: https://github.com/lucafaggianelli/plombery/issues/491
 
+    A run doesn't use a single logger: `get_logger` creates one for the pipeline
+    (`plombery.<run_id>`) and one for every task, and every mapped instance of a
+    task (`plombery.<run_id>-<task_id>[-<map_index>]`). All of them hold an open
+    file descriptor, so all of them have to be closed, otherwise a pipeline that
+    fans out over a large collection leaks one descriptor per item.
+
     Args:
-        logger (logging.LoggerAdapter): logger obtained with get_logger
+        pipeline_run (PipelineRun): the run that has just finished
     """
-    pt = pipeline_context.set(pipeline)
-    rt = run_context.set(pipeline_run)
 
-    logger = get_logger()
+    run_logger_name = f"plombery.{pipeline_run.id}"
 
-    for handler in logger.logger.handlers:
-        logger.logger.removeHandler(handler)
-        handler.close()
+    logger_names = [
+        name
+        for name in list(logging.Logger.manager.loggerDict)
+        if name == run_logger_name or name.startswith(f"{run_logger_name}-")
+    ]
 
-    pipeline_context.reset(pt)
-    run_context.reset(rt)
+    for logger_name in logger_names:
+        logger = logging.getLogger(logger_name)
+
+        # Iterate over a copy: `removeHandler` mutates the list being iterated,
+        # which would silently skip every other handler.
+        for handler in list(logger.handlers):
+            # The websocket handler is a single shared instance used by every
+            # run, so it must be detached but never closed.
+            if isinstance(handler, logging.FileHandler):
+                handler.close()
+
+            logger.removeHandler(handler)
+
+        # Loggers are never garbage collected by the logging module, and a new
+        # one is created for every run and every task: drop them explicitly or
+        # a long running instance grows one entry per task run, forever.
+        logging.Logger.manager.loggerDict.pop(logger_name, None)
