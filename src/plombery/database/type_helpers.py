@@ -57,5 +57,10 @@ class AwareDateTime(sa.types.TypeDecorator):
 
     impl = DateTime
 
+    # The type carries no per instance state, so it's safe to cache. Without
+    # this SQLAlchemy disables statement caching for every query touching a
+    # datetime column.
+    cache_ok = True
+
     def process_result_value(self, value: datetime.datetime, dialect):
         return value.replace(tzinfo=datetime.timezone.utc) if value else value

@@ -51,6 +51,12 @@ if settings.database_url.scheme == "sqlite+libsql":
 
 engine = get_engine()
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# `expire_on_commit` is disabled because the repository returns instances that
+# outlive their session: with it enabled every attribute would be expired on
+# commit and the first read afterwards would try to refresh from a closed
+# session, raising DetachedInstanceError.
+SessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, expire_on_commit=False, bind=engine
+)
 
 Base = declarative_base()
