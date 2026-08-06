@@ -25,8 +25,36 @@ class AuthSettings(BaseModel):
     microsoft_tenant_id: Optional[str] = None
 
 
+class RetentionSettings(BaseModel):
+    """How long to keep the data produced by pipeline runs.
+
+    The two thresholds are independent on purpose: log files are usually the
+    first thing that stops being useful, while the run history is what feeds
+    the charts and is worth keeping much longer.
+    """
+
+    files_days: Optional[int] = Field(
+        default=None,
+        gt=0,
+        description=(
+            "Delete the log files of runs finished more than this many days "
+            "ago. The run itself is kept, so its history stays visible."
+        ),
+    )
+
+    runs_days: Optional[int] = Field(
+        default=None,
+        gt=0,
+        description=(
+            "Delete the runs finished more than this many days ago, with "
+            "their task runs, their stored outputs and their log files."
+        ),
+    )
+
+
 class Settings(BaseSettings):
     auth: Optional[AuthSettings] = None
+    retention: RetentionSettings = Field(default_factory=RetentionSettings)
     allowed_origins: Union[List[AnyHttpUrl], Literal["*"]] = "*"
     data_path: Path = Field(default_factory=Path.cwd)
     database_url: AnyUrl = AnyUrl("sqlite:///./plombery.db")

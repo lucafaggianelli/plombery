@@ -1,6 +1,7 @@
 import json
+import shutil
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from plombery.constants import PIPELINE_RUN_LOGS_FILE
 from plombery.exceptions import InvalidDataPath
@@ -138,3 +139,70 @@ def read_logs_file(pipeline_run_id: int) -> Optional[str]:
 
     with logs_file.open(mode="r", encoding="utf-8") as f:
         return f.read().rstrip()
+
+
+def get_run_data_dir(pipeline_run_id: int) -> Path:
+    """Get the directory holding all the data of a run, without creating it.
+
+    Args:
+        pipeline_run_id (int): the run ID
+
+    Returns:
+        Path: the run data directory
+
+    Raises:
+        InvalidDataPath: In case the path is invalid.
+    """
+
+    run_dir = _base_data_path / "runs" / f"run_{pipeline_run_id}"
+
+    _check_is_valid_path(run_dir)
+
+    return run_dir
+
+
+def delete_run_data(pipeline_run_id: int) -> bool:
+    """Delete the whole data directory of a run, logs included.
+
+    Args:
+        pipeline_run_id (int): the run ID
+
+    Returns:
+        bool: True if there was something to delete
+    """
+
+    run_dir = get_run_data_dir(pipeline_run_id)
+
+    if not run_dir.is_dir():
+        return False
+
+    shutil.rmtree(run_dir)
+
+    return True
+
+
+def list_stored_run_ids() -> List[int]:
+    """The run IDs that have a data directory on disk.
+
+    Used to find the directories left behind by runs that are no longer in the
+    database, for instance because the database was reset.
+    """
+
+    runs_dir = _base_data_path / "runs"
+
+    if not runs_dir.is_dir():
+        return []
+
+    run_ids = []
+
+    for child in runs_dir.iterdir():
+        if not child.is_dir() or not child.name.startswith("run_"):
+            continue
+
+        try:
+            run_ids.append(int(child.name[len("run_") :]))
+        except ValueError:
+            # Not a directory Plombery created, leave it alone
+            continue
+
+    return run_ids

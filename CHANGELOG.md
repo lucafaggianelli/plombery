@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add `context` arg to tasks
 - Show pipeline tasks as an interactive graph
 - Deployment documentation
+- Retention policy for runs data, with independent thresholds for log
+  files and for run history (`retention.files_days`, `retention.runs_days`)
 
 ### Fixed
 

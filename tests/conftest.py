@@ -9,6 +9,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from plombery import _Plombery
 from plombery.config import settings
+from plombery.database.base import Base, engine
 from plombery.database.models import PipelineRun
 from plombery.database.repository import get_pipeline_run
 from plombery.orchestrator import data_storage, orchestrator
@@ -59,6 +60,12 @@ def count_task_runs(run: PipelineRun) -> Dict[str, int]:
 
 @pytest.fixture
 def app():
+    # The engine is created once at import time and the in memory database
+    # lives as long as the process, so without this every test would see the
+    # rows left behind by the ones that ran before it.
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
     # The orchestrator is a module level singleton and its scheduler binds to
     # the event loop that started it, while every test gets a fresh event loop.
     # Reset both the registry and the scheduler so that more than one test can
