@@ -59,6 +59,11 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         process_revision_directives=writer,
+        # SQLite supports almost no ALTER TABLE: without batch mode a migration
+        # that changes a column type or a constraint simply cannot be expressed.
+        # Batch mode makes Alembic recreate the table instead (create, copy,
+        # drop, rename), which is the standard way to migrate SQLite.
+        render_as_batch=True,
     )
 
     with context.begin_transaction():
@@ -79,6 +84,8 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             process_revision_directives=writer,
+            # See the comment in run_migrations_offline()
+            render_as_batch=True,
         )
 
         with context.begin_transaction():
