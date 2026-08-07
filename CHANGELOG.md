@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   files and for run history (`retention.files_days`, `retention.runs_days`)
 - Record on every run the version of the pipeline it executed, either the
   `version` set on the pipeline or a hash of its task graph
+- Warn when a task blocks the event loop, naming it, since that freezes the
+  API and the live logs (`blocked_loop_threshold`)
 
 ### Fixed
 

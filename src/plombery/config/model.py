@@ -54,6 +54,15 @@ class RetentionSettings(BaseModel):
 
 class Settings(BaseSettings):
     auth: Optional[AuthSettings] = None
+    blocked_loop_threshold: Optional[float] = Field(
+        default=2.0,
+        description=(
+            "Log a warning when the event loop stays blocked for longer than "
+            "this many seconds, naming the task responsible. An async task "
+            "calling blocking code freezes the API and the live logs along "
+            "with it, and this is what makes that visible. Set to 0 to disable."
+        ),
+    )
     retention: RetentionSettings = Field(default_factory=RetentionSettings)
     allowed_origins: Union[List[AnyHttpUrl], Literal["*"]] = "*"
     data_path: Path = Field(default_factory=Path.cwd)

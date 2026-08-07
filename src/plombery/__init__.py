@@ -13,6 +13,7 @@ from .logger import get_logger  # noqa F401
 from .logger.web_socket_handler import bind_event_loop
 from .notifications import NotificationRule, notification_manager
 from .orchestrator import orchestrator
+from .orchestrator.watchdog import start_watchdog, stop_watchdog
 from .retention import apply_retention, delete_orphan_data
 from .orchestrator.context import Context  # noqa F401
 from .pipeline.tasks import Task, task, MappingMode  # noqa F401
@@ -62,6 +63,7 @@ class _Plombery:
         # Socket.IO coroutines are scheduled onto this loop from the logging
         # thread, so it has to be captured while it is running.
         bind_event_loop()
+        start_watchdog(settings.blocked_loop_threshold)
 
         setup_database()
 
@@ -83,6 +85,7 @@ class _Plombery:
         )
 
     def stop(self):
+        stop_watchdog()
         orchestrator.stop()
 
 

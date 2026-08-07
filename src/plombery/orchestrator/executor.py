@@ -11,6 +11,7 @@ from plombery.exceptions import InvalidDataPath
 from plombery.logger import close_logger, get_logger
 from plombery.notifications import notification_manager
 from plombery.orchestrator.context import Context
+from plombery.orchestrator.watchdog import track_running_task
 from plombery.utils import run_all_coroutines, utcnow
 from plombery.websocket import sio
 from plombery.database.models import PipelineRun, TaskRun
@@ -161,7 +162,8 @@ async def execute_task_instance(
             pipeline_params = None
 
         # Pass resolved XCom inputs and pipeline params to the execution wrapper
-        task_output = await _execute_task(task, task_run, pipeline_params)
+        with track_running_task(task_run.id, task.id):
+            task_output = await _execute_task(task, task_run, pipeline_params)
 
         # Store output and set success status
         if task_output is not None:
