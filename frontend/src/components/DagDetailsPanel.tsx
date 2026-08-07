@@ -24,7 +24,10 @@ export default function DagDetailsPanel({ pipeline, run }: Props) {
       (taskRun) => taskRun.task_id === selectedNode
     )
 
-    return <TaskRunDetails pipeline={pipeline} runs={taskRuns} />
+    // The task carries the mapping metadata, which the runs alone don't have
+    const task = pipeline.tasks.find((task) => task.id === selectedNode)
+
+    return <TaskRunDetails task={task} runs={taskRuns} />
   }
 
   return <PipelineRunDetails pipeline={pipeline} run={run} />

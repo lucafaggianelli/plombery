@@ -26,6 +26,7 @@ import {
   TaskRun,
 } from '@/types'
 import TaskRunStatusIcon from './TaskRunStatusIcon'
+import { getTaskRunsStatus } from '@/utils'
 
 interface Props extends PropsWithChildren {
   pipeline: Pipeline
@@ -49,6 +50,12 @@ export function TaskNode({
   selected,
 }: NodeProps<Node<TaskWithRun, 'task'>>) {
   const numberInstances = data.runs?.length ?? 0
+
+  const mappingLabel = data.task.mapping_mode
+    ? `${
+        data.task.mapping_mode === 'fan_out' ? 'Fan out' : 'Chained fan out'
+      }${data.task.map_upstream_id ? ` over ${data.task.map_upstream_id}` : ''}`
+    : ''
 
   return (
     <div className="relative">
@@ -86,17 +93,34 @@ export function TaskNode({
             )}
           >
             {data.task.mapping_mode === 'fan_out' && (
-              <SplitIcon className="size-3 rotate-90" />
+              <SplitIcon
+                className="size-3 rotate-90"
+                aria-label={mappingLabel}
+              >
+                <title>{mappingLabel}</title>
+              </SplitIcon>
             )}
 
             {data.task.mapping_mode === 'chained_fan_out' && (
-              <ArrowsUpFromLineIcon className="size-3 rotate-90" />
+              <ArrowsUpFromLineIcon
+                className="size-3 rotate-90"
+                aria-label={mappingLabel}
+              >
+                <title>{mappingLabel}</title>
+              </ArrowsUpFromLineIcon>
             )}
           </Handle>
         )}
 
-        {numberInstances > 1 && (
-          <div className="absolute -top-2 -left-2 text-xs flex size-5 items-center justify-center rounded-full bg-sky-800 text-white">
+        {/* Show the count on any mapped task, not only when it produced more
+            than one instance: a fan out over a single item is still a fan out */}
+        {data.task.mapping_mode && numberInstances > 0 && (
+          <div
+            title={`${numberInstances} ${
+              numberInstances === 1 ? 'instance' : 'instances'
+            }`}
+            className="absolute -top-2 -left-2 text-xs flex size-5 items-center justify-center rounded-full bg-sky-800 text-white"
+          >
             {numberInstances}&times;
           </div>
         )}
@@ -160,34 +184,6 @@ const getLayoutedElements = (
     }),
     edges,
   }
-}
-
-const getTaskRunsStatus = (taskRuns: TaskRun[]): PipelineRunStatus => {
-  if (taskRuns.length === 0) {
-    return 'pending'
-  }
-
-  if (taskRuns.every((taskRun) => taskRun.status === 'completed')) {
-    return 'completed'
-  }
-
-  if (taskRuns.some((taskRun) => taskRun.status === 'failed')) {
-    return 'failed'
-  }
-
-  if (taskRuns.some((taskRun) => taskRun.status === 'cancelled')) {
-    return 'cancelled'
-  }
-
-  if (taskRuns.some((taskRun) => taskRun.status === 'running')) {
-    return 'running'
-  }
-
-  if (taskRuns.some((taskRun) => taskRun.status === 'pending')) {
-    return 'pending'
-  }
-
-  return 'running'
 }
 
 export default function DagViewer({
