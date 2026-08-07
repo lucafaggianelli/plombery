@@ -14,6 +14,7 @@ class PipelineRunBase(BaseModel):
     end_time: Optional[datetime] = None
     input_params: Optional[dict] = None
     reason: Optional[str] = None
+    pipeline_version: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

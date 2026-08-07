@@ -16,9 +16,11 @@ from plombery.database.repository import (
     mark_tasks_as_skipped,
 )
 from plombery.database.schemas import PipelineRunCreate, TaskRunCreate
+from plombery.logger import get_logger
 from plombery.orchestrator.dag import is_mappable_list
 from plombery.orchestrator.executor import (
     Pipeline,
+    build_run_update_payload,
     execute_task_instance,
     on_pipeline_status_changed,
     run,
@@ -99,6 +101,24 @@ class _Orchestrator:
         # Find tasks with no dependencies (DAG entry points)
         initial_tasks = [task for task in pipeline.tasks if not task.upstream_task_ids]
 
+        if not initial_tasks:
+            # Nothing will ever be scheduled, so nothing will ever report a
+            # completion: without closing the run here it stays RUNNING forever.
+            if pipeline.tasks:
+                # Every task has an upstream, so the graph has no entry point.
+                # Cycle validation should have rejected this at registration,
+                # hence failing loudly rather than silently completing.
+                get_logger().error(
+                    "Pipeline %s has no task without dependencies and cannot start",
+                    pipeline.id,
+                )
+                status = PipelineRunStatus.FAILED
+            else:
+                status = PipelineRunStatus.COMPLETED
+
+            on_pipeline_status_changed(pipeline, pipeline_run, status)
+            return
+
         for task in initial_tasks:
             self._schedule_task_instance(
                 pipeline,
@@ -112,13 +132,7 @@ class _Orchestrator:
         Checks dependencies for downstream tasks and schedules them if ready.
         Also checks if the entire pipeline run is complete.
         """
-        await sio.emit(
-            "run-update",
-            dict(
-                pipeline=task_run.pipeline_run.pipeline_id,
-                trigger=task_run.pipeline_run.trigger_id,
-            ),
-        )
+        await sio.emit("run-update", build_run_update_payload(task_run.pipeline_run))
 
         pipeline = self.get_pipeline(task_run.pipeline_run.pipeline_id)
         if not pipeline:
@@ -248,7 +262,10 @@ class _Orchestrator:
         # inserted in the DB just before the task is queued.
         # Even more, some tasks are mapped so their task runs appear more than once.
 
-        finished_tasks = get_finished_tasks_ids(task_run.pipeline_run_id)
+        # A set, not a list: a task can be both finished in the database and
+        # part of a skipped branch, and counting it twice makes the total
+        # overshoot the number of tasks, so the run would never be completed.
+        finished_tasks = set(get_finished_tasks_ids(task_run.pipeline_run_id))
 
         # Skipped tasks for the moment are mapped tasks whose upstream output is an empty list
         # so they cannot be scheduled
@@ -257,14 +274,15 @@ class _Orchestrator:
 
         for task in skipped_tasks:
             all_skipped_tasks.add(task.id)
-            all_skipped_tasks = all_skipped_tasks.union(
-                get_downstream_task_ids(task.id, pipeline)
-            )
-            finished_tasks.extend(all_skipped_tasks)
+            all_skipped_tasks |= get_downstream_task_ids(task.id, pipeline)
 
-        mark_tasks_as_skipped(all_skipped_tasks, task_run.pipeline_run_id)
+        if all_skipped_tasks:
+            mark_tasks_as_skipped(all_skipped_tasks, task_run.pipeline_run_id)
+            finished_tasks |= all_skipped_tasks
 
-        if len(finished_tasks) == len(pipeline.tasks):
+        # `>=` rather than `==`: an equality check turns any miscount into a run
+        # that stays RUNNING forever, which is the worst possible failure mode.
+        if len(finished_tasks) >= len(pipeline.tasks):
             # No more running, scheduled, or pending tasks left
             on_pipeline_status_changed(
                 pipeline, task_run.pipeline_run, PipelineRunStatus.COMPLETED
@@ -409,6 +427,7 @@ async def run_pipeline_now(
             status=PipelineRunStatus.PENDING,
             input_params=params,
             reason=reason,
+            pipeline_version=pipeline.get_version(),
         )
     )
 

@@ -44,7 +44,8 @@ export class Pipeline {
     public name: string,
     public description: string,
     public tasks: Task[],
-    public triggers: Trigger[]
+    public triggers: Trigger[],
+    public version?: string
   ) {}
 
   hasTrigger(): boolean {
@@ -87,6 +88,8 @@ export interface PipelineRun {
   duration: number
   task_runs: TaskRun[]
   input_params: Record<string, any>
+  /** The pipeline definition this run executed */
+  pipeline_version?: string
 }
 
 export interface WhoamiResponse {

@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Deployment documentation
 - Retention policy for runs data, with independent thresholds for log
   files and for run history (`retention.files_days`, `retention.runs_days`)
+- Record on every run the version of the pipeline it executed, either the
+  `version` set on the pipeline or a hash of its task graph
 
 ### Fixed
 
@@ -27,6 +29,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Tasks annotated with generic types, such as `List[int]`, no longer fail
 - Close the log file descriptors of every task and mapped instance, not only the
   ones of the pipeline logger
+- A run no longer hangs in `running` forever when two mapped branches are
+  skipped at once, when the pipeline has no tasks, or when the input params
+  fail validation
+- Every `run-update` websocket event now carries the run, so the runs list
+  stops showing a finished run as still going
+- Live log lines are no longer labelled with the wrong task when several
+  tasks run at the same time, and are streamed on the server event loop
+  instead of a new one per line
 
 ### Changed
 

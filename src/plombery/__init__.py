@@ -10,6 +10,7 @@ from .api import app
 from .config import settings
 from .database.operations import setup_database
 from .logger import get_logger  # noqa F401
+from .logger.web_socket_handler import bind_event_loop
 from .notifications import NotificationRule, notification_manager
 from .orchestrator import orchestrator
 from .retention import apply_retention, delete_orphan_data
@@ -58,6 +59,10 @@ class _Plombery:
         notification_manager.register_rule(notification)
 
     def start(self):
+        # Socket.IO coroutines are scheduled onto this loop from the logging
+        # thread, so it has to be captured while it is running.
+        bind_event_loop()
+
         setup_database()
 
         _apply_retention()

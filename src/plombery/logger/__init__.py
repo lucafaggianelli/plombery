@@ -2,7 +2,7 @@ import logging
 
 from plombery.database.models import PipelineRun
 from plombery.logger.formatter import JsonFormatter
-from plombery.logger.web_socket_handler import queue_handler
+from plombery.logger.web_socket_handler import build_queue_handler
 from plombery.orchestrator.data_storage import get_logs_filename
 from plombery.pipeline.context import (
     run_context,
@@ -33,8 +33,10 @@ def get_logger() -> logging.LoggerAdapter:
     json_handler = logging.FileHandler(filename)
     json_handler.setFormatter(json_formatter)
 
-    websocket_handler = queue_handler
-    websocket_handler.setFormatter(json_formatter)
+    # A handler of its own, because the formatter holds this logger's task and
+    # map index: a shared handler would label log lines with whichever task
+    # created a logger last.
+    websocket_handler = build_queue_handler(json_formatter)
 
     # Create a logger that's unique for each pipeline run
     # and not simply for each pipeline, otherwise successive
@@ -103,8 +105,8 @@ def close_logger(pipeline_run: PipelineRun):
         # Iterate over a copy: `removeHandler` mutates the list being iterated,
         # which would silently skip every other handler.
         for handler in list(logger.handlers):
-            # The websocket handler is a single shared instance used by every
-            # run, so it must be detached but never closed.
+            # Only the file handler owns a resource. The queue handler writes to
+            # the queue shared with the listener thread, which outlives the run.
             if isinstance(handler, logging.FileHandler):
                 handler.close()
 
