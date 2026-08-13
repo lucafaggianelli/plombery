@@ -30,6 +30,7 @@ pipeline1_serialized = {
         }
     ],
     "triggers": [],
+    "fail_fast": True,
     # Not set on this pipeline, so the API reports the graph hash instead
     "version": pipeline1.get_version(),
 }

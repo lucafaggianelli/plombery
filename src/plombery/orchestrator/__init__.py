@@ -13,6 +13,7 @@ from plombery.database.repository import (
     create_task_run_if_absent,
     get_task_run_output_by_id,
     get_task_runs_for_pipeline_run,
+    has_failed_task_run,
     mark_tasks_as_skipped,
 )
 from plombery.database.schemas import PipelineRunCreate, TaskRunCreate
@@ -142,8 +143,9 @@ class _Orchestrator:
         if not completed_task:
             raise ValueError(f"Task {task_run.task_id} not found")
 
-        # If the pipeline was already marked FAILED by a previous task, stop.
-        if task_run.pipeline_run.status != PipelineRunStatus.RUNNING:
+        # The run is closed once and for all when everything has drained, so
+        # anything arriving afterwards has nothing left to do.
+        if task_run.pipeline_run.status in FINISHED_STATUS:
             return
 
         if task_run.task_output_id:
@@ -158,11 +160,22 @@ class _Orchestrator:
         completed_was_mapped_instance = task_run.map_index is not None
         instance_map_index = task_run.map_index
 
-        if task_run.status == PipelineRunStatus.FAILED:
-            # Mark the entire pipeline as failed and stop
-            on_pipeline_status_changed(
-                pipeline, task_run.pipeline_run, PipelineRunStatus.FAILED
-            )
+        # A failure does not close the run straight away. Marking it FAILED here
+        # used to make every other in-flight completion bail out at the check
+        # above, so the tasks downstream of the branches that were still running
+        # were never scheduled *and* never recorded: the run showed a task that
+        # simply wasn't there, which reads as "never part of the graph" rather
+        # than "did not get to run". The run is closed further down, once every
+        # task has drained, and `has_failed_task_run` decides its final status.
+        run_has_failed = task_run.status == PipelineRunStatus.FAILED or (
+            pipeline.fail_fast and has_failed_task_run(task_run.pipeline_run_id)
+        )
+
+        if run_has_failed:
+            # This branch is dead: record every task below it as cancelled so
+            # the run shows exactly where the DAG stopped.
+            self._cancel_downstream_of(pipeline, task_run)
+            self._close_run_if_drained(pipeline, task_run)
             return
 
         downstream_task_ids = [
@@ -262,11 +275,6 @@ class _Orchestrator:
         # inserted in the DB just before the task is queued.
         # Even more, some tasks are mapped so their task runs appear more than once.
 
-        # A set, not a list: a task can be both finished in the database and
-        # part of a skipped branch, and counting it twice makes the total
-        # overshoot the number of tasks, so the run would never be completed.
-        finished_tasks = set(get_finished_tasks_ids(task_run.pipeline_run_id))
-
         # Skipped tasks for the moment are mapped tasks whose upstream output is an empty list
         # so they cannot be scheduled
 
@@ -278,15 +286,66 @@ class _Orchestrator:
 
         if all_skipped_tasks:
             mark_tasks_as_skipped(all_skipped_tasks, task_run.pipeline_run_id)
-            finished_tasks |= all_skipped_tasks
+
+        self._close_run_if_drained(pipeline, task_run)
+
+    def _cancel_downstream_of(self, pipeline: Pipeline, task_run: TaskRun) -> None:
+        """Record the tasks below a dead branch as cancelled.
+
+        They will never be scheduled, and without a row of their own the run
+        keeps a hole where they should be: nothing to look at in the UI, and
+        nothing for the completion check to count, which would leave the run
+        RUNNING for good.
+
+        A task that chains the mapping inherits the index of the instance that
+        died, so the cancelled row sits next to its siblings rather than
+        looking like an unrelated unmapped run.
+        """
+
+        downstream_task_ids = get_downstream_task_ids(task_run.task_id, pipeline)
+
+        if not downstream_task_ids:
+            return
+
+        map_indexes = {
+            task_id: (
+                task_run.map_index
+                if (task := pipeline.get_task_by_id(task_id))
+                and task.mapping_mode == MappingMode.CHAINED_FAN_OUT
+                else None
+            )
+            for task_id in downstream_task_ids
+        }
+
+        mark_tasks_as_skipped(
+            downstream_task_ids, task_run.pipeline_run_id, map_indexes
+        )
+
+    def _close_run_if_drained(self, pipeline: Pipeline, task_run: TaskRun) -> None:
+        """Close the run once no task is left running, scheduled or pending.
+
+        The check is pretty tricky as tasks get scheduled dynamically and task
+        runs are inserted in the DB just before the task is queued. Even more,
+        some tasks are mapped so their task runs appear more than once.
+        """
+
+        # A set, not a list: a task can be both finished in the database and
+        # part of a skipped branch, and counting it twice makes the total
+        # overshoot the number of tasks, so the run would never be completed.
+        finished_tasks = set(get_finished_tasks_ids(task_run.pipeline_run_id))
 
         # `>=` rather than `==`: an equality check turns any miscount into a run
         # that stays RUNNING forever, which is the worst possible failure mode.
-        if len(finished_tasks) >= len(pipeline.tasks):
-            # No more running, scheduled, or pending tasks left
-            on_pipeline_status_changed(
-                pipeline, task_run.pipeline_run, PipelineRunStatus.COMPLETED
-            )
+        if len(finished_tasks) < len(pipeline.tasks):
+            return
+
+        status = (
+            PipelineRunStatus.FAILED
+            if has_failed_task_run(task_run.pipeline_run_id)
+            else PipelineRunStatus.COMPLETED
+        )
+
+        on_pipeline_status_changed(pipeline, task_run.pipeline_run, status)
 
     def _are_upstream_tasks_complete(self, pipeline_run_id: int, task: Task) -> bool:
         """Verifies all dependencies are met."""

@@ -146,6 +146,32 @@ def create_task_run(task_run: TaskRunCreate) -> models.TaskRun:
         return db_task_run
 
 
+def _task_run_exists(
+    session: Session, pipeline_run_id: int, task_id: str, map_index: Optional[int]
+) -> bool:
+    """Whether this run already has a row for that task instance.
+
+    A task instance is identified by `(pipeline_run_id, task_id, map_index)`:
+    a plain task has `map_index` NULL and runs once, a mapped task runs once
+    per index.
+    """
+
+    return (
+        session.execute(
+            select(models.TaskRun.id).where(
+                models.TaskRun.pipeline_run_id == pipeline_run_id,
+                models.TaskRun.task_id == task_id,
+                (
+                    models.TaskRun.map_index.is_(None)
+                    if map_index is None
+                    else models.TaskRun.map_index == map_index
+                ),
+            )
+        ).first()
+        is not None
+    )
+
+
 def create_task_run_if_absent(task_run: TaskRunCreate) -> Optional[models.TaskRun]:
     """Create a TaskRun unless the run already has one for the same instance.
 
@@ -166,19 +192,9 @@ def create_task_run_if_absent(task_run: TaskRunCreate) -> Optional[models.TaskRu
     """
 
     with session_scope() as session:
-        already_scheduled = session.execute(
-            select(models.TaskRun.id).where(
-                models.TaskRun.pipeline_run_id == task_run.pipeline_run_id,
-                models.TaskRun.task_id == task_run.task_id,
-                (
-                    models.TaskRun.map_index.is_(None)
-                    if task_run.map_index is None
-                    else models.TaskRun.map_index == task_run.map_index
-                ),
-            )
-        ).first()
-
-        if already_scheduled:
+        if _task_run_exists(
+            session, task_run.pipeline_run_id, task_run.task_id, task_run.map_index
+        ):
             return None
 
         db_task_run = models.TaskRun(
@@ -338,13 +354,59 @@ def get_task_run_output_by_id(task_output_id: str) -> Optional[models.TaskRunOut
         return session.get(models.TaskRunOutput, task_output_id)
 
 
-def mark_tasks_as_skipped(task_ids: set[str], pipeline_run_id: int):
+def mark_tasks_as_skipped(
+    task_ids: Collection[str],
+    pipeline_run_id: int,
+    map_indexes: Optional[dict[str, Optional[int]]] = None,
+):
+    """Record that these task instances will never run.
+
+    Without a row the run is left with a hole: the UI shows nothing at all for
+    the task, which is indistinguishable from a task that was never part of the
+    graph, and the completion check never counts it so the run cannot close.
+
+    `map_indexes` gives the index to record for a mapped task, so that the
+    cancelled row lines up with the instance whose branch died rather than
+    appearing as an unrelated unmapped run.
+
+    Instances that already have a row are left alone: a task that really ran
+    must not be overwritten with a cancellation.
+    """
+
+    map_indexes = map_indexes or {}
+
     with session_scope() as session:
         for task_id in task_ids:
+            map_index = map_indexes.get(task_id)
+
+            if _task_run_exists(session, pipeline_run_id, task_id, map_index):
+                continue
+
             session.add(
                 models.TaskRun(
                     task_id=task_id,
                     status=PipelineRunStatus.CANCELLED,
                     pipeline_run_id=pipeline_run_id,
+                    map_index=map_index,
                 )
             )
+
+
+def has_failed_task_run(pipeline_run_id: int) -> bool:
+    """Whether any task instance of this run failed.
+
+    The run's own status cannot be used for this while it is still draining:
+    it stays RUNNING until every in-flight task has finished, precisely so
+    that the tasks left behind can be recorded.
+    """
+
+    with SessionLocal() as session:
+        return (
+            session.execute(
+                select(models.TaskRun.id).where(
+                    models.TaskRun.pipeline_run_id == pipeline_run_id,
+                    models.TaskRun.status == PipelineRunStatus.FAILED,
+                )
+            ).first()
+            is not None
+        )

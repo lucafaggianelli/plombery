@@ -73,6 +73,39 @@ of mapped tasks processes one item at a time end to end.
 
 If the upstream task of a fan-out doesn't return a collection, the run fails.
 
+### When one branch fails
+
+By default a failure stops the pipeline from scheduling any further task, and
+every task that will no longer run is recorded as `cancelled`, so the run shows
+where the DAG stopped instead of leaving a gap.
+
+When the branches of a fan-out are independent of each other — one per input
+file, one per record — that default throws away work that had already
+succeeded. Set `fail_fast=False` and only the failed branch is dropped:
+
+```python
+with Pipeline(id="import_files", fail_fast=False) as pipeline:
+
+    @task
+    def list_files():
+        return ["a.csv", "b.csv", "c.csv"]
+
+    @task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="list_files")
+    def parse(list_files):
+        return read(list_files)
+
+    @task(mapping_mode=MappingMode.CHAINED_FAN_OUT, map_upstream_id="parse")
+    def store(parse):
+        write_to_warehouse(parse)
+
+    list_files >> parse >> store
+```
+
+If `b.csv` is corrupt, `a.csv` and `c.csv` are still stored, and only the
+instance that failed and its own downstream instance are left out.
+
+The run itself still ends as `failed` either way: something didn't get through.
+
 ## Registering a pipeline
 
 `register_pipeline` is the alternative, flat way to declare a pipeline, and the

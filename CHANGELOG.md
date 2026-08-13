@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   `version` set on the pipeline or a hash of its task graph
 - Warn when a task blocks the event loop, naming it, since that freezes the
   API and the live logs (`blocked_loop_threshold`)
+- `Pipeline(fail_fast=False)` keeps the healthy branches of a fan-out running
+  when one of them fails, for pipelines whose branches are independent of each
+  other, such as one per input file
 
 ### Fixed
 
@@ -39,6 +42,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Live log lines are no longer labelled with the wrong task when several
   tasks run at the same time, and are streamed on the server event loop
   instead of a new one per line
+- A fan-in task is scheduled once instead of once per branch when several
+  branches finish while a websocket client is connected
+- A task returning a `pandas.DataFrame` is stored instead of failing the run
+- When a fan-out branch fails, the tasks below the branches that were still
+  running are recorded as cancelled rather than silently left out of the run
 
 ### Changed
 

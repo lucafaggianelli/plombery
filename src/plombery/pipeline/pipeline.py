@@ -23,6 +23,16 @@ class Pipeline(BaseModel):
     description: Optional[str] = None
     params: Optional[Type[BaseModel]] = Field(exclude=True, default=None)
     triggers: list[Trigger] = Field(default_factory=list)
+    fail_fast: bool = Field(
+        default=True,
+        description=(
+            "Stop scheduling new work as soon as a task fails. Turn it off "
+            "when the branches of a fan-out are independent of each other, "
+            "such as one branch per input file: the branches that succeeded "
+            "then run all the way to the end, and only the failed branch is "
+            "cancelled. Either way the run finishes as failed."
+        ),
+    )
     version: Optional[str] = Field(
         default=None,
         description=(

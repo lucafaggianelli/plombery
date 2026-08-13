@@ -463,3 +463,118 @@ async def test_a_task_can_return_a_dataframe(app: Plombery):
 
     output = get_task_run_output_by_id(task_run.task_output_id)
     assert output.data == records
+
+
+def _files_pipeline(parsed: list, stored: list, fail_fast: bool = True) -> Pipeline:
+    """Fan out over four files, one of which is corrupt, then store each one."""
+
+    with Pipeline(id="files", fail_fast=fail_fast) as pipeline:
+
+        @task
+        def source():
+            return [1, 2, 3, 4]
+
+        @task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="source")
+        async def parse(source):
+            # Staggered so the failure lands while the siblings are in flight
+            await asyncio.sleep(0.01 * source)
+
+            if source == 2:
+                raise ValueError("file 2 is corrupt")
+
+            parsed.append(source)
+            return source
+
+        @task(mapping_mode=MappingMode.CHAINED_FAN_OUT, map_upstream_id="parse")
+        def store(parse):
+            stored.append(parse)
+
+        source >> parse >> store
+
+    return pipeline
+
+
+def _statuses(run, task_id: str) -> dict:
+    """Status of every instance of a task, keyed by map index."""
+
+    return {
+        task_run.map_index: task_run.status
+        for task_run in run.task_runs
+        if task_run.task_id == task_id
+    }
+
+
+@pytest.mark.asyncio
+async def test_fan_out_failure_records_the_tasks_that_never_ran(app: Plombery):
+    """A failed branch must leave a cancelled task run, not a hole.
+
+    Marking the run FAILED as soon as one instance fails made every other
+    in-flight completion bail out, so the tasks downstream of the branches that
+    were still running were never scheduled and never recorded: the run showed
+    nothing at all for them, which is indistinguishable from a task that was
+    never part of the graph.
+    """
+
+    parsed, stored = [], []
+
+    pipeline = _files_pipeline(parsed, stored)
+
+    app.start()
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.FAILED
+
+    # Three files parsed successfully, and their side effects happened
+    assert sorted(parsed) == [1, 3, 4]
+    assert _statuses(run, "parse") == {
+        0: PipelineRunStatus.COMPLETED,
+        1: PipelineRunStatus.FAILED,
+        2: PipelineRunStatus.COMPLETED,
+        3: PipelineRunStatus.COMPLETED,
+    }
+
+    # Every instance of the downstream task is accounted for: the ones that did
+    # not run say so, instead of being missing altogether
+    assert _statuses(run, "store") == {
+        0: PipelineRunStatus.COMPLETED,
+        1: PipelineRunStatus.CANCELLED,
+        2: PipelineRunStatus.CANCELLED,
+        3: PipelineRunStatus.CANCELLED,
+    }
+
+
+@pytest.mark.asyncio
+async def test_fan_out_without_fail_fast_finishes_the_healthy_branches(
+    app: Plombery,
+):
+    """With `fail_fast=False` only the failed branch is dropped.
+
+    The branches of a fan-out over independent items — one per file, per
+    record — have nothing to do with each other, so one corrupt file must not
+    abandon work that had already succeeded halfway through.
+    """
+
+    parsed, stored = [], []
+
+    pipeline = _files_pipeline(parsed, stored, fail_fast=False)
+
+    app.start()
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    # The run still fails: a file was not imported
+    assert run.status == PipelineRunStatus.FAILED
+
+    # ...but everything that parsed also got stored, no silent gap
+    assert sorted(parsed) == [1, 3, 4]
+    assert sorted(stored) == [1, 3, 4]
+
+    assert _statuses(run, "store") == {
+        0: PipelineRunStatus.COMPLETED,
+        1: PipelineRunStatus.CANCELLED,
+        2: PipelineRunStatus.COMPLETED,
+        3: PipelineRunStatus.COMPLETED,
+    }
