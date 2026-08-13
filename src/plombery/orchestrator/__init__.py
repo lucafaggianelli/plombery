@@ -10,7 +10,7 @@ from plombery.constants import MANUAL_TRIGGER_ID
 from plombery.database.models import PipelineRun, TaskRun
 from plombery.database.repository import (
     create_pipeline_run,
-    create_task_run,
+    create_task_run_if_absent,
     get_task_run_output_by_id,
     get_task_runs_for_pipeline_run,
     mark_tasks_as_skipped,
@@ -314,10 +314,15 @@ class _Orchestrator:
         parent_task_run_id: Optional[str] = None,
         map_index: Optional[int] = None,
     ):
-        """Creates TaskRun record and submits job to executor."""
+        """Creates TaskRun record and submits job to executor.
+
+        Scheduling the same task instance twice is a no-op: several upstream
+        branches of a fan-in can each conclude that the downstream task is
+        ready, and without this the task would run once per branch.
+        """
 
         # 1. Create TaskRun DB record
-        task_run_db = create_task_run(
+        task_run_db = create_task_run_if_absent(
             TaskRunCreate(
                 pipeline_run_id=pipeline_run.id,
                 task_id=task.id,
@@ -327,6 +332,10 @@ class _Orchestrator:
                 map_index=map_index,
             )
         )
+
+        if not task_run_db:
+            # Another branch got there first, it owns the execution.
+            return
 
         # Submit job to APScheduler/Executor
         executor: AsyncIOExecutor = self.scheduler._lookup_executor("default")

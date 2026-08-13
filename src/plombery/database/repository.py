@@ -144,6 +144,51 @@ def create_task_run(task_run: TaskRunCreate) -> models.TaskRun:
         return db_task_run
 
 
+def create_task_run_if_absent(task_run: TaskRunCreate) -> Optional[models.TaskRun]:
+    """Create a TaskRun unless the run already has one for the same instance.
+
+    Returns None when a row already exists for
+    `(pipeline_run_id, task_id, map_index)`, which identifies a task instance:
+    a plain task has `map_index` NULL and runs once, a mapped task runs once
+    per index.
+
+    This is what stops a fan-in from being scheduled several times when more
+    than one upstream branch finishes at the same time and each of them
+    concludes on its own that every dependency is met.
+
+    The check and the insert share one transaction, and nothing awaits between
+    them, so no other coroutine can slip in. The unique index on those three
+    columns cannot be relied upon instead: `map_index` is NULL for a plain
+    task, and neither SQLite nor Postgres considers two NULLs equal, so the
+    index never fires for exactly the rows that need it.
+    """
+
+    with session_scope() as session:
+        already_scheduled = session.execute(
+            select(models.TaskRun.id).where(
+                models.TaskRun.pipeline_run_id == task_run.pipeline_run_id,
+                models.TaskRun.task_id == task_run.task_id,
+                (
+                    models.TaskRun.map_index.is_(None)
+                    if task_run.map_index is None
+                    else models.TaskRun.map_index == task_run.map_index
+                ),
+            )
+        ).first()
+
+        if already_scheduled:
+            return None
+
+        db_task_run = models.TaskRun(
+            **task_run.model_dump(exclude_none=True),
+            start_time=task_run.start_time or utcnow(),
+        )
+        session.add(db_task_run)
+        session.flush()
+
+        return db_task_run
+
+
 def update_task_run(
     task_run_id: str, update_data: TaskRunUpdate
 ) -> Optional[models.TaskRun]:

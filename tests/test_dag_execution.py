@@ -367,3 +367,63 @@ async def test_wide_fan_in_schedules_the_join_task_once(app: Plombery):
 
     assert run.status == PipelineRunStatus.COMPLETED
     assert count_task_runs(run)["join"] == 1
+
+
+@pytest.mark.asyncio
+async def test_fan_in_schedules_the_join_once_when_emit_yields(
+    app: Plombery, monkeypatch: pytest.MonkeyPatch
+):
+    """A fan-in must run once even when the websocket emit yields to the loop.
+
+    `handle_task_completion` emits before it checks whether the downstream
+    task's dependencies are all met. With a real client connected that emit
+    suspends, so several branches can each observe "everything upstream is
+    done" and each schedule the join. In the test suite nothing is connected
+    and the emit never yields, which is why the other fan-in tests cannot see
+    this: the yield has to be forced.
+    """
+
+    from plombery import websocket
+
+    original_emit = websocket.sio.emit
+
+    async def yielding_emit(*args, **kwargs):
+        await asyncio.sleep(0)
+        return await original_emit(*args, **kwargs)
+
+    monkeypatch.setattr(websocket.sio, "emit", yielding_emit)
+
+    app.start()
+
+    with Pipeline(id="racing_fan_in") as pipeline:
+
+        @task
+        def start():
+            return 1
+
+        branches = []
+
+        for index in range(8):
+
+            @task(id=f"branch_{index}")
+            async def branch(start):
+                await asyncio.sleep(0.02)
+                return "done"
+
+            branches.append(branch)
+
+        @task
+        def join(**kwargs):
+            return "joined"
+
+        start >> branches
+
+        for branch_task in branches:
+            branch_task >> join
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert count_task_runs(run)["join"] == 1
