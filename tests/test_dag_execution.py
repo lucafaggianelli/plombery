@@ -10,6 +10,7 @@ from typing import List
 import pytest
 
 from plombery import Pipeline, task, _Plombery as Plombery
+from plombery.database.repository import get_task_run_output_by_id
 from plombery.orchestrator import run_pipeline_now
 from plombery.pipeline.tasks import MappingMode
 from plombery.schemas import PipelineRunStatus
@@ -427,3 +428,38 @@ async def test_fan_in_schedules_the_join_once_when_emit_yields(
 
     assert run.status == PipelineRunStatus.COMPLETED
     assert count_task_runs(run)["join"] == 1
+
+
+@pytest.mark.asyncio
+async def test_a_task_can_return_a_dataframe(app: Plombery):
+    """Returning a pandas DataFrame is a documented pattern and must be stored.
+
+    Task outputs used to be written to disk by `store_task_output`, which
+    special cased DataFrames; now they go to the database, and a generic
+    `__dict__` fallback turned a DataFrame into pandas' internals, which are
+    not JSON serializable, so the whole run failed.
+    """
+
+    pandas = pytest.importorskip("pandas")
+
+    records = [{"sku": 1, "price": 10}, {"sku": 2, "price": 20}]
+
+    app.start()
+
+    with Pipeline(id="dataframe_output") as pipeline:
+
+        @task
+        def produce():
+            return pandas.DataFrame(records)
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+
+    task_run = run.task_runs[0]
+    assert task_run.task_output_id
+
+    output = get_task_run_output_by_id(task_run.task_output_id)
+    assert output.data == records

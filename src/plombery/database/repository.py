@@ -18,9 +18,11 @@ inside it, so they share one transaction.
 """
 
 from contextlib import contextmanager
-from typing import Collection, Iterator, Optional
+from dataclasses import asdict, is_dataclass
+from typing import Any, Collection, Iterator, Optional
 from datetime import datetime
 
+from pydantic import BaseModel
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session, selectinload
 
@@ -270,16 +272,40 @@ def get_finished_task_runs(pipeline_run_id: int) -> list[models.TaskRun]:
     return get_task_runs_for_pipeline_run(pipeline_run_id, status=FINISHED_STATUS)
 
 
+def _to_storable(data: Any) -> Any:
+    """Turn a task's return value into something the JSON column can hold.
+
+    Deliberately not a generic `__dict__` fallback: that reaches into an
+    object's internals, which for a DataFrame means pandas' block manager and
+    weakrefs rather than the data, and for anything else silently stores
+    private attributes. Each supported type is converted explicitly, and
+    everything else is passed through untouched.
+    """
+
+    try:
+        import pandas
+    except ModuleNotFoundError:
+        pass
+    else:
+        if isinstance(data, pandas.DataFrame):
+            return data.to_dict(orient="records")
+
+    if isinstance(data, BaseModel):
+        return data.model_dump(mode="json")
+
+    # `is_dataclass` is also true for the class itself, not just an instance
+    if is_dataclass(data) and not isinstance(data, type):
+        return asdict(data)
+
+    return data
+
+
 def create_task_run_output(
     task_output: TaskRunOutputCreate, task_run_id: str
 ) -> models.TaskRunOutput:
     """Creates a new TaskRunOutput record and links it to its task run."""
 
-    data = (
-        task_output.data.__dict__
-        if hasattr(task_output.data, "__dict__")
-        else task_output.data
-    )
+    data = _to_storable(task_output.data)
 
     with SessionLocal() as session:
         db_output = models.TaskRunOutput(
