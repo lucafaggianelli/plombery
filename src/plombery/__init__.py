@@ -3,14 +3,18 @@ import logging
 import os
 
 from apscheduler.schedulers.base import SchedulerAlreadyRunningError
+from apscheduler.triggers.interval import IntervalTrigger
 from pydantic import BaseModel
 
 from .api import app
 from .config import settings
 from .database.operations import setup_database
 from .logger import get_logger  # noqa F401
+from .logger.web_socket_handler import bind_event_loop
 from .notifications import NotificationRule, notification_manager
 from .orchestrator import orchestrator
+from .orchestrator.watchdog import start_watchdog, stop_watchdog
+from .retention import apply_retention, delete_orphan_data
 from .orchestrator.context import Context  # noqa F401
 from .pipeline.tasks import Task, task, MappingMode  # noqa F401
 from .pipeline.pipeline import Pipeline, Trigger  # noqa F401
@@ -28,6 +32,19 @@ if os.getenv("DEBUG_APS"):
     logging.getLogger("apscheduler").setLevel(logging.DEBUG)
 
 
+RETENTION_JOB_ID = "plombery:retention"
+
+
+def _apply_retention():
+    """Run the retention policy, never letting it take the app down with it."""
+
+    try:
+        apply_retention()
+        delete_orphan_data()
+    except Exception as error:
+        _logger.error("Cannot apply the retention policy: %s", error, exc_info=error)
+
+
 class _Plombery:
     def __init__(self) -> None:
         self._apply_settings()
@@ -43,14 +60,32 @@ class _Plombery:
         notification_manager.register_rule(notification)
 
     def start(self):
+        # Socket.IO coroutines are scheduled onto this loop from the logging
+        # thread, so it has to be captured while it is running.
+        bind_event_loop()
+        start_watchdog(settings.blocked_loop_threshold)
+
         setup_database()
+
+        _apply_retention()
 
         try:
             orchestrator.start()
         except SchedulerAlreadyRunningError:
             pass
 
+        # Keep reclaiming space while the app is up, not only at boot: a long
+        # running instance would otherwise never apply the policy.
+        orchestrator.scheduler.add_job(
+            _apply_retention,
+            trigger=IntervalTrigger(days=1),
+            id=RETENTION_JOB_ID,
+            name=RETENTION_JOB_ID,
+            replace_existing=True,
+        )
+
     def stop(self):
+        stop_watchdog()
         orchestrator.stop()
 
 

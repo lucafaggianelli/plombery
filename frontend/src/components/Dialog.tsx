@@ -20,7 +20,7 @@ const Dialog: React.FC<Props> = ({
 }) => {
   return (
     <Transition show={isOpen} as={Fragment}>
-      <HUDialog onClose={onClose} className="relative z-50">
+      <HUDialog onClose={onClose} className="relative z-10">
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"

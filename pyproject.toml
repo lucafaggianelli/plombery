@@ -28,6 +28,10 @@ dependencies = [
   "pydantic>=2.12.0",
   "pydantic-settings>=2.6.0",
   "SQLAlchemy>=2.0.40",
+  # Used for ParamSpec, which is only in typing from Python 3.10.
+  # It comes in transitively via pydantic, but it's imported directly so it
+  # has to be declared explicitly.
+  "typing-extensions>=4.0.0",
   "uvicorn>=0.32.0",
   "uuid6>=2025.0.1",
 ]
@@ -41,6 +45,9 @@ dev = [
   "pytest>=8.0.0",
   "pytest_asyncio>=1.0.0",
   "pytest-env>=1.1.0",
+  # Returning a DataFrame from a task is a supported pattern, so the
+  # regression test covering it has to actually run
+  "pandas>=2.0.0",
 ]
 docs = ["mkdocs-material>=9.1,<9.7"]
 

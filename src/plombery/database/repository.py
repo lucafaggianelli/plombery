@@ -1,8 +1,30 @@
-from typing import Collection, Optional
+"""Database access layer.
+
+Session handling contract
+-------------------------
+
+Every function here owns its session and returns objects that are **detached**
+from it, fully loaded: whatever the callers read must be loaded before the
+session closes, either because it is a plain column or because the query eager
+loads the relationship explicitly.
+
+`expire_on_commit` is disabled on the session factory, so an instance keeps the
+values it was loaded with after a commit instead of expiring them and trying to
+refresh from a session that no longer exists.
+
+When several operations have to happen atomically, don't chain the functions
+below: each one commits on its own. Use `session_scope()` and write the queries
+inside it, so they share one transaction.
+"""
+
+from contextlib import contextmanager
+from dataclasses import asdict, is_dataclass
+from typing import Any, Collection, Iterator, Optional
 from datetime import datetime
 
-from sqlalchemy import update
-from sqlalchemy.orm import selectinload
+from pydantic import BaseModel
+from sqlalchemy import select, update
+from sqlalchemy.orm import Session, selectinload
 
 from plombery.schemas import ACTIVE_STATUS, FINISHED_STATUS, PipelineRunStatus
 from plombery.utils import utcnow
@@ -16,91 +38,102 @@ from .schemas import (
 from . import models
 
 
-def create_pipeline_run(data: PipelineRunCreate):
-    with SessionLocal() as db:
-        db.expire_on_commit = False
+@contextmanager
+def session_scope() -> Iterator[Session]:
+    """A transactional scope for a group of operations.
 
+    Commits on success, rolls back on error. Use it when several statements
+    have to succeed or fail together.
+    """
+
+    with SessionLocal() as session:
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+
+
+def create_pipeline_run(data: PipelineRunCreate) -> models.PipelineRun:
+    with SessionLocal() as db:
         created_model = models.PipelineRun(**data.model_dump())
         db.add(created_model)
         db.commit()
         db.refresh(created_model)
+
     return created_model
 
 
 def update_pipeline_run(
     pipeline_run: models.PipelineRun, end_time: datetime, status: PipelineRunStatus
 ):
-    pipeline_run.end_time = end_time
-    pipeline_run.duration = (end_time - pipeline_run.start_time).total_seconds() * 1000
-    pipeline_run.status = status.value
+    duration = (end_time - pipeline_run.start_time).total_seconds() * 1000
 
     with SessionLocal() as db:
-
-        db.query(models.PipelineRun).filter(
-            models.PipelineRun.id == pipeline_run.id
-        ).update(
-            {
-                "end_time": end_time,
-                "duration": pipeline_run.duration,
-                "status": pipeline_run.status,
-            }
+        db.execute(
+            update(models.PipelineRun)
+            .where(models.PipelineRun.id == pipeline_run.id)
+            .values(end_time=end_time, duration=duration, status=status.value)
         )
         db.commit()
 
+    # The caller holds a detached instance and keeps using it to build the
+    # websocket payload and the notifications, so mirror the new values onto it.
+    pipeline_run.end_time = end_time
+    pipeline_run.duration = duration
+    pipeline_run.status = status.value
+
 
 def list_pipeline_runs(
-    pipeline_id: Optional[str] = None, trigger_id: Optional[str] = None
-):
-    filters = []
+    pipeline_id: Optional[str] = None,
+    trigger_id: Optional[str] = None,
+    limit: int = 30,
+) -> list[models.PipelineRun]:
+    statement = select(models.PipelineRun)
+
     if pipeline_id:
-        filters.append(models.PipelineRun.pipeline_id == pipeline_id)
+        statement = statement.where(models.PipelineRun.pipeline_id == pipeline_id)
+
     if trigger_id:
-        filters.append(models.PipelineRun.trigger_id == trigger_id)
+        statement = statement.where(models.PipelineRun.trigger_id == trigger_id)
+
+    statement = statement.order_by(models.PipelineRun.id.desc()).limit(limit)
 
     with SessionLocal() as db:
-        db.expire_on_commit = False
-
-        pipeline_runs: list[models.PipelineRun] = (
-            db.query(models.PipelineRun)
-            .filter(*filters)
-            .order_by(models.PipelineRun.id.desc())
-            .limit(30)
-            .all()
-        )
-
-    return pipeline_runs
+        return list(db.execute(statement).scalars().all())
 
 
 def get_pipeline_run(pipeline_run_id: int) -> Optional[models.PipelineRun]:
     with SessionLocal() as db:
+        return db.execute(
+            select(models.PipelineRun)
+            # Callers read `task_runs`, which is a relationship, so it has to be
+            # loaded before the session closes.
+            .options(selectinload(models.PipelineRun.task_runs)).where(
+                models.PipelineRun.id == pipeline_run_id
+            )
+        ).scalar_one_or_none()
 
-        pipeline_run: Optional[models.PipelineRun] = (
-            db.query(models.PipelineRun)
-            .options(selectinload(models.PipelineRun.task_runs))
-            .get(pipeline_run_id)
-        )
 
-    return pipeline_run
-
-
-def get_latest_pipeline_run(pipeline_id, trigger_id):
+def get_latest_pipeline_run(
+    pipeline_id: str, trigger_id: str
+) -> Optional[models.PipelineRun]:
     with SessionLocal() as db:
-
-        pipeline_run: models.PipelineRun = (
-            db.query(models.PipelineRun)
-            .filter(
+        return db.execute(
+            select(models.PipelineRun)
+            .where(
                 models.PipelineRun.pipeline_id == pipeline_id,
                 models.PipelineRun.trigger_id == trigger_id,
             )
             .order_by(models.PipelineRun.id.desc())
-            .first()
-        )
-
-    return pipeline_run
+            .limit(1)
+        ).scalar_one_or_none()
 
 
 def create_task_run(task_run: TaskRunCreate) -> models.TaskRun:
     """Creates a new TaskRun record."""
+
     with SessionLocal() as session:
         db_task_run = models.TaskRun(
             **task_run.model_dump(exclude_none=True),
@@ -109,32 +142,104 @@ def create_task_run(task_run: TaskRunCreate) -> models.TaskRun:
         session.add(db_task_run)
         session.commit()
         session.refresh(db_task_run)
+
+        return db_task_run
+
+
+def _task_run_exists(
+    session: Session, pipeline_run_id: int, task_id: str, map_index: Optional[int]
+) -> bool:
+    """Whether this run already has a row for that task instance.
+
+    A task instance is identified by `(pipeline_run_id, task_id, map_index)`:
+    a plain task has `map_index` NULL and runs once, a mapped task runs once
+    per index.
+    """
+
+    return (
+        session.execute(
+            select(models.TaskRun.id).where(
+                models.TaskRun.pipeline_run_id == pipeline_run_id,
+                models.TaskRun.task_id == task_id,
+                (
+                    models.TaskRun.map_index.is_(None)
+                    if map_index is None
+                    else models.TaskRun.map_index == map_index
+                ),
+            )
+        ).first()
+        is not None
+    )
+
+
+def create_task_run_if_absent(task_run: TaskRunCreate) -> Optional[models.TaskRun]:
+    """Create a TaskRun unless the run already has one for the same instance.
+
+    Returns None when a row already exists for
+    `(pipeline_run_id, task_id, map_index)`, which identifies a task instance:
+    a plain task has `map_index` NULL and runs once, a mapped task runs once
+    per index.
+
+    Keeps a fan-in to a single run when several upstream branches finish at the
+    same time and each of them concludes on its own that every dependency is
+    met.
+
+    The check and the insert share one transaction and nothing awaits between
+    them, so no other coroutine can slip in. The unique index on those three
+    columns does not cover this: `map_index` is NULL for a plain task, and
+    neither SQLite nor Postgres considers two NULLs equal, so the index never
+    fires for exactly the rows that need it.
+    """
+
+    with session_scope() as session:
+        if _task_run_exists(
+            session, task_run.pipeline_run_id, task_run.task_id, task_run.map_index
+        ):
+            return None
+
+        db_task_run = models.TaskRun(
+            **task_run.model_dump(exclude_none=True),
+            start_time=task_run.start_time or utcnow(),
+        )
+        session.add(db_task_run)
+        session.flush()
+
         return db_task_run
 
 
 def update_task_run(
     task_run_id: str, update_data: TaskRunUpdate
 ) -> Optional[models.TaskRun]:
-    """Updates an existing TaskRun record."""
+    """Updates an existing TaskRun record and returns it."""
+
     with SessionLocal() as session:
         session.execute(
             update(models.TaskRun)
             .where(models.TaskRun.id == task_run_id)
             .values(**update_data.model_dump(exclude_none=True))
         )
-
         session.commit()
-        return get_task_run_by_id(task_run_id)
+
+        # Re-read in the same session rather than calling get_task_run_by_id,
+        # which would open a second one for what is a single operation.
+        return session.execute(
+            select(models.TaskRun)
+            .options(selectinload(models.TaskRun.pipeline_run))
+            .where(models.TaskRun.id == task_run_id)
+        ).scalar_one_or_none()
 
 
 def get_task_run_by_id(task_run_id: str) -> Optional[models.TaskRun]:
     """Retrieves a specific TaskRun by ID."""
+
     with SessionLocal() as db:
-        return (
-            db.query(models.TaskRun)
-            .options(selectinload(models.TaskRun.pipeline_run))
-            .get(task_run_id)
-        )
+        return db.execute(
+            select(models.TaskRun)
+            # The orchestrator reads `task_run.pipeline_run` to drive the DAG.
+            .options(selectinload(models.TaskRun.pipeline_run)).where(
+                models.TaskRun.id == task_run_id
+            )
+        ).scalar_one_or_none()
 
 
 def get_task_runs_for_pipeline_run(
@@ -146,16 +251,17 @@ def get_task_runs_for_pipeline_run(
     Retrieves TaskRuns for a specific PipelineRun, optionally filtered by a list of task IDs.
     Used by the Orchestrator for dependency checking and XCom resolution.
     """
+
+    statement = select(models.TaskRun).where(models.TaskRun.pipeline_run_id == run_id)
+
+    if task_ids:
+        statement = statement.where(models.TaskRun.task_id.in_(task_ids))
+
+    if status:
+        statement = statement.where(models.TaskRun.status.in_(status))
+
     with SessionLocal() as db:
-        stmt = db.query(models.TaskRun).where(models.TaskRun.pipeline_run_id == run_id)
-
-        if task_ids:
-            stmt = stmt.where(models.TaskRun.task_id.in_(task_ids))
-
-        if status:
-            stmt = stmt.where(models.TaskRun.status.in_(status))
-
-        return stmt.all()
+        return list(db.execute(statement).scalars().all())
 
 
 def get_active_task_runs(pipeline_run_id: int) -> list[models.TaskRun]:
@@ -182,17 +288,41 @@ def get_finished_task_runs(pipeline_run_id: int) -> list[models.TaskRun]:
     return get_task_runs_for_pipeline_run(pipeline_run_id, status=FINISHED_STATUS)
 
 
+def _to_storable(data: Any) -> Any:
+    """Turn a task's return value into something the JSON column can hold.
+
+    Every supported type is converted explicitly and anything else is passed
+    through untouched, so that a value the column cannot hold raises instead of
+    being silently mangled: reaching into `__dict__` would store a DataFrame's
+    block manager and weakrefs, and any other object's private attributes.
+    """
+
+    try:
+        import pandas
+    except ModuleNotFoundError:
+        pass
+    else:
+        if isinstance(data, pandas.DataFrame):
+            return data.to_dict(orient="records")
+
+    if isinstance(data, BaseModel):
+        return data.model_dump(mode="json")
+
+    # `is_dataclass` is also true for the class itself, not just an instance
+    if is_dataclass(data) and not isinstance(data, type):
+        return asdict(data)
+
+    return data
+
+
 def create_task_run_output(
     task_output: TaskRunOutputCreate, task_run_id: str
 ) -> models.TaskRunOutput:
-    """Creates a new TaskRunOutput record and returns the instance."""
-    with SessionLocal() as session:
-        data = (
-            task_output.data.__dict__
-            if hasattr(task_output.data, "__dict__")
-            else task_output.data
-        )
+    """Creates a new TaskRunOutput record and links it to its task run."""
 
+    data = _to_storable(task_output.data)
+
+    with SessionLocal() as session:
         db_output = models.TaskRunOutput(
             mimetype=task_output.mimetype,
             encoding=task_output.encoding,
@@ -200,36 +330,82 @@ def create_task_run_output(
             size=0,
         )
         session.add(db_output)
+        # Flush to get the generated ID without ending the transaction: the
+        # output row and the link on the task run are written together.
         session.flush()
 
-        session.query(models.TaskRun).filter(models.TaskRun.id == task_run_id).update(
-            {
-                "task_output_id": db_output.id,
-            },
-            # Crucial for bulk updates in a transaction
-            synchronize_session=False,
+        session.execute(
+            update(models.TaskRun)
+            .where(models.TaskRun.id == task_run_id)
+            .values(task_output_id=db_output.id)
         )
 
         session.commit()
         session.refresh(db_output)
+
         return db_output
 
 
 def get_task_run_output_by_id(task_output_id: str) -> Optional[models.TaskRunOutput]:
     """Retrieves an TaskRunOutput record by Task Run ID."""
+
     with SessionLocal() as session:
-        return session.query(models.TaskRunOutput).get(task_output_id)
+        return session.get(models.TaskRunOutput, task_output_id)
 
 
-def mark_tasks_as_skipped(task_ids: set[str], pipeline_run_id: int):
-    with SessionLocal() as session:
+def mark_tasks_as_skipped(
+    task_ids: Collection[str],
+    pipeline_run_id: int,
+    map_indexes: Optional[dict[str, Optional[int]]] = None,
+):
+    """Record that these task instances will never run.
+
+    Without a row the run is left with a hole: the UI shows nothing at all for
+    the task, which is indistinguishable from a task that was never part of the
+    graph, and the completion check never counts it so the run cannot close.
+
+    `map_indexes` gives the index to record for a mapped task, so that the
+    cancelled row lines up with the instance whose branch died rather than
+    appearing as an unrelated unmapped run.
+
+    Instances that already have a row are left alone: a task that really ran
+    must not be overwritten with a cancellation.
+    """
+
+    map_indexes = map_indexes or {}
+
+    with session_scope() as session:
         for task_id in task_ids:
+            map_index = map_indexes.get(task_id)
+
+            if _task_run_exists(session, pipeline_run_id, task_id, map_index):
+                continue
+
             session.add(
                 models.TaskRun(
                     task_id=task_id,
                     status=PipelineRunStatus.CANCELLED,
                     pipeline_run_id=pipeline_run_id,
+                    map_index=map_index,
                 )
             )
 
-        session.commit()
+
+def has_failed_task_run(pipeline_run_id: int) -> bool:
+    """Whether any task instance of this run failed.
+
+    The run's own status cannot be used for this while it is still draining:
+    it stays RUNNING until every in-flight task has finished, precisely so
+    that the tasks left behind can be recorded.
+    """
+
+    with SessionLocal() as session:
+        return (
+            session.execute(
+                select(models.TaskRun.id).where(
+                    models.TaskRun.pipeline_run_id == pipeline_run_id,
+                    models.TaskRun.status == PipelineRunStatus.FAILED,
+                )
+            ).first()
+            is not None
+        )

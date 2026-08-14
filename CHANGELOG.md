@@ -7,16 +7,60 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## Added
+### Added
 
-- Add libsql database support (#525)
-- Support for DAGs and Fan-out / Dynamic Mapping tasks (#529)
-- Add context arg to tasks
-- Show pipelines tasks as graph
+- Support for DAGs and Fan-out / Dynamic Mapping tasks ([#529](https://github.com/lucafaggianelli/plombery/issues/529))
+- Add `context` arg to tasks
+- Show pipeline tasks as an interactive graph
+- Deployment documentation
+- Retention policy for runs data, with independent thresholds for log
+  files and for run history (`retention.files_days`, `retention.runs_days`)
+- Record on every run the version of the pipeline it executed, either the
+  `version` set on the pipeline or a hash of its task graph
+- Warn when a task blocks the event loop, naming it, since that freezes the
+  API and the live logs (`blocked_loop_threshold`)
+- `Pipeline(fail_fast=False)` keeps the healthy branches of a fan-out running
+  when one of them fails, for pipelines whose branches are independent of each
+  other, such as one per input file
 
-## Changed
+### Fixed
 
-- (breaking) Task dependencies must be defined explicitely
+- A task downstream of a fan-out now receives the output of every mapped
+  instance, instead of `None`
+- An orchestration error, such as a fan-out over a non collection, now fails the
+  run instead of leaving it running forever
+- A task argument with a default value is no longer overwritten with `None` when
+  it doesn't name an upstream task
+- Tasks annotated with generic types, such as `List[int]`, no longer fail
+- Close the log file descriptors of every task and mapped instance, not only the
+  ones of the pipeline logger
+- A run no longer hangs in `running` forever when two mapped branches are
+  skipped at once, when the pipeline has no tasks, or when the input params
+  fail validation
+- Every `run-update` websocket event now carries the run, so the runs list
+  stops showing a finished run as still going
+- Live log lines are no longer labelled with the wrong task when several
+  tasks run at the same time, and are streamed on the server event loop
+  instead of a new one per line
+- A fan-in task is scheduled once instead of once per branch when several
+  branches finish while a websocket client is connected
+- A task returning a `pandas.DataFrame` is stored instead of failing the run
+- When a fan-out branch fails, the tasks below the branches that were still
+  running are recorded as cancelled rather than silently left out of the run
+
+### Changed
+
+- (breaking) Task dependencies must be defined explicitly
+
+## [0.5.2] - 2025-11-30
+
+### Added
+
+- Add libsql database support ([#525](https://github.com/lucafaggianelli/plombery/issues/525))
+
+### Fixed
+
+- Fix Select field in pipeline run dialog ([#537](https://github.com/lucafaggianelli/plombery/issues/537))
 
 ## [0.5.1] - 2025-10-28
 

@@ -2,14 +2,12 @@ import logging
 
 from plombery.database.models import PipelineRun
 from plombery.logger.formatter import JsonFormatter
-from plombery.logger.web_socket_handler import queue_handler
+from plombery.logger.web_socket_handler import build_queue_handler
 from plombery.orchestrator.data_storage import get_logs_filename
 from plombery.pipeline.context import (
     run_context,
-    pipeline_context,
     task_run_context,
 )
-from plombery.pipeline.pipeline import Pipeline
 
 
 def get_logger() -> logging.LoggerAdapter:
@@ -35,8 +33,10 @@ def get_logger() -> logging.LoggerAdapter:
     json_handler = logging.FileHandler(filename)
     json_handler.setFormatter(json_formatter)
 
-    websocket_handler = queue_handler
-    websocket_handler.setFormatter(json_formatter)
+    # A handler of its own, because the formatter holds this logger's task and
+    # map index: a shared handler would label log lines with whichever task
+    # created a logger last.
+    websocket_handler = build_queue_handler(json_formatter)
 
     # Create a logger that's unique for each pipeline run
     # and not simply for each pipeline, otherwise successive
@@ -76,22 +76,43 @@ def get_logger() -> logging.LoggerAdapter:
     return logging.LoggerAdapter(logger, extra_log_info)
 
 
-def close_logger(pipeline: Pipeline, pipeline_run: PipelineRun):
+def close_logger(pipeline_run: PipelineRun):
     """
     Close all the resources and file descriptors opened by the logger.
     Solves issue 491: https://github.com/lucafaggianelli/plombery/issues/491
 
+    A run doesn't use a single logger: `get_logger` creates one for the pipeline
+    (`plombery.<run_id>`) and one for every task, and every mapped instance of a
+    task (`plombery.<run_id>-<task_id>[-<map_index>]`). All of them hold an open
+    file descriptor, so all of them have to be closed, otherwise a pipeline that
+    fans out over a large collection leaks one descriptor per item.
+
     Args:
-        logger (logging.LoggerAdapter): logger obtained with get_logger
+        pipeline_run (PipelineRun): the run that has just finished
     """
-    pt = pipeline_context.set(pipeline)
-    rt = run_context.set(pipeline_run)
 
-    logger = get_logger()
+    run_logger_name = f"plombery.{pipeline_run.id}"
 
-    for handler in logger.logger.handlers:
-        logger.logger.removeHandler(handler)
-        handler.close()
+    logger_names = [
+        name
+        for name in list(logging.Logger.manager.loggerDict)
+        if name == run_logger_name or name.startswith(f"{run_logger_name}-")
+    ]
 
-    pipeline_context.reset(pt)
-    run_context.reset(rt)
+    for logger_name in logger_names:
+        logger = logging.getLogger(logger_name)
+
+        # Iterate over a copy: `removeHandler` mutates the list being iterated,
+        # which would silently skip every other handler.
+        for handler in list(logger.handlers):
+            # Only the file handler owns a resource. The queue handler writes to
+            # the queue shared with the listener thread, which outlives the run.
+            if isinstance(handler, logging.FileHandler):
+                handler.close()
+
+            logger.removeHandler(handler)
+
+        # Loggers are never garbage collected by the logging module, and a new
+        # one is created for every run and every task: drop them explicitly or
+        # a long running instance grows one entry per task run, forever.
+        logging.Logger.manager.loggerDict.pop(logger_name, None)

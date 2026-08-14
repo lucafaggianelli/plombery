@@ -1,0 +1,580 @@
+"""End to end tests for the DAG execution semantics.
+
+These cover how the orchestrator walks the graph: how data flows between tasks,
+how fan-out and fan-in behave, and what happens when something goes wrong.
+"""
+
+import asyncio
+from typing import List
+
+import pytest
+
+from plombery import Pipeline, task, _Plombery as Plombery
+from plombery.database.repository import get_task_run_output_by_id
+from plombery.orchestrator import run_pipeline_now
+from plombery.pipeline.tasks import MappingMode
+from plombery.schemas import PipelineRunStatus
+
+from .conftest import count_task_runs, wait_for_run
+
+
+@pytest.mark.asyncio
+async def test_linear_dag_flows_data(app: Plombery):
+    app.start()
+
+    with Pipeline(id="linear") as pipeline:
+
+        @task
+        def first():
+            return 1
+
+        @task
+        def second(first):
+            return first + 1
+
+        first >> second
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert count_task_runs(run) == {"first": 1, "second": 1}
+
+
+@pytest.mark.asyncio
+async def test_task_receives_data_from_every_upstream(app: Plombery):
+    received = []
+
+    app.start()
+
+    with Pipeline(id="multi-upstream") as pipeline:
+
+        @task
+        def left():
+            return "L"
+
+        @task
+        def right():
+            return "R"
+
+        @task
+        def join(left, right):
+            received.append((left, right))
+
+        left >> join
+        right >> join
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert received == [("L", "R")]
+
+
+@pytest.mark.asyncio
+async def test_diamond_runs_the_join_task_only_once(app: Plombery):
+    """A >> [B, C] >> D: D must wait for both branches and run exactly once."""
+
+    calls = []
+
+    app.start()
+
+    with Pipeline(id="diamond") as pipeline:
+
+        @task
+        def start():
+            return 1
+
+        @task
+        async def branch_a(start):
+            await asyncio.sleep(0.01)
+            return "a"
+
+        @task
+        async def branch_b(start):
+            await asyncio.sleep(0.01)
+            return "b"
+
+        @task
+        def join(branch_a, branch_b):
+            calls.append((branch_a, branch_b))
+
+        start >> [branch_a, branch_b]
+        branch_a >> join
+        branch_b >> join
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert calls == [("a", "b")]
+    assert count_task_runs(run)["join"] == 1
+
+
+@pytest.mark.asyncio
+async def test_fan_out_runs_a_task_instance_per_item(app: Plombery):
+    received = []
+
+    app.start()
+
+    with Pipeline(id="fan-out") as pipeline:
+
+        @task
+        def source():
+            return [1, 2, 3]
+
+        @task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="source")
+        def each(source):
+            received.append(source)
+            return source * 10
+
+        source >> each
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert sorted(received) == [1, 2, 3]
+    assert count_task_runs(run) == {"source": 1, "each": 3}
+
+
+@pytest.mark.asyncio
+async def test_fan_in_gathers_the_output_of_every_mapped_instance(app: Plombery):
+    """A non mapped task downstream of a fan-out collects all of its outputs.
+
+    Regression test: the mapped task runs are stored under `task_id.map_index`,
+    so looking them up by plain task ID used to miss them and silently pass
+    `None` to the downstream task, throwing away the whole fan-out result.
+    """
+
+    received = []
+
+    app.start()
+
+    with Pipeline(id="fan-in") as pipeline:
+
+        @task
+        def source():
+            return [1, 2, 3]
+
+        @task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="source")
+        async def each(source):
+            await asyncio.sleep(0.01)
+            return source * 10
+
+        @task
+        def gather(each):
+            received.append(each)
+
+        source >> each >> gather
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert received == [[10, 20, 30]], "fan-in must gather every mapped output"
+    assert count_task_runs(run)["gather"] == 1
+
+
+@pytest.mark.asyncio
+async def test_chained_fan_out_inherits_the_map_index(app: Plombery):
+    received = []
+
+    app.start()
+
+    with Pipeline(id="chained-fan-out") as pipeline:
+
+        @task
+        def source():
+            return [1, 2, 3]
+
+        @task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="source")
+        def double(source):
+            return source * 2
+
+        @task(mapping_mode=MappingMode.CHAINED_FAN_OUT, map_upstream_id="double")
+        def increment(double):
+            received.append(double)
+            return double + 1
+
+        source >> double >> increment
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert sorted(received) == [2, 4, 6]
+    assert count_task_runs(run) == {"source": 1, "double": 3, "increment": 3}
+
+
+@pytest.mark.asyncio
+async def test_fan_out_over_a_non_collection_fails_the_run(app: Plombery):
+    """A fan-out task whose upstream isn't a collection must fail, not hang.
+
+    Regression test: the orchestration error used to escape the executor while
+    the run was still marked RUNNING, and nothing would ever advance the DAG
+    again, leaving the run pending forever.
+    """
+
+    app.start()
+
+    with Pipeline(id="bad-fan-out") as pipeline:
+
+        @task
+        def source():
+            return {"not": "a collection"}
+
+        @task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="source")
+        def each(source):
+            return source
+
+        source >> each
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id, timeout=5)
+
+    assert run.status == PipelineRunStatus.FAILED
+
+
+@pytest.mark.asyncio
+async def test_failing_task_fails_the_run_and_stops_downstream(app: Plombery):
+    downstream_calls = []
+
+    app.start()
+
+    with Pipeline(id="failing") as pipeline:
+
+        @task
+        def boom():
+            raise ValueError("boom")
+
+        @task
+        def downstream(boom):
+            downstream_calls.append(1)
+
+        boom >> downstream
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id, timeout=5)
+
+    assert run.status == PipelineRunStatus.FAILED
+    assert downstream_calls == []
+
+
+@pytest.mark.asyncio
+async def test_argument_with_a_default_is_not_an_upstream_task(app: Plombery):
+    """Regression test: an argument that doesn't name an upstream task but has a
+    default used to be overwritten with `None`, shadowing the default."""
+
+    received = []
+
+    app.start()
+
+    with Pipeline(id="default-arg") as pipeline:
+
+        @task
+        def source():
+            return 2
+
+        @task
+        def multiply(source, factor=10):
+            received.append((source, factor))
+            return source * factor
+
+        source >> multiply
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert received == [(2, 10)]
+
+
+@pytest.mark.asyncio
+async def test_generic_type_annotations_are_supported(app: Plombery):
+    """Regression test: `issubclass` raises on subscripted generics such as
+    `List[int]`, which used to make any annotated task fail."""
+
+    received = []
+
+    app.start()
+
+    with Pipeline(id="annotated") as pipeline:
+
+        @task
+        def source():
+            return [1, 2, 3]
+
+        @task
+        def consume(source: List[int]):
+            received.append(source)
+
+        source >> consume
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert received == [[1, 2, 3]]
+
+
+@pytest.mark.asyncio
+async def test_wide_fan_in_schedules_the_join_task_once(app: Plombery):
+    """Many branches completing at the same time must not schedule the join
+    task more than once: every branch reaches `handle_task_completion` and
+    checks the very same set of upstream dependencies."""
+
+    app.start()
+
+    with Pipeline(id="wide-fan-in") as pipeline:
+
+        @task
+        def start():
+            return 1
+
+        branches = []
+
+        for index in range(8):
+
+            @task(id=f"branch_{index}")
+            async def branch(start):
+                await asyncio.sleep(0.02)
+                return "done"
+
+            branches.append(branch)
+
+        @task
+        def join(**kwargs):
+            return "joined"
+
+        start >> branches
+
+        for branch_task in branches:
+            branch_task >> join
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert count_task_runs(run)["join"] == 1
+
+
+@pytest.mark.asyncio
+async def test_fan_in_schedules_the_join_once_when_emit_yields(
+    app: Plombery, monkeypatch: pytest.MonkeyPatch
+):
+    """A fan-in must run once even when the websocket emit yields to the loop.
+
+    `handle_task_completion` emits before it checks whether the downstream
+    task's dependencies are all met. With a real client connected that emit
+    suspends, so several branches can each observe "everything upstream is
+    done" and each schedule the join. In the test suite nothing is connected
+    and the emit never yields, which is why the other fan-in tests cannot see
+    this: the yield has to be forced.
+    """
+
+    from plombery import websocket
+
+    original_emit = websocket.sio.emit
+
+    async def yielding_emit(*args, **kwargs):
+        await asyncio.sleep(0)
+        return await original_emit(*args, **kwargs)
+
+    monkeypatch.setattr(websocket.sio, "emit", yielding_emit)
+
+    app.start()
+
+    with Pipeline(id="racing_fan_in") as pipeline:
+
+        @task
+        def start():
+            return 1
+
+        branches = []
+
+        for index in range(8):
+
+            @task(id=f"branch_{index}")
+            async def branch(start):
+                await asyncio.sleep(0.02)
+                return "done"
+
+            branches.append(branch)
+
+        @task
+        def join(**kwargs):
+            return "joined"
+
+        start >> branches
+
+        for branch_task in branches:
+            branch_task >> join
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert count_task_runs(run)["join"] == 1
+
+
+@pytest.mark.asyncio
+async def test_a_task_can_return_a_dataframe(app: Plombery):
+    """Returning a pandas DataFrame is a documented pattern and must be stored.
+
+    Task outputs used to be written to disk by `store_task_output`, which
+    special cased DataFrames; now they go to the database, and a generic
+    `__dict__` fallback turned a DataFrame into pandas' internals, which are
+    not JSON serializable, so the whole run failed.
+    """
+
+    pandas = pytest.importorskip("pandas")
+
+    records = [{"sku": 1, "price": 10}, {"sku": 2, "price": 20}]
+
+    app.start()
+
+    with Pipeline(id="dataframe_output") as pipeline:
+
+        @task
+        def produce():
+            return pandas.DataFrame(records)
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+
+    task_run = run.task_runs[0]
+    assert task_run.task_output_id
+
+    output = get_task_run_output_by_id(task_run.task_output_id)
+    assert output.data == records
+
+
+def _files_pipeline(parsed: list, stored: list, fail_fast: bool = True) -> Pipeline:
+    """Fan out over four files, one of which is corrupt, then store each one."""
+
+    with Pipeline(id="files", fail_fast=fail_fast) as pipeline:
+
+        @task
+        def source():
+            return [1, 2, 3, 4]
+
+        @task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="source")
+        async def parse(source):
+            # Staggered so the failure lands while the siblings are in flight
+            await asyncio.sleep(0.01 * source)
+
+            if source == 2:
+                raise ValueError("file 2 is corrupt")
+
+            parsed.append(source)
+            return source
+
+        @task(mapping_mode=MappingMode.CHAINED_FAN_OUT, map_upstream_id="parse")
+        def store(parse):
+            stored.append(parse)
+
+        source >> parse >> store
+
+    return pipeline
+
+
+def _statuses(run, task_id: str) -> dict:
+    """Status of every instance of a task, keyed by map index."""
+
+    return {
+        task_run.map_index: task_run.status
+        for task_run in run.task_runs
+        if task_run.task_id == task_id
+    }
+
+
+@pytest.mark.asyncio
+async def test_fan_out_failure_records_the_tasks_that_never_ran(app: Plombery):
+    """A failed branch must leave a cancelled task run, not a hole.
+
+    Marking the run FAILED as soon as one instance fails made every other
+    in-flight completion bail out, so the tasks downstream of the branches that
+    were still running were never scheduled and never recorded: the run showed
+    nothing at all for them, which is indistinguishable from a task that was
+    never part of the graph.
+    """
+
+    parsed, stored = [], []
+
+    pipeline = _files_pipeline(parsed, stored)
+
+    app.start()
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.FAILED
+
+    # Three files parsed successfully, and their side effects happened
+    assert sorted(parsed) == [1, 3, 4]
+    assert _statuses(run, "parse") == {
+        0: PipelineRunStatus.COMPLETED,
+        1: PipelineRunStatus.FAILED,
+        2: PipelineRunStatus.COMPLETED,
+        3: PipelineRunStatus.COMPLETED,
+    }
+
+    # Every instance of the downstream task is accounted for: the ones that did
+    # not run say so, instead of being missing altogether
+    assert _statuses(run, "store") == {
+        0: PipelineRunStatus.COMPLETED,
+        1: PipelineRunStatus.CANCELLED,
+        2: PipelineRunStatus.CANCELLED,
+        3: PipelineRunStatus.CANCELLED,
+    }
+
+
+@pytest.mark.asyncio
+async def test_fan_out_without_fail_fast_finishes_the_healthy_branches(
+    app: Plombery,
+):
+    """With `fail_fast=False` only the failed branch is dropped.
+
+    The branches of a fan-out over independent items — one per file, per
+    record — have nothing to do with each other, so one corrupt file must not
+    abandon work that had already succeeded halfway through.
+    """
+
+    parsed, stored = [], []
+
+    pipeline = _files_pipeline(parsed, stored, fail_fast=False)
+
+    app.start()
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    # The run still fails: a file was not imported
+    assert run.status == PipelineRunStatus.FAILED
+
+    # ...but everything that parsed also got stored, no silent gap
+    assert sorted(parsed) == [1, 3, 4]
+    assert sorted(stored) == [1, 3, 4]
+
+    assert _statuses(run, "store") == {
+        0: PipelineRunStatus.COMPLETED,
+        1: PipelineRunStatus.CANCELLED,
+        2: PipelineRunStatus.COMPLETED,
+        3: PipelineRunStatus.COMPLETED,
+    }

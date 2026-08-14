@@ -34,6 +34,9 @@ class PipelineRun(Base):
         PydanticType(Optional[dict]), default=None, nullable=True
     )
     reason: Mapped[Optional[str]]
+    # The pipeline definition this run executed, so a run from before a
+    # change can be told from one after it
+    pipeline_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     task_runs: Mapped[list["TaskRun"]] = relationship(back_populates="pipeline_run")
 

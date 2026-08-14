@@ -1,6 +1,6 @@
-import json
+import shutil
 from pathlib import Path
-from typing import Any, Optional
+from typing import List, Optional
 
 from plombery.constants import PIPELINE_RUN_LOGS_FILE
 from plombery.exceptions import InvalidDataPath
@@ -37,68 +37,6 @@ def _get_data_path(pipeline_run_id: int, filename: str) -> Path:
     data_path.parent.mkdir(parents=True, exist_ok=True)
 
     return data_path
-
-
-def get_task_run_data_file(pipeline_run_id: int, task_id: str) -> Path:
-    """Get the file path of a task run output
-
-    Args:
-        pipeline_run_id (int): the run ID
-        task_id (str): the task ID
-
-    Returns:
-        Path: the file path
-
-    Raises:
-        InvalidDataPath: In case the path is invalid.
-    """
-    return _get_data_path(pipeline_run_id, f"{task_id}.json")
-
-
-def store_task_output(pipeline_run_id: int, task_id: str, data: Any) -> bool:
-    """
-    Store a task output as a JSON file
-
-    Args:
-        pipeline_run_id (int): the pipeline run ID used to name the folder
-            containing the run data
-        task_id (str): the id of the task
-        data (Any): the actual data to store, if is None or is an empty DataFrame
-            it will not be saved
-
-    Returns:
-        bool: returns True if the store succeeded, False otherwise
-
-    Raises:
-        InvalidDataPath: In case the path is invalid.
-    """
-
-    output_file_path = get_task_run_data_file(pipeline_run_id, task_id)
-
-    try:
-        import pandas
-
-        if type(data) is pandas.DataFrame:
-            if not data.empty:
-                data.to_json(output_file_path, orient="records")
-                return True
-            else:
-                return False
-    except ModuleNotFoundError:
-        pass
-
-    try:
-        if data is None:
-            return False
-
-        with output_file_path.open(mode="w", encoding="utf-8") as output_file:
-            json.dump(data, output_file, default=str)
-
-        return True
-    except Exception as exc:
-        print(f"Failed to save task {task_id} output", exc)
-        output_file_path.unlink()
-        return False
 
 
 def get_logs_filename(pipeline_run_id: int) -> Path:
@@ -138,3 +76,70 @@ def read_logs_file(pipeline_run_id: int) -> Optional[str]:
 
     with logs_file.open(mode="r", encoding="utf-8") as f:
         return f.read().rstrip()
+
+
+def get_run_data_dir(pipeline_run_id: int) -> Path:
+    """Get the directory holding all the data of a run, without creating it.
+
+    Args:
+        pipeline_run_id (int): the run ID
+
+    Returns:
+        Path: the run data directory
+
+    Raises:
+        InvalidDataPath: In case the path is invalid.
+    """
+
+    run_dir = _base_data_path / "runs" / f"run_{pipeline_run_id}"
+
+    _check_is_valid_path(run_dir)
+
+    return run_dir
+
+
+def delete_run_data(pipeline_run_id: int) -> bool:
+    """Delete the whole data directory of a run, logs included.
+
+    Args:
+        pipeline_run_id (int): the run ID
+
+    Returns:
+        bool: True if there was something to delete
+    """
+
+    run_dir = get_run_data_dir(pipeline_run_id)
+
+    if not run_dir.is_dir():
+        return False
+
+    shutil.rmtree(run_dir)
+
+    return True
+
+
+def list_stored_run_ids() -> List[int]:
+    """The run IDs that have a data directory on disk.
+
+    Used to find the directories left behind by runs that are no longer in the
+    database, for instance because the database was reset.
+    """
+
+    runs_dir = _base_data_path / "runs"
+
+    if not runs_dir.is_dir():
+        return []
+
+    run_ids = []
+
+    for child in runs_dir.iterdir():
+        if not child.is_dir() or not child.name.startswith("run_"):
+            continue
+
+        try:
+            run_ids.append(int(child.name[len("run_") :]))
+        except ValueError:
+            # Not a directory Plombery created, leave it alone
+            continue
+
+    return run_ids

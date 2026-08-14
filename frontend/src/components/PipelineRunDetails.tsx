@@ -57,6 +57,28 @@ export default function PipelineRunDetails({ pipeline, run }: Props) {
               <p>{formatDate(run.end_time)}</p>
             )}
         </div>
+
+        {run.pipeline_version && (
+          <div>
+            <div className="text-xs">Pipeline version</div>
+
+            <p
+              className="font-mono text-sm truncate"
+              title={
+                run.pipeline_version === pipeline.version
+                  ? 'Matches the pipeline as it is defined now'
+                  : 'The pipeline has changed since this run'
+              }
+            >
+              {run.pipeline_version}
+              {pipeline.version && run.pipeline_version !== pipeline.version && (
+                <span className="ml-2 text-xs text-amber-600 dark:text-amber-500">
+                  outdated
+                </span>
+              )}
+            </p>
+          </div>
+        )}
       </div>
     </Card>
   )

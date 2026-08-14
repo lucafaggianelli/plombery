@@ -11,6 +11,7 @@ from plombery.exceptions import InvalidDataPath
 from plombery.logger import close_logger, get_logger
 from plombery.notifications import notification_manager
 from plombery.orchestrator.context import Context
+from plombery.orchestrator.watchdog import track_running_task
 from plombery.utils import run_all_coroutines, utcnow
 from plombery.websocket import sio
 from plombery.database.models import PipelineRun, TaskRun
@@ -50,6 +51,7 @@ def _on_pipeline_start(
             status=PipelineRunStatus.RUNNING,
             input_params=input_params,
             reason="scheduled",
+            pipeline_version=pipeline.get_version(),
         )
     )
 
@@ -66,31 +68,37 @@ def on_pipeline_status_changed(
     _send_pipeline_event(pipeline, pipeline_run)
 
     if status.is_finished():
-        close_logger(pipeline, pipeline_run)
+        close_logger(pipeline_run)
 
     return pipeline_run
+
+
+def build_run_update_payload(pipeline_run: PipelineRun) -> Dict[str, Any]:
+    """The payload of a `run-update` event.
+
+    Every emitter has to send the same shape: the frontend reads `run` to
+    refresh the runs list, and an event without it leaves the list showing a
+    run as still going long after it finished.
+    """
+
+    return dict(
+        run=dict(
+            id=pipeline_run.id,
+            status=pipeline_run.status,
+            start_time=(
+                pipeline_run.start_time.isoformat() if pipeline_run.start_time else None
+            ),
+            duration=pipeline_run.duration,
+        ),
+        pipeline=pipeline_run.pipeline_id,
+        trigger=pipeline_run.trigger_id,
+    )
 
 
 def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
     notify_coro = notification_manager.notify(pipeline, pipeline_run)
 
-    run_payload = dict(
-        id=pipeline_run.id,
-        status=pipeline_run.status,
-        start_time=(
-            pipeline_run.start_time.isoformat() if pipeline_run.start_time else None
-        ),
-        duration=pipeline_run.duration,
-    )
-
-    emit_coro = sio.emit(
-        "run-update",
-        dict(
-            run=run_payload,
-            pipeline=pipeline_run.pipeline_id,
-            trigger=pipeline_run.trigger_id,
-        ),
-    )
+    emit_coro = sio.emit("run-update", build_run_update_payload(pipeline_run))
 
     run_all_coroutines([notify_coro, emit_coro])
 
@@ -106,54 +114,56 @@ async def execute_task_instance(
 
     task_run = get_task_run_by_id(task_run_id)
     if not task_run:
-        raise ValueError(f"TaskRun {task_run_id} not found")
-
-    logger.info(
-        "Executing task %s %sin pipeline %s (id=%s)",
-        task.id,
-        "" if task_run.map_index is None else f"index {task_run.map_index} ",
-        pipeline.id,
-        task_run.id,
-    )
-
-    update_task_run(
-        task_run.id,
-        TaskRunUpdate(
-            status=PipelineRunStatus.RUNNING,
-        ),
-    )
-
-    await sio.emit(
-        "run-update",
-        dict(
-            # TODO: remove pipeline_run why we need it? task_run should be sufficient
-            pipeline=pipeline_run.pipeline_id,
-            trigger=pipeline_run.trigger_id,
-        ),
-    )
-
-    # Prepare arguments using the TaskRun's context/inputs determined by the Orchestrator
-    # The Orchestrator should have resolved all upstream tasks' data into task_run.context
-    if task_run.context:
-        dict_params = task_run.context.get("params", None)
-
-        if pipeline.params:
-            # Pydantic models always need a dict input, so provide one as default if the dict_params is None
-            # typically because the pipeline was triggered by a trigger with no params
-            pipeline_params = pipeline.params.model_validate(dict_params or {})
-        else:
-            # TODO: This should raise at least a warning
-            pipeline_params = dict_params
-    else:
-        pipeline_params = None
+        # Without the row there is no way to advance the DAG from here, so fail
+        # the run rather than leave it RUNNING forever.
+        logger.error("TaskRun %s not found", task_run_id)
+        on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.FAILED)
+        return
 
     task_start_time = utcnow()
     task_run_status = PipelineRunStatus.FAILED  # Assume failure until success
     task_run_output = None
 
+    # Everything that can raise belongs inside the try: an exception escaping
+    # this function skips the `finally` that advances the DAG, and the run would
+    # hang. Resolving the input params is the likeliest offender, since invalid
+    # params raise a Pydantic ValidationError.
     try:
+        logger.info(
+            "Executing task %s %sin pipeline %s (id=%s)",
+            task.id,
+            "" if task_run.map_index is None else f"index {task_run.map_index} ",
+            pipeline.id,
+            task_run.id,
+        )
+
+        update_task_run(
+            task_run.id,
+            TaskRunUpdate(
+                status=PipelineRunStatus.RUNNING,
+            ),
+        )
+
+        await sio.emit("run-update", build_run_update_payload(pipeline_run))
+
+        # Prepare arguments using the TaskRun's context/inputs determined by the Orchestrator
+        # The Orchestrator should have resolved all upstream tasks' data into task_run.context
+        if task_run.context:
+            dict_params = task_run.context.get("params", None)
+
+            if pipeline.params:
+                # Pydantic models always need a dict input, so provide one as default if the dict_params is None
+                # typically because the pipeline was triggered by a trigger with no params
+                pipeline_params = pipeline.params.model_validate(dict_params or {})
+            else:
+                # TODO: This should raise at least a warning
+                pipeline_params = dict_params
+        else:
+            pipeline_params = None
+
         # Pass resolved XCom inputs and pipeline params to the execution wrapper
-        task_output = await _execute_task(task, task_run, pipeline_params)
+        with track_running_task(task_run.id, task.id):
+            task_output = await _execute_task(task, task_run, pipeline_params)
 
         # Store output and set success status
         if task_output is not None:
@@ -187,18 +197,22 @@ async def execute_task_instance(
             ),
         )
 
-        await sio.emit(
-            "run-update",
-            dict(
-                pipeline=pipeline_run.pipeline_id,
-                trigger=pipeline_run.trigger_id,
-            ),
-        )
+        await sio.emit("run-update", build_run_update_payload(pipeline_run))
 
         # Avoid circular import
         from plombery.orchestrator import orchestrator
 
-        await orchestrator.handle_task_completion(task_run)
+        try:
+            await orchestrator.handle_task_completion(task_run)
+        except Exception as error:
+            # Orchestration itself failed (bad fan-out input, missing task, ...).
+            # Without this guard the exception escapes into the executor and the
+            # pipeline run stays RUNNING forever, as nothing else will ever
+            # advance the DAG.
+            logger.error(
+                "Cannot schedule the tasks downstream of %s", task.id, exc_info=error
+            )
+            on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.FAILED)
 
 
 async def run(
@@ -329,15 +343,28 @@ async def _execute_task(
 
     # Iterate over arguments required by the function signature
     for arg_name in result.input_arg_names:
+        parameter = result.func_params[arg_name]
+
+        # An argument that doesn't name an upstream task but declares a default
+        # is a plain optional argument of the function: leave the default alone
+        # rather than overwriting it with None.
+        if (
+            arg_name not in task.upstream_task_ids
+            and parameter.default is not inspect.Parameter.empty
+        ):
+            continue
+
         # The context handles the mapping logic:
         # - If mapped, resolves to single item if arg_name == map_upstream_id.
         # - Otherwise, resolves to the full output of the upstream task named arg_name.
         input_data = runtime_context.get_output_data(task_id=arg_name)
 
-        arg_annotation = result.func_params[arg_name].annotation
+        arg_annotation = parameter.annotation
 
-        # If the argument is a Pydantic Model, we parse it
-        if issubclass(arg_annotation, BaseModel):
+        # If the argument is a Pydantic Model, we parse it. `isinstance(..., type)`
+        # guards against generic annotations such as `List[int]` or `Optional[str]`,
+        # which are not classes and would make `issubclass` raise a TypeError.
+        if isinstance(arg_annotation, type) and issubclass(arg_annotation, BaseModel):
             input_data = arg_annotation.model_validate(input_data or {})
 
         kwargs[arg_name] = input_data

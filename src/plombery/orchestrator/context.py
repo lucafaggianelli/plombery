@@ -17,6 +17,17 @@ class Context:
         self.logger = get_logger()
         self.task = task_context.get()
 
+    def _read_output(self, task_run: TaskRun) -> Optional[Any]:
+        """Reads the stored output of a single task run."""
+
+        if not task_run.task_output_id:
+            return None
+
+        output_record = get_task_run_output_by_id(task_run.task_output_id)
+
+        # Should not happen if task_output_id is set
+        return output_record.data if output_record else None
+
     def get_output_data(self, task_id: str) -> Optional[Any]:
         """
         Imperatively retrieves the full TaskRunOutput data (XCom) for a specified
@@ -35,24 +46,35 @@ class Context:
 
         target_task_run = self._upstream_task_runs.get(task_full_id)
 
-        if not target_task_run or not target_task_run.task_output_id:
+        if target_task_run is None:
+            # No run is registered under the plain task ID, which means the
+            # upstream task was mapped (its runs are keyed `task_id.map_index`)
+            # while this task is not: this is a fan-in, so gather the output of
+            # every instance, ordered by map index.
+            mapped_runs = sorted(
+                (
+                    run
+                    for run in self._upstream_task_runs.values()
+                    if run.task_id == task_id and run.map_index is not None
+                ),
+                key=lambda run: run.map_index,
+            )
+
+            if mapped_runs:
+                return [self._read_output(run) for run in mapped_runs]
+
             # Task ID not found in upstream dependencies
             return None
 
-        # Fetch the actual data from the TaskRunOutput table
-        output_record = get_task_run_output_by_id(target_task_run.task_output_id)
+        data = self._read_output(target_task_run)
 
-        if output_record:
-            if (
-                self._task_run.map_index is not None
-                # If it's a Fan Out task then the upstream is return a list and we need
-                # to get the item at the specific index
-                and self.task.mapping_mode == MappingMode.FAN_OUT
-            ):
-                return output_record.data[self._task_run.map_index]
+        if (
+            data is not None
+            and self._task_run.map_index is not None
+            # If it's a Fan Out task then the upstream returns a list and we need
+            # to get the item at the specific index
+            and self.task.mapping_mode == MappingMode.FAN_OUT
+        ):
+            return data[self._task_run.map_index]
 
-            # Return the data stored in the 'data' JSON column
-            return output_record.data
-
-        # Should not happen if output_xcom_id is set
-        return None
+        return data

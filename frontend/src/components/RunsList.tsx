@@ -36,6 +36,13 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
 
   const onWsMessage = useCallback(
     (data: any) => {
+      // Ignore malformed events rather than throwing inside the socket handler:
+      // an exception here would stop the list from ever updating again, leaving
+      // a finished run displayed as still running.
+      if (!data?.run?.id) {
+        return
+      }
+
       data.run.start_time = new Date(data.run.start_time)
       data.run.trigger_id = data.trigger
 

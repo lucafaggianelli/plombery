@@ -1,7 +1,116 @@
-A pipeline is a list of tasks that are executed sequentially.
+A pipeline is a graph of tasks: each task declares which tasks must run before
+it, and Plombery runs them in that order, in parallel whenever the graph allows
+it. The graph must be acyclic, and Plombery refuses to register a pipeline that
+contains a cycle.
 
-To declare a pipeline just call the function `register_pipeline`,
-the only 2 mandatory fields are `id` and `tasks`:
+## Declaring the graph
+
+The recommended way to build a pipeline is the `Pipeline` context manager: every
+task defined inside it is added to the pipeline automatically, and dependencies
+are declared with the `>>` operator.
+
+```py
+from plombery import Pipeline, task
+
+with Pipeline(id="sales_pipeline") as pipeline:
+    @task
+    def extract():
+        return [1, 2, 3]
+
+    @task
+    def transform(extract):
+        return [value * 2 for value in extract]
+
+    @task
+    def notify(extract):
+        ...
+
+    # transform and notify both depend on extract, and run in parallel
+    extract >> [transform, notify]
+```
+
+`a >> b` reads "a runs before b". The reverse operator is also available, so
+`b << a` means the same thing. A task can depend on several tasks, and several
+tasks can depend on it:
+
+```py
+extract >> transform >> load
+extract >> notify
+```
+
+!!! warning "Dependencies are explicit"
+
+    Defining tasks one after the other is not enough: two tasks with no `>>`
+    between them have no relationship and will run at the same time. This is a
+    breaking change from the versions of Plombery where `tasks=[a, b, c]` meant
+    "run a, then b, then c".
+
+## Fan-out: dynamic task mapping
+
+A task can be run once per item of the collection returned by an upstream task,
+which is useful to process a list of files, accounts or hosts in parallel:
+
+```py
+from plombery import MappingMode, Pipeline, task
+
+with Pipeline(id="hosts"):
+    @task
+    def get_hosts():
+        return ["a.example.com", "b.example.com"]
+
+    @task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="get_hosts")
+    def check(get_hosts):
+        # runs once per host, receiving a single host
+        ...
+
+    get_hosts >> check
+```
+
+`MappingMode.FAN_OUT` splits the upstream collection and gives one item to each
+instance. `MappingMode.CHAINED_FAN_OUT` keeps the mapping going: the task runs
+once per instance of the upstream mapped task, inheriting its index, so a chain
+of mapped tasks processes one item at a time end to end.
+
+If the upstream task of a fan-out doesn't return a collection, the run fails.
+
+### When one branch fails
+
+By default a failure stops the pipeline from scheduling any further task, and
+every task that will no longer run is recorded as `cancelled`, so the run shows
+where the DAG stopped instead of leaving a gap.
+
+When the branches of a fan-out are independent of each other — one per input
+file, one per record — that default throws away work that had already
+succeeded. Set `fail_fast=False` and only the failed branch is dropped:
+
+```python
+with Pipeline(id="import_files", fail_fast=False) as pipeline:
+
+    @task
+    def list_files():
+        return ["a.csv", "b.csv", "c.csv"]
+
+    @task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="list_files")
+    def parse(list_files):
+        return read(list_files)
+
+    @task(mapping_mode=MappingMode.CHAINED_FAN_OUT, map_upstream_id="parse")
+    def store(parse):
+        write_to_warehouse(parse)
+
+    list_files >> parse >> store
+```
+
+If `b.csv` is corrupt, `a.csv` and `c.csv` are still stored, and only the
+instance that failed and its own downstream instance are left out.
+
+The run itself still ends as `failed` either way: something didn't get through.
+
+## Registering a pipeline
+
+`register_pipeline` is the alternative, flat way to declare a pipeline, and the
+only 2 mandatory fields are `id` and `tasks`. Dependencies still have to be
+declared with `>>`:
 
 ```py
 from plombery import register_pipeline, task
