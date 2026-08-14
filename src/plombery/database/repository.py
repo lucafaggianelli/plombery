@@ -180,15 +180,15 @@ def create_task_run_if_absent(task_run: TaskRunCreate) -> Optional[models.TaskRu
     a plain task has `map_index` NULL and runs once, a mapped task runs once
     per index.
 
-    This is what stops a fan-in from being scheduled several times when more
-    than one upstream branch finishes at the same time and each of them
-    concludes on its own that every dependency is met.
+    Keeps a fan-in to a single run when several upstream branches finish at the
+    same time and each of them concludes on its own that every dependency is
+    met.
 
-    The check and the insert share one transaction, and nothing awaits between
+    The check and the insert share one transaction and nothing awaits between
     them, so no other coroutine can slip in. The unique index on those three
-    columns cannot be relied upon instead: `map_index` is NULL for a plain
-    task, and neither SQLite nor Postgres considers two NULLs equal, so the
-    index never fires for exactly the rows that need it.
+    columns does not cover this: `map_index` is NULL for a plain task, and
+    neither SQLite nor Postgres considers two NULLs equal, so the index never
+    fires for exactly the rows that need it.
     """
 
     with session_scope() as session:
@@ -291,11 +291,10 @@ def get_finished_task_runs(pipeline_run_id: int) -> list[models.TaskRun]:
 def _to_storable(data: Any) -> Any:
     """Turn a task's return value into something the JSON column can hold.
 
-    Deliberately not a generic `__dict__` fallback: that reaches into an
-    object's internals, which for a DataFrame means pandas' block manager and
-    weakrefs rather than the data, and for anything else silently stores
-    private attributes. Each supported type is converted explicitly, and
-    everything else is passed through untouched.
+    Every supported type is converted explicitly and anything else is passed
+    through untouched, so that a value the column cannot hold raises instead of
+    being silently mangled: reaching into `__dict__` would store a DataFrame's
+    block manager and weakrefs, and any other object's private attributes.
     """
 
     try:

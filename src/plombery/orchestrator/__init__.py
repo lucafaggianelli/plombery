@@ -160,13 +160,11 @@ class _Orchestrator:
         completed_was_mapped_instance = task_run.map_index is not None
         instance_map_index = task_run.map_index
 
-        # A failure does not close the run straight away. Marking it FAILED here
-        # used to make every other in-flight completion bail out at the check
-        # above, so the tasks downstream of the branches that were still running
-        # were never scheduled *and* never recorded: the run showed a task that
-        # simply wasn't there, which reads as "never part of the graph" rather
-        # than "did not get to run". The run is closed further down, once every
-        # task has drained, and `has_failed_task_run` decides its final status.
+        # A failure doesn't close the run: the branches that are still in flight
+        # have to reach `_cancel_downstream_of` to record the tasks below them,
+        # and closing the run here would make them all return at the check
+        # above. The run is closed once every task has drained, and
+        # `has_failed_task_run` decides its final status.
         run_has_failed = task_run.status == PipelineRunStatus.FAILED or (
             pipeline.fail_fast and has_failed_task_run(task_run.pipeline_run_id)
         )
@@ -269,12 +267,6 @@ class _Orchestrator:
                 print(f"Downstream task {downstream_task.id} not ready")
                 # Instantiate the task anyway so the it's marked into the DB
 
-        # Check if the pipeline has finished running, checking if all the tasks have finished
-        #
-        # The check is pretty tricky as tasks get scheduled dynamically and task runs are
-        # inserted in the DB just before the task is queued.
-        # Even more, some tasks are mapped so their task runs appear more than once.
-
         # Skipped tasks for the moment are mapped tasks whose upstream output is an empty list
         # so they cannot be scheduled
 
@@ -329,13 +321,10 @@ class _Orchestrator:
         some tasks are mapped so their task runs appear more than once.
         """
 
-        # A set, not a list: a task can be both finished in the database and
-        # part of a skipped branch, and counting it twice makes the total
-        # overshoot the number of tasks, so the run would never be completed.
-        finished_tasks = set(get_finished_tasks_ids(task_run.pipeline_run_id))
+        finished_tasks = get_finished_tasks_ids(task_run.pipeline_run_id)
 
-        # `>=` rather than `==`: an equality check turns any miscount into a run
-        # that stays RUNNING forever, which is the worst possible failure mode.
+        # `>=` guards against a miscount: an exact comparison would leave the
+        # run RUNNING forever, which is the worst failure mode available here.
         if len(finished_tasks) < len(pipeline.tasks):
             return
 
@@ -359,7 +348,7 @@ class _Orchestrator:
         if not ready:
             print(
                 f"Upstream tasks of {task.id} not ready because",
-                set(task.upstream_task_ids) - set(finished_tasks),
+                set(task.upstream_task_ids) - finished_tasks,
             )
 
         return ready
@@ -467,16 +456,20 @@ def get_downstream_task_ids(task_id: str, pipeline: Pipeline):
 
 def get_finished_tasks_ids(
     pipeline_run_id: int, task_ids: Optional[Collection[str]] = None
-):
+) -> set[str]:
+    """The IDs of the tasks whose every instance has finished.
+
+    A mapped task has one run per index, so it counts as finished only once all
+    of them are: a single unfinished instance keeps the whole task out.
+    """
+
     tasks_status: dict[str, bool] = {}
 
     for r in get_task_runs_for_pipeline_run(pipeline_run_id, task_ids):
         if tasks_status.get(r.task_id) is not False:
             tasks_status[r.task_id] = r.status in FINISHED_STATUS
 
-    finished_tasks = [task_id for task_id, finished in tasks_status.items() if finished]
-
-    return finished_tasks
+    return {task_id for task_id, finished in tasks_status.items() if finished}
 
 
 async def run_pipeline_now(
