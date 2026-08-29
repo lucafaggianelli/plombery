@@ -28,6 +28,8 @@ on its own — nothing here is blocked on a phase after it.
 - `plombery run`: discovers the pipelines in a `pipelines/` folder and serves
   the web app, replacing the hand-written `app.py`. Single process for now;
   the `serve`/`worker` split comes with the scheduler in Phase 1.
+- A `Pipeline` built with the context manager registers itself when its block
+  ends, so importing the file that defines it is enough.
 
 ## Phase 1 — Own scheduler
 

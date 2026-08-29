@@ -1,5 +1,6 @@
 from typing import Any, Collection, Dict, Optional, Tuple
 from datetime import datetime, timedelta
+import logging
 
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.job import Job
@@ -34,6 +35,9 @@ from plombery.utils import utcnow
 from plombery.websocket import sio
 
 
+_logger = logging.getLogger(__name__)
+
+
 class _Orchestrator:
     _all_pipelines: Dict[str, Pipeline] = {}
     _all_triggers: Dict[str, Tuple[Pipeline, Trigger]] = {}
@@ -42,8 +46,17 @@ class _Orchestrator:
         self.scheduler = AsyncIOScheduler()
 
     def register_pipeline(self, pipeline: Pipeline):
-        if pipeline.id in self._all_pipelines:
-            print(f"Pipeline {pipeline.id} already registered")
+        already_registered = self._all_pipelines.get(pipeline.id)
+        if already_registered is not None:
+            # The same pipeline registering again is a no-op — it happens
+            # whenever a `with Pipeline()` block (which registers itself on
+            # exit) is also passed to `register_pipeline` explicitly.
+            if already_registered is not pipeline:
+                _logger.warning(
+                    "A different pipeline with id '%s' is already registered; "
+                    "keeping the first one. Pipeline ids must be unique.",
+                    pipeline.id,
+                )
             return
 
         self._all_pipelines[pipeline.id] = pipeline

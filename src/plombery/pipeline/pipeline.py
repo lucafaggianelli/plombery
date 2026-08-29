@@ -45,6 +45,15 @@ class Pipeline(BaseModel):
             "which changes whenever tasks or dependencies do."
         ),
     )
+    auto_register: bool = Field(
+        default=True,
+        exclude=True,
+        description=(
+            "Register the pipeline with Plombery automatically when the "
+            "`with Pipeline()` block ends. Set it to False to build a pipeline "
+            "without registering it, for a test or to register it later."
+        ),
+    )
 
     model_config = ConfigDict(validate_assignment=True)
 
@@ -215,11 +224,24 @@ class Pipeline(BaseModel):
 
         pipeline_context.reset(self._p_token)
 
+        # Leave a failing block alone: don't validate or register a pipeline
+        # whose definition raised half-way through.
+        if type is not None:
+            return
+
         # Tasks are added to `self.tasks` throughout the block, after the
         # model validator already ran once on an empty list at construction:
         # re-run the full check now that every task is in.
-        if type is None:
-            self._check_dag()
+        self._check_dag()
+
+        # Register the pipeline as soon as its block ends, so importing the
+        # module that defines it is enough — no separate `register_pipeline`
+        # call. The registry lives on the orchestrator; import it lazily to
+        # avoid a circular import at module load.
+        if self.auto_register:
+            from plombery.orchestrator import orchestrator
+
+            orchestrator.register_pipeline(self)
 
     @field_serializer("version")
     def _serialize_version(self, version: Optional[str]) -> str:

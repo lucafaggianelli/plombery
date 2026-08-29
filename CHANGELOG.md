@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - A `plombery` command: `plombery run` discovers the pipelines in a
   `pipelines/` folder and serves the web app, so a project no longer needs an
   `app.py` with the uvicorn boilerplate
+- A pipeline built with the `Pipeline` context manager registers itself when
+  its block ends, so `register_pipeline(pipeline)` is no longer needed after
+  it. Pass `Pipeline(auto_register=False)` to opt out
 
 ### Fixed
 

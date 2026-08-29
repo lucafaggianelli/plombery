@@ -23,14 +23,13 @@ Before starting, let's define some naming so there will be no confusion!
 ## Write a pipeline
 
 Create `pipelines/sales.py`. A *Task* is a Python function decorated with
-`@task`; a *Pipeline* groups the tasks defined inside its `with` block; and
-`register_pipeline` makes Plombery aware of it.
+`@task`, and a *Pipeline* groups the tasks defined inside its `with` block:
 
 ```py title="pipelines/sales.py"
 from datetime import datetime
 from random import randint
 
-from plombery import Pipeline, register_pipeline, task, get_logger
+from plombery import Pipeline, task, get_logger
 
 
 with Pipeline(id="sales_pipeline") as pipeline:
@@ -57,14 +56,12 @@ with Pipeline(id="sales_pipeline") as pipeline:
         # Returning a value stores it and makes it available in the web UI;
         # it's also passed to any task downstream of this one
         return sales
-
-
-register_pipeline(pipeline)
 ```
 
 Every task defined inside the `with Pipeline()` block is added to the pipeline
-automatically. See [Pipelines](pipelines.md) for how to add more tasks and
-declare dependencies between them with `>>`.
+automatically, and the pipeline registers itself with Plombery when the block
+ends — importing the file is all it takes. See [Pipelines](pipelines.md) for
+how to add more tasks and declare dependencies between them with `>>`.
 
 ## Run it
 
@@ -91,7 +88,7 @@ endpoint. To have Plombery run it on a schedule, add a `Trigger`:
 
 ```py title="pipelines/sales.py"
 from apscheduler.triggers.interval import IntervalTrigger
-from plombery import Pipeline, Trigger, register_pipeline, task
+from plombery import Pipeline, Trigger, task
 
 
 with Pipeline(
@@ -109,9 +106,6 @@ with Pipeline(
     @task
     async def fetch_raw_sales_data():
         ...
-
-
-register_pipeline(pipeline)
 ```
 
 See [Triggers](triggers.md) for cron schedules and triggers with parameters.

@@ -15,14 +15,12 @@ def _write_pipelines_package(root: Path, name: str = "pipelines") -> None:
     (package / "sales.py").write_text(
         textwrap.dedent(
             """
-            from plombery import Pipeline, register_pipeline, task
+            from plombery import Pipeline, task
 
             with Pipeline(id="sales_from_cli") as pipeline:
                 @task
                 def extract():
                     return 1
-
-            register_pipeline(pipeline)
             """
         )
     )

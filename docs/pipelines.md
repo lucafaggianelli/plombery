@@ -6,8 +6,9 @@ contains a cycle.
 ## Declaring the graph
 
 The recommended way to build a pipeline is the `Pipeline` context manager: every
-task defined inside it is added to the pipeline automatically, and dependencies
-are declared with the `>>` operator.
+task defined inside it is added to the pipeline automatically, dependencies are
+declared with the `>>` operator, and the pipeline registers itself with Plombery
+when the block ends — so importing the file that defines it is all it takes.
 
 ```py
 from plombery import Pipeline, task
@@ -155,13 +156,27 @@ The run itself still ends as `failed` either way: something didn't get through.
 
 ## Registering a pipeline
 
-A pipeline built with the `Pipeline` context manager is registered by passing
-it to `register_pipeline`:
+A pipeline built with the `Pipeline` context manager registers itself when the
+`with` block ends: nothing else to call.
+
+```py
+from plombery import Pipeline, task
+
+with Pipeline(id="sales_pipeline") as pipeline:
+    @task
+    def get_sales_data():
+        ...
+# registered here, at the end of the block
+```
+
+To build a pipeline without registering it — for a test, or to register it
+later — pass `auto_register=False`, then register it explicitly with
+`register_pipeline` when you're ready:
 
 ```py
 from plombery import Pipeline, register_pipeline, task
 
-with Pipeline(id="sales_pipeline") as pipeline:
+with Pipeline(id="sales_pipeline", auto_register=False) as pipeline:
     @task
     def get_sales_data():
         ...
@@ -201,8 +216,7 @@ register_pipeline(
 )
 ```
 
-Both forms return the registered `Pipeline`, and both accept the same
-`params` argument, covered next.
+The `params` argument, covered next, is accepted by every form.
 
 ## Parameters
 
@@ -211,7 +225,7 @@ argument, a [Pydantic model](https://docs.pydantic.dev/latest/usage/models/):
 
 ```py
 from pydantic import BaseModel
-from plombery import Pipeline, register_pipeline, task
+from plombery import Pipeline, task
 
 
 class InputParams(BaseModel):
@@ -222,8 +236,6 @@ with Pipeline(id="sales_pipeline", params=InputParams) as pipeline:
     @task
     def get_sales_data(params: InputParams):
         return params.some_value
-
-register_pipeline(pipeline)
 ```
 
 The flat form takes the same argument:

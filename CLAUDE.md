@@ -126,11 +126,11 @@ Real-time updates arrive via `socket.io-client` (`contexts/WebSocketContext.tsx`
 
 ### Pipeline Definition Pattern
 
-Users write pipelines using the public API — the `Pipeline` context manager (recommended: tasks defined inside are auto-registered) or the flat `register_pipeline(id=..., tasks=[...])` form:
+Users write pipelines using the public API — the `Pipeline` context manager (recommended: tasks defined inside are auto-added, and the pipeline registers itself when the block ends) or the flat `register_pipeline(id=..., tasks=[...])` form. `plombery run` (`cli.py`) discovers and imports the `pipelines/` package so each one registers; a hand-written `app.py` + `get_app()` still works.
 
 ```python
 from apscheduler.triggers.interval import IntervalTrigger
-from plombery import get_app, register_pipeline, task, Pipeline, Trigger
+from plombery import task, Pipeline, Trigger
 
 with Pipeline(
     id="my_pipeline",
@@ -145,11 +145,10 @@ with Pipeline(
         return fetch["result"] + 1
 
     fetch >> process
-
-register_pipeline(pipeline)
-
-app = get_app()  # pass to uvicorn
+# registered here, when the block ends (auto_register=False opts out)
 ```
+
+`register_pipeline` remains for the flat form and for a pipeline built with `auto_register=False`. `Pipeline.__exit__` registers via `orchestrator.register_pipeline`, which is idempotent for the same object.
 
 A task's arguments are resolved by name against upstream task ids declared with `>>`/`<<` (never by position — the DAG isn't a sequence), or explicitly with `OutputOf(task)` when the argument shouldn't have to be named after it. `>>`/`<<` is the only thing that declares an edge; `OutputOf` only binds data, and `Pipeline` rejects the two disagreeing. Everything a task receives is dependency-injected by matching its signature (`orchestrator/executor.py:check_task_signature`): `params` (the pipeline's Pydantic params model), `context`/`ctx` (the `Context`), an argument annotated with a `BaseSecrets` subclass (an injected, validated secrets instance — matched by annotation, so it can have any name), and everything else as upstream task output. Any of them can be omitted. Because secrets are declared in the signature, `get_pipelines_missing_secrets()` (called at startup) reports which registered pipelines can't run for lack of a secret.
 

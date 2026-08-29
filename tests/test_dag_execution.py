@@ -753,3 +753,44 @@ async def test_a_task_can_be_reused_across_pipelines(app: Plombery):
     # Neither run has a task run for the other pipeline's exclusive task.
     assert {tr.task_id for tr in run_a.task_runs} == {"shared", "only_in_a"}
     assert {tr.task_id for tr in run_b.task_runs} == {"shared", "only_in_b"}
+
+
+@pytest.mark.asyncio
+async def test_a_pipeline_registers_itself_when_its_block_ends(app: Plombery):
+    """A `with Pipeline()` block registers the pipeline on exit, so importing
+    the module that defines it is enough — no explicit `register_pipeline`."""
+
+    from plombery.orchestrator import orchestrator
+
+    app.start()
+
+    with Pipeline(id="self_registered") as pipeline:
+
+        @task
+        def only_task():
+            return 1
+
+    # No register_pipeline call here on purpose.
+    assert orchestrator.pipelines.get("self_registered") is pipeline
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+    assert run.status == PipelineRunStatus.COMPLETED
+
+
+@pytest.mark.asyncio
+async def test_auto_register_false_leaves_the_pipeline_unregistered(app: Plombery):
+    from plombery.orchestrator import orchestrator
+
+    app.start()
+
+    with Pipeline(id="not_registered", auto_register=False) as pipeline:
+
+        @task
+        def only_task():
+            return 1
+
+    assert "not_registered" not in orchestrator.pipelines
+
+    # It can still be registered explicitly afterwards.
+    app.register_pipeline(pipeline)
+    assert orchestrator.pipelines.get("not_registered") is pipeline
