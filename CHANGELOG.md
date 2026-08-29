@@ -58,6 +58,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - A task returning a `pandas.DataFrame` is stored instead of failing the run
 - When a fan-out branch fails, the tasks below the branches that were still
   running are recorded as cancelled rather than silently left out of the run
+- Wiring the same `Task` object into two different pipelines no longer makes
+  one pipeline's dependencies leak into the other's scheduling decisions
 - A task defined outside a `with Pipeline()` block now joins the pipeline when
   wired with `>>` inside it, instead of being silently left out
 

@@ -703,3 +703,53 @@ def test_output_of_without_a_declared_dependency_is_rejected():
                 return sum(data)
 
             # No `fetch_data >> process` here on purpose.
+
+
+@pytest.mark.asyncio
+async def test_a_task_can_be_reused_across_pipelines(app: Plombery):
+    """Wiring the same `Task` object into two pipelines must not leak edges.
+
+    Edges used to be mutated directly onto the `Task` object by `>>`, so
+    wiring an already-defined task into a second pipeline changed what the
+    first pipeline saw as its own dependencies too, corrupting scheduling
+    decisions for a run that had nothing to do with the second pipeline.
+    """
+
+    app.start()
+
+    @task
+    def shared():
+        return 1
+
+    with Pipeline(id="reuse_a") as pipeline_a:
+
+        @task
+        def only_in_a(shared):
+            return shared + 10
+
+        shared >> only_in_a
+
+    with Pipeline(id="reuse_b") as pipeline_b:
+
+        @task
+        def only_in_b(shared):
+            return shared + 100
+
+        shared >> only_in_b
+
+    # Each pipeline must see only its own edge for the shared task.
+    assert pipeline_a.downstream_of("shared") == {"only_in_a"}
+    assert pipeline_b.downstream_of("shared") == {"only_in_b"}
+
+    app.register_pipeline(pipeline_a)
+    app.register_pipeline(pipeline_b)
+
+    run_a = await wait_for_run((await run_pipeline_now(pipeline_a)).id)
+    run_b = await wait_for_run((await run_pipeline_now(pipeline_b)).id)
+
+    assert run_a.status == PipelineRunStatus.COMPLETED
+    assert run_b.status == PipelineRunStatus.COMPLETED
+
+    # Neither run has a task run for the other pipeline's exclusive task.
+    assert {tr.task_id for tr in run_a.task_runs} == {"shared", "only_in_a"}
+    assert {tr.task_id for tr in run_b.task_runs} == {"shared", "only_in_b"}

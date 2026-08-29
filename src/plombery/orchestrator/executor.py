@@ -164,7 +164,7 @@ async def execute_task_instance(
 
         # Pass resolved XCom inputs and pipeline params to the execution wrapper
         with track_running_task(task_run.id, task.id):
-            task_output = await _execute_task(task, task_run, pipeline_params)
+            task_output = await _execute_task(pipeline, task, task_run, pipeline_params)
 
         # Store output and set success status
         if task_output is not None:
@@ -304,6 +304,7 @@ def check_task_signature(func: Callable) -> TaskFunctionSignature:
 
 
 async def _execute_task(
+    pipeline: Pipeline,
     task: Task,
     task_run: TaskRun,
     pipeline_params: Optional[BaseModel] = None,
@@ -311,6 +312,8 @@ async def _execute_task(
     """Entrypoint to actually run a Task `run` function
 
     Args:
+        pipeline (Pipeline): The pipeline `task` belongs to, whose dependency
+            graph resolves the task's upstream ids
         task (Task): The task to run
         task_run (TaskRun): The TaskRun object
         pipeline_params (Optional[BaseModel], optional): Input params for the pipeline. Defaults to None.
@@ -326,9 +329,11 @@ async def _execute_task(
 
     kwargs = {}
 
+    upstream_task_ids = pipeline.upstream_of(task.id)
+
     # Load the TaskRuns for all upstream dependencies
     upstream_runs_metadata = get_task_runs_for_pipeline_run(
-        task_run.pipeline_run_id, task_ids=task.upstream_task_ids
+        task_run.pipeline_run_id, task_ids=upstream_task_ids
     )
 
     # Build the map of task_id -> TaskRun model instance
@@ -355,7 +360,7 @@ async def _execute_task(
         # is a plain optional argument of the function: leave the default alone
         # rather than overwriting it with None.
         elif (
-            arg_name not in task.upstream_task_ids
+            arg_name not in upstream_task_ids
             and parameter.default is not inspect.Parameter.empty
         ):
             continue
