@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Pipeline(fail_fast=False)` keeps the healthy branches of a fan-out running
   when one of them fails, for pipelines whose branches are independent of each
   other, such as one per input file
+- `register_pipeline` also accepts a `Pipeline` built with the `with Pipeline()`
+  context manager, not only the flat `id`/`tasks`/... form
 
 ### Fixed
 
@@ -47,6 +49,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - A task returning a `pandas.DataFrame` is stored instead of failing the run
 - When a fan-out branch fails, the tasks below the branches that were still
   running are recorded as cancelled rather than silently left out of the run
+- A task defined outside a `with Pipeline()` block now joins the pipeline when
+  wired with `>>` inside it, instead of being silently left out
 
 ### Changed
 

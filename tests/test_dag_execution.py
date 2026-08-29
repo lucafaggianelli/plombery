@@ -578,3 +578,40 @@ async def test_fan_out_without_fail_fast_finishes_the_healthy_branches(
         2: PipelineRunStatus.COMPLETED,
         3: PipelineRunStatus.COMPLETED,
     }
+
+
+@pytest.mark.asyncio
+async def test_register_pipeline_accepts_a_built_pipeline(app: Plombery):
+    """`register_pipeline` must accept a `Pipeline` built with the context manager.
+
+    Without this, a user who builds a pipeline with `with Pipeline()` and then
+    calls the flat `register_pipeline(id=..., tasks=[...])` on it hits a
+    TypeError, and the natural workaround is to redeclare the whole task list
+    by hand, duplicating what `>>` already expressed.
+    """
+
+    from plombery import register_pipeline
+    from plombery.orchestrator import orchestrator
+
+    app.start()
+
+    with Pipeline(id="via_register_pipeline") as pipeline:
+
+        @task
+        def start():
+            return 1
+
+        @task
+        def finish(start):
+            return start + 1
+
+        start >> finish
+
+    returned = register_pipeline(pipeline)
+
+    assert returned is pipeline
+    assert orchestrator.pipelines["via_register_pipeline"] is pipeline
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+    assert run.status == PipelineRunStatus.COMPLETED
+

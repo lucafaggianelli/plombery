@@ -1,4 +1,4 @@
-from typing import List, Optional, Type
+from typing import List, Optional, Type, Union, overload
 import logging
 import os
 
@@ -101,6 +101,12 @@ def get_app():
     return app
 
 
+@overload
+def register_pipeline(pipeline: Pipeline) -> Pipeline:
+    """Register a `Pipeline` already built, typically with the `with Pipeline()` context manager."""
+
+
+@overload
 def register_pipeline(
     id: str,
     tasks: List[Task],
@@ -108,14 +114,30 @@ def register_pipeline(
     description: Optional[str] = None,
     params: Optional[Type[BaseModel]] = None,
     triggers: Optional[List[Trigger]] = None,
-):
-    pipeline = Pipeline(
-        id=id,
-        tasks=tasks,
-        name=name,
-        description=description,
-        params=params,
-        triggers=triggers or [],
-    )
+) -> Pipeline:
+    """Build and register a pipeline from its parts, the flat alternative to the context manager."""
+
+
+def register_pipeline(
+    id: Union[str, Pipeline],
+    tasks: Optional[List[Task]] = None,
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+    params: Optional[Type[BaseModel]] = None,
+    triggers: Optional[List[Trigger]] = None,
+) -> Pipeline:
+    if isinstance(id, Pipeline):
+        pipeline = id
+    else:
+        pipeline = Pipeline(
+            id=id,
+            tasks=tasks or [],
+            name=name,
+            description=description,
+            params=params,
+            triggers=triggers or [],
+        )
 
     _plombery.register_pipeline(pipeline)
+
+    return pipeline
