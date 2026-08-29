@@ -1,6 +1,6 @@
 ## Prerequisites
 
-To run Plombery you only need Python (v3.8 or later), if you don't have it installed yet, go
+To run Plombery you only need Python (v3.9 or later), if you don't have it installed yet, go
 to the [official Python website](https://www.python.org/downloads/), download it
 and install it.
 

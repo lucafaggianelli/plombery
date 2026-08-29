@@ -53,9 +53,13 @@ when registering a pipeline, (the `triggers` argument must be a list
 even if you only have 1 trigger).
 The actual schedule is defined via the `schedule` argument:
 
-```py hl_lines="1 7-15"
+```py hl_lines="1 7-16"
 from apscheduler.triggers.interval import IntervalTrigger
-from plombery import register_pipeline, Trigger
+from plombery import register_pipeline, task, Trigger
+
+@task
+def get_sales_data():
+    ...
 
 register_pipeline(
     id="sales_pipeline",
@@ -63,6 +67,7 @@ register_pipeline(
     triggers=[
         Trigger(
             id="daily",
+            name="Daily",
             description="Run the pipeline every day",
             schedule=IntervalTrigger(
                 days=1,
@@ -87,13 +92,15 @@ custom parameters.
 
 If a pipeline has input parameters, then its triggers can have custom parameters:
 
-```py hl_lines="3-5 13 21-24"
+```py hl_lines="3-5 8 14 22-25"
 from pydantic import BaseModel
+from plombery import task
 
 class InputParams(BaseModel):
     past_days: int
     convert_currency: bool = False
 
+@task
 def get_sales_data(params: InputParams):
     print(params.past_days)
 
@@ -104,14 +111,15 @@ register_pipeline(
     triggers=[
         Trigger(
             id="daily",
+            name="Daily USD",
             description="Get last 5 days of sales data in USD dollars",
             schedule=IntervalTrigger(
                 days=1,
             ),
-            params={
-                "past_days": 5,
-                "convert_currency": True,
-            },
+            params=InputParams(
+                past_days=5,
+                convert_currency=True,
+            ),
         ),
     ],
 )
@@ -149,9 +157,9 @@ because `past_days` is missing but it's mandatory in `InputParams`:
 ```py
 Trigger(
     # ...
-    params={
-        "convert_currency": True,
-    }
+    params=InputParams(
+        convert_currency=True,
+    ),
 )
 ```
 Though you can omit optional values, so this would be valid:
@@ -159,9 +167,9 @@ Though you can omit optional values, so this would be valid:
 ```py
 Trigger(
     # ...
-    params={
-        "past_days": 3,
-    }
+    params=InputParams(
+        past_days=3,
+    ),
 )
 ```
 

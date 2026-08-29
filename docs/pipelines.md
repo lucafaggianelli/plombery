@@ -155,63 +155,85 @@ The run itself still ends as `failed` either way: something didn't get through.
 
 ## Registering a pipeline
 
-`register_pipeline` is the alternative, flat way to declare a pipeline, and the
-only 2 mandatory fields are `id` and `tasks`. Dependencies still have to be
-declared with `>>`:
+A pipeline built with the `Pipeline` context manager is registered by passing
+it to `register_pipeline`:
 
 ```py
-from plombery import register_pipeline, task
+from plombery import Pipeline, register_pipeline, task
 
-class InputParams(BaseModel):
-  some_value: int
+with Pipeline(id="sales_pipeline") as pipeline:
+    @task
+    def get_sales_data():
+        ...
+
+register_pipeline(pipeline)
+```
+
+`register_pipeline` also accepts a pipeline's parts directly, without the
+context manager — a flat alternative useful when a pipeline has a single task
+and the graph itself needs no `>>`:
+
+```py
+from apscheduler.triggers.interval import IntervalTrigger
+from plombery import register_pipeline, task, Trigger
 
 @task
 def get_sales_data():
-  pass
+    ...
 
 register_pipeline(
     # (required) the id identifies the pipeline univocally
-    id="sales_pipeline_2345",
+    id="sales_pipeline",
     # (required) the list of tasks to execute
     tasks=[get_sales_data],
-    # This pipeline is configurable via input parameters
-    params=InputParams,
     # The name is optional, if absent it would be generated from the ID
     name="Sales pipeline",
-    description="""This is a very useless pipeline""",
+    description="Aggregate sales activity from all stores across the country",
     # Triggers with schedules
     triggers=[
         Trigger(
             id="daily",
             name="Daily",
             description="Run the pipeline every day",
-            # the input params value for this specific trigger
-            params=InputParams(some_value=2),
-            schedule=IntervalTrigger(
-                days=1,
-            ),
+            schedule=IntervalTrigger(days=1),
         )
     ],
 )
 ```
 
+Both forms return the registered `Pipeline`, and both accept the same
+`params` argument, covered next.
+
 ## Parameters
 
-A pipeline is configurable if it declares some input parameters in the registration
-via the `params` argument:
+A pipeline is configurable if it declares input parameters via the `params`
+argument, a [Pydantic model](https://docs.pydantic.dev/latest/usage/models/):
+
+```py
+from pydantic import BaseModel
+from plombery import Pipeline, register_pipeline, task
+
+
+class InputParams(BaseModel):
+    some_value: int
+
+
+with Pipeline(id="sales_pipeline", params=InputParams) as pipeline:
+    @task
+    def get_sales_data(params: InputParams):
+        return params.some_value
+
+register_pipeline(pipeline)
+```
+
+The flat form takes the same argument:
 
 ```py
 register_pipeline(
-  # ...
-  params=InputParams
+    id="sales_pipeline",
+    tasks=[get_sales_data],
+    params=InputParams,
 )
-```
-
-The `InputParams` is a [Pydantic Model](https://docs.pydantic.dev/latest/usage/models/):
-
-```py
-class InputParams(BaseModel):
-  some_value: int
 ```
 
 If the pipeline has input parameters, when you click the manual run button,

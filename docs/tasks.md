@@ -88,6 +88,9 @@ with Pipeline(id="my_pipeline"):
     argument, or forgetting to declare the dependency with `>>`, means the task
     won't receive the data.
 
+    To free the argument from having to match the task's name, use
+    [`OutputOf`](pipelines.md#naming-an-upstream-task-explicitly) instead.
+
 An argument that doesn't name an upstream task and declares a default value is
 treated as a plain argument of the function, and keeps its default:
 
@@ -124,36 +127,9 @@ with Pipeline(id="fan_in"):
 
 ## Secrets
 
-A task that needs a credential — a database password, an API key — shouldn't
-read it with a plain `os.getenv`: there's no validation, no type, and nothing
-tells you what it's called until it's missing at 3am. Subclass `BaseSecrets`
-instead, the same way `Pipeline.params` is a plain Pydantic model:
-
-```py
-from pydantic import SecretStr
-from plombery import BaseSecrets, task
-
-
-class WeatherApiSecrets(BaseSecrets):
-    WEATHER_API_KEY: SecretStr
-
-
-@task
-def fetch_weather():
-    secrets = WeatherApiSecrets()
-    return call_api(secrets.WEATHER_API_KEY.get_secret_value())
-```
-
-Values are read from an environment variable named `PLOMBERY_SECRET_<FIELD>`
-(so `WEATHER_API_KEY` above reads `PLOMBERY_SECRET_WEATHER_API_KEY`), or from
-a `.env` file — the same two sources `plombery.config.yaml` is read from. A
-missing value raises a clear validation error instead of a `None` that only
-fails once the task tries to use it.
-
-There's no YAML declaration and no code generation: the class *is* the
-declaration, so it's read wherever you'd already look — your IDE's
-autocomplete included. Declare a field as `SecretStr`, as above, to keep its
-value out of `repr()` and out of the logs.
+A task that needs a credential — a database password, an API key — declares
+it with `BaseSecrets` rather than reading it with a plain `os.getenv`. See
+[Secrets](secrets.md) for how to declare and use one.
 
 ## Logging
 

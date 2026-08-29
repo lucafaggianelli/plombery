@@ -73,6 +73,7 @@ nav:
   - Docs:
       - Pipelines: pipelines.md
       - Tasks: tasks.md
+      - Secrets: secrets.md
       - Triggers: triggers.md
       - Deployment: deployment.md
   - Configuration:
