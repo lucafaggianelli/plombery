@@ -648,3 +648,58 @@ async def test_tasks_defined_outside_the_context_are_registered_by_wiring(
 
     run = await wait_for_run((await run_pipeline_now(pipeline)).id)
     assert run.status == PipelineRunStatus.COMPLETED
+
+
+@pytest.mark.asyncio
+async def test_output_of_binds_by_reference_not_by_name(app: Plombery):
+    """`OutputOf` resolves the right upstream task regardless of the argument's name."""
+
+    from plombery import OutputOf
+
+    app.start()
+
+    with Pipeline(id="output_of_run") as pipeline:
+
+        @task
+        def fetch_data():
+            return [1, 2, 3]
+
+        @task
+        def process(data=OutputOf(fetch_data)):
+            return sum(data)
+
+        fetch_data >> process
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+
+    process_run = next(tr for tr in run.task_runs if tr.task_id == "process")
+    output = get_task_run_output_by_id(process_run.task_output_id)
+    assert output.data == 6
+
+
+def test_output_of_without_a_declared_dependency_is_rejected():
+    """`OutputOf` only binds data; the edge must still be declared with `>>`.
+
+    Deriving the graph from the signature was explicitly ruled out (too many
+    edge cases, and it would make a pure refactor of a function's arguments
+    silently change the DAG's topology), so a mismatch between the two must
+    be a hard error, not a silently working accident.
+    """
+
+    with pytest.raises(ValueError, match="OutputOf.*no declared dependency"):
+        with Pipeline(id="output_of_missing_edge"):
+            from plombery import OutputOf
+
+            @task
+            def fetch_data():
+                return [1, 2, 3]
+
+            @task
+            def process(data=OutputOf(fetch_data)):
+                return sum(data)
+
+            # No `fetch_data >> process` here on purpose.

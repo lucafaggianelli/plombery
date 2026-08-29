@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   other, such as one per input file
 - `register_pipeline` also accepts a `Pipeline` built with the `with Pipeline()`
   context manager, not only the flat `id`/`tasks`/... form
+- `OutputOf(task)` binds a task argument to a specific upstream task's output,
+  so the argument doesn't have to be named after it. A type checker still
+  verifies the argument's declared type against what `task` actually returns.
+  It only binds data: the dependency itself still has to be declared with
+  `>>`/`<<`, and a mismatch between the two is now a validation error
 
 ### Fixed
 

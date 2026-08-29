@@ -1,4 +1,5 @@
 import hashlib
+import inspect
 import json
 from typing import Any, Optional, Type
 
@@ -11,7 +12,7 @@ from pydantic import (
 )
 
 from plombery.orchestrator.dag import is_graph_acyclic
-from .tasks import Task
+from .tasks import OutputOfMarker, Task
 from .trigger import Trigger
 from ._utils import prettify_name
 
@@ -60,9 +61,25 @@ class Pipeline(BaseModel):
 
     @model_validator(mode="after")
     def validate_dag_dependencies(self):
+        """Validates the dependencies, run at construction time.
+
+        This only catches what's wrong with the tasks passed to the
+        constructor directly (the flat `register_pipeline` form): the context
+        manager form adds tasks to `self.tasks` *after* construction, by
+        mutating the list in place, which `validate_assignment` doesn't see.
+        `__exit__` calls `_check_dag` again once every task is in, so both
+        forms end up fully validated either way.
         """
-        Validates the dependencies to ensure all upstream tasks exist
-        and that no cyclic dependencies are present.
+
+        self._check_dag()
+
+        return self
+
+    def _check_dag(self) -> None:
+        """Validates the dependencies to ensure all upstream tasks exist,
+        that every `OutputOf(...)` binding has a matching declared dependency,
+        that no cyclic dependencies are present, and that the mapping
+        configuration of every task is consistent.
         """
 
         task_id_set = {task.id for task in self.tasks}
@@ -75,6 +92,24 @@ class Pipeline(BaseModel):
                         f"Task '{task.id}' depends on non-existent task '{upstream_id}'."
                     )
 
+        # `OutputOf(...)` only binds data, it never creates a dependency by
+        # itself: the graph is declared exclusively with `>>`/`<<`, on purpose,
+        # so that the topology stays reviewable and doesn't change as a side
+        # effect of a signature refactor. This catches the two disagreeing.
+        for task in self.tasks:
+            for name, parameter in inspect.signature(task.run).parameters.items():
+                if not isinstance(parameter.default, OutputOfMarker):
+                    continue
+
+                referenced_id = parameter.default.task.id
+
+                if referenced_id not in task.upstream_task_ids:
+                    raise ValueError(
+                        f"Task '{task.id}' reads OutputOf({referenced_id}) on "
+                        f"argument '{name}', but there's no declared dependency: "
+                        f"add `{referenced_id} >> {task.id}` (or `<<`)."
+                    )
+
         # Check for cycles
         if not is_graph_acyclic(self.tasks):
             raise ValueError(
@@ -83,8 +118,6 @@ class Pipeline(BaseModel):
 
         for task in self.tasks:
             task.validate_mapping()
-
-        return self
 
     def get_task_by_id(self, task_id: str):
         for task in self.tasks:
@@ -112,10 +145,11 @@ class Pipeline(BaseModel):
 
         pipeline_context.reset(self._p_token)
 
-        if not is_graph_acyclic(self.tasks):
-            raise ValueError(
-                f"Pipeline '{self.id}' contains a cyclic dependency and cannot run."
-            )
+        # Tasks are added to `self.tasks` throughout the block, after the
+        # model validator already ran once on an empty list at construction:
+        # re-run the full check now that every task is in.
+        if type is None:
+            self._check_dag()
 
     @field_serializer("version")
     def _serialize_version(self, version: Optional[str]) -> str:

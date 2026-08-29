@@ -16,7 +16,7 @@ from .orchestrator import orchestrator
 from .orchestrator.watchdog import start_watchdog, stop_watchdog
 from .retention import apply_retention, delete_orphan_data
 from .orchestrator.context import Context  # noqa F401
-from .pipeline.tasks import Task, task, MappingMode  # noqa F401
+from .pipeline.tasks import Task, task, MappingMode, OutputOf  # noqa F401
 from .pipeline.pipeline import Pipeline, Trigger  # noqa F401
 from .schemas import PipelineRunStatus  # noqa F401
 from ._version import __version__  # noqa F401

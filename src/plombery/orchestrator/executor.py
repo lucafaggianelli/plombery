@@ -29,6 +29,7 @@ from plombery.database.schemas import (
     TaskRunUpdate,
 )
 from plombery.pipeline.pipeline import Pipeline, Trigger, Task
+from plombery.pipeline.tasks import OutputOfMarker
 from plombery.pipeline.context import (
     pipeline_context,
     task_context,
@@ -345,19 +346,26 @@ async def _execute_task(
     for arg_name in result.input_arg_names:
         parameter = result.func_params[arg_name]
 
+        # `OutputOf(some_task)` names the upstream task explicitly, so the
+        # argument itself is free to have any name. It's still a default
+        # value, but not the "plain optional argument" kind handled below.
+        if isinstance(parameter.default, OutputOfMarker):
+            upstream_task_id = parameter.default.task.id
         # An argument that doesn't name an upstream task but declares a default
         # is a plain optional argument of the function: leave the default alone
         # rather than overwriting it with None.
-        if (
+        elif (
             arg_name not in task.upstream_task_ids
             and parameter.default is not inspect.Parameter.empty
         ):
             continue
+        else:
+            upstream_task_id = arg_name
 
         # The context handles the mapping logic:
         # - If mapped, resolves to single item if arg_name == map_upstream_id.
         # - Otherwise, resolves to the full output of the upstream task named arg_name.
-        input_data = runtime_context.get_output_data(task_id=arg_name)
+        input_data = runtime_context.get_output_data(task_id=upstream_task_id)
 
         arg_annotation = parameter.annotation
 

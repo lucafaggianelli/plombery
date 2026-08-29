@@ -45,6 +45,53 @@ extract >> notify
     breaking change from the versions of Plombery where `tasks=[a, b, c]` meant
     "run a, then b, then c".
 
+A task doesn't have to be defined inside the `with Pipeline()` block: only the
+dependency declarations do. This keeps the block itself short when a task's
+body is long, or when the same function is easier to read at module level:
+
+```py
+@task
+def extract():
+    return [1, 2, 3]
+
+@task
+def transform(extract):
+    return [value * 2 for value in extract]
+
+with Pipeline(id="sales_pipeline") as pipeline:
+    extract >> transform
+```
+
+### Naming an upstream task explicitly
+
+By default, an argument's value comes from the upstream task whose id matches
+the argument's name — `transform(extract)` above works because the argument is
+called `extract`. Renaming either one silently breaks this, since nothing
+checks that an argument name still matches a real task.
+
+`OutputOf(task)` binds an argument to a specific task's output instead, so the
+argument is free to have any name:
+
+```py
+@task
+def fetch_data() -> list[dict]:
+    ...
+
+@task
+def process(data: list[dict] = OutputOf(fetch_data)):
+    ...
+
+fetch_data >> process
+```
+
+The type is written twice — once on `fetch_data`, once on `process` — but that
+duplication is checked, not just cosmetic: a type checker flags it if the two
+disagree, because `OutputOf` is declared to return `fetch_data`'s own return
+type. `OutputOf` only binds the data, though: it never creates the dependency
+by itself, so `fetch_data >> process` (or `<<`) still has to be there. Leaving
+it out is a validation error when the pipeline is built, naming the missing
+line to add.
+
 ## Fan-out: dynamic task mapping
 
 A task can be run once per item of the collection returned by an upstream task,

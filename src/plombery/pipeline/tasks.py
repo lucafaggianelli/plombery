@@ -29,6 +29,48 @@ R = TypeVar("R")  # The return type of the user's function
 P = ParamSpec("P")  # The parameters of the task
 
 
+class OutputOfMarker(Generic[R]):
+    """Runtime marker left behind by `OutputOf`, in place of an actual default.
+
+    The executor reads `.task` off it to resolve the argument's value from
+    that specific upstream task's output, and `Pipeline` validation reads it
+    to check that the dependency was also declared with `>>`/`<<`. It's never
+    used as a value itself.
+    """
+
+    __slots__ = ("task",)
+
+    def __init__(self, task: "Task") -> None:
+        self.task = task
+
+    def __repr__(self) -> str:
+        return f"OutputOf({self.task.id})"
+
+
+def OutputOf(task: "Task[P, R]") -> R:
+    """Bind a task argument to a specific upstream task's output.
+
+    Use it when the argument name shouldn't have to match the upstream task's
+    id, which is otherwise how an argument is resolved:
+
+        @task
+        def fetch_data() -> list[dict]: ...
+
+        @task
+        def process(data: list[dict] = OutputOf(fetch_data)): ...
+
+    Declared to statically return `R`, the return type of `task`, so a type
+    checker flags a mismatch between the argument's own annotation and what
+    `task` actually returns. At runtime this returns a marker instead, read by
+    the executor rather than ever being the parameter's real default value.
+
+    This only binds the data: the dependency itself still has to be declared
+    with `>>` or `<<`, and `Pipeline` rejects a pipeline where the two disagree.
+    """
+
+    return OutputOfMarker(task)  # type: ignore[return-value]
+
+
 class Task(BaseModel, Generic[P, R]):
     id: str
     run: Callable = Field(
