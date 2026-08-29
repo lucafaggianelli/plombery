@@ -33,3 +33,101 @@ def test_a_missing_secret_fails_clearly(monkeypatch: pytest.MonkeyPatch):
 
     with pytest.raises(ValidationError):
         WarehouseSecrets()
+
+
+@pytest.mark.asyncio
+async def test_a_declared_secret_is_injected_into_the_task(
+    app, monkeypatch: pytest.MonkeyPatch
+):
+    """A task argument annotated with a `BaseSecrets` subclass receives a
+    validated instance, resolved from the environment, not upstream output."""
+
+    from plombery import Pipeline, task
+    from plombery.orchestrator import run_pipeline_now
+    from plombery.database.repository import get_task_run_output_by_id
+    from plombery.schemas import PipelineRunStatus
+
+    from .conftest import wait_for_run
+
+    monkeypatch.setenv("WAREHOUSE_URI", "postgres://user:pass@host/db")
+
+    app.start()
+
+    with Pipeline(id="secret_injection") as pipeline:
+
+        @task
+        def load(warehouse: WarehouseSecrets):
+            # the argument's name is free: it's matched by its annotation
+            return warehouse.WAREHOUSE_URI.get_secret_value()
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+
+    output = get_task_run_output_by_id(run.task_runs[0].task_output_id)
+    assert output.data == "postgres://user:pass@host/db"
+
+
+@pytest.mark.asyncio
+async def test_a_missing_secret_is_reported_at_startup_not_only_at_runtime(
+    app, monkeypatch: pytest.MonkeyPatch
+):
+    """The secrets a registered pipeline needs are known from task signatures,
+    so a missing one is surfaced up front instead of only when the run fails."""
+
+    from plombery import Pipeline, task, get_pipelines_missing_secrets
+
+    monkeypatch.delenv("WAREHOUSE_URI", raising=False)
+
+    app.start()
+
+    with Pipeline(id="needs_secret") as pipeline:
+
+        @task
+        def load(warehouse: WarehouseSecrets):
+            return warehouse.WAREHOUSE_URI.get_secret_value()
+
+    app.register_pipeline(pipeline)
+
+    missing = get_pipelines_missing_secrets()
+
+    assert missing == {"needs_secret": {"WarehouseSecrets": ["WAREHOUSE_URI"]}}
+
+
+@pytest.mark.asyncio
+async def test_a_pipeline_with_its_secrets_set_is_not_reported_as_missing(
+    app, monkeypatch: pytest.MonkeyPatch
+):
+    from plombery import Pipeline, task, get_pipelines_missing_secrets
+
+    monkeypatch.setenv("WAREHOUSE_URI", "postgres://user:pass@host/db")
+
+    app.start()
+
+    with Pipeline(id="has_secret") as pipeline:
+
+        @task
+        def load(warehouse: WarehouseSecrets):
+            return warehouse.WAREHOUSE_URI.get_secret_value()
+
+    app.register_pipeline(pipeline)
+
+    assert get_pipelines_missing_secrets() == {}
+
+
+def test_a_secrets_annotated_argument_is_routed_to_injection():
+    """A secrets-annotated argument is resolved by injection, kept out of the
+    upstream-data arguments so it's never resolved from a task's output."""
+
+    from plombery.orchestrator.executor import check_task_signature
+
+    def load(rows, warehouse: WarehouseSecrets, params): ...
+
+    signature = check_task_signature(load)
+
+    assert signature.secret_args == {"warehouse": WarehouseSecrets}
+    assert "warehouse" not in signature.input_arg_names
+    assert "rows" in signature.input_arg_names
+    assert signature.has_params_arg

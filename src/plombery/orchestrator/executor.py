@@ -1,7 +1,7 @@
 import asyncio
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Type
 import inspect
 
 from pydantic import BaseModel
@@ -30,6 +30,7 @@ from plombery.database.schemas import (
 )
 from plombery.pipeline.pipeline import Pipeline, Trigger, Task
 from plombery.pipeline.tasks import OutputOfMarker
+from plombery.secrets import BaseSecrets
 from plombery.pipeline.context import (
     pipeline_context,
     task_context,
@@ -265,28 +266,40 @@ class TaskFunctionSignature:
     has_params_arg: bool = False
     context_arg: Optional[str] = None
     input_arg_names: list[str] = field(default_factory=list)
+    # Argument name -> the `BaseSecrets` subclass it's annotated with. These
+    # are resolved by injecting a fresh, validated instance, not from upstream
+    # task output, and are what lets the required secrets be checked at startup.
+    secret_args: Dict[str, Type[BaseSecrets]] = field(default_factory=dict)
 
 
 def check_task_signature(func: Callable) -> TaskFunctionSignature:
     """
-    Check if a function signature declares positional args.
+    Inspect a task function's signature to decide how each argument is supplied.
 
-    This is meant to be used to check if a task function accepts data inputs from another task.
-
-    The signature of the task run function should be:
-    `def task_fn(previous_task_output: Any, params: Model):`
-
-    Where the params argument is the Pipeline input params.
+    An argument is one of:
+    - `params`: the pipeline's input params model
+    - `context`/`ctx`: the runtime `Context`
+    - one annotated with a `BaseSecrets` subclass: an injected secrets instance
+    - anything else: input data resolved from an upstream task (by name, or by
+      `OutputOf(...)`)
     """
 
     result = TaskFunctionSignature(inspect.signature(func).parameters)
 
     for name, parameter in result.func_params.items():
+        annotation = parameter.annotation
+
         # Check for special arguments
         if name == "params":
             result.has_params_arg = True
         elif name in ["context", "ctx"]:
             result.context_arg = name
+
+        # An argument annotated with a secrets schema is injected, not resolved
+        # from upstream. Matched by annotation, not name, so it can be called
+        # anything.
+        elif isinstance(annotation, type) and issubclass(annotation, BaseSecrets):
+            result.secret_args[name] = annotation
 
         # Check for input data arguments (any other argument)
         else:
@@ -387,6 +400,13 @@ async def _execute_task(
 
     if result.context_arg:
         kwargs[result.context_arg] = runtime_context
+
+    # Inject a fresh, validated instance of each declared secrets schema.
+    # Fresh, so rotating a secret takes effect without a restart; validated,
+    # because constructing the class reads and checks the environment. A
+    # missing secret raises here, but startup analysis has already surfaced it.
+    for arg_name, secrets_cls in result.secret_args.items():
+        kwargs[arg_name] = secrets_cls()
 
     if asyncio.iscoroutinefunction(task.run):
         task_output = await task.run(**kwargs)

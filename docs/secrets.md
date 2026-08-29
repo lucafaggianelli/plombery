@@ -27,9 +27,9 @@ library requires as a plain `str`, for instance).
 
 ## Using a secret in a task
 
-Instantiate the class wherever the value is needed. There is nothing else to
-call: the class *is* the declaration, so it's read wherever you'd already
-look for it, IDE autocomplete included.
+Declare the secrets a task needs as an argument annotated with the class, and
+Plombery injects a validated instance when the task runs — the same way it
+injects `params` and the `context`:
 
 ```py
 from plombery import task
@@ -38,11 +38,19 @@ from .secrets import WarehouseSecrets
 
 
 @task
-def load_to_warehouse(rows):
-    secrets = WarehouseSecrets()
+def load_to_warehouse(rows, secrets: WarehouseSecrets):
     engine = create_engine(secrets.WAREHOUSE_URI.get_secret_value())
     ...
 ```
+
+The argument is matched by its annotation, not its name, so it can be called
+anything. It's kept separate from the arguments that carry upstream task
+output, so it's never confused with one.
+
+Declaring the secret as an argument, rather than constructing the class inside
+the task body, is what lets Plombery know at startup which secrets each
+pipeline needs — see [Checking secrets at startup](#checking-secrets-at-startup)
+— and lets the task be called with a stand-in in tests.
 
 ## Where values come from
 
@@ -71,8 +79,11 @@ class WarehouseSecrets(BaseSecrets):
 
 ## Several secrets, several classes
 
-Group secrets by what uses them, not all in one class. A common pattern is
-one class per external system, in a dedicated module:
+Group secrets by the external system they belong to — one class per database,
+API or bucket — not all in one class, and not per pipeline. The same
+credential is often shared by several pipelines, so a per-system class is
+declared once and reused, and a task ends up requiring only the secrets it
+actually uses:
 
 ```py title="secrets.py"
 from pydantic import SecretStr
@@ -92,5 +103,18 @@ WAREHOUSE_URI=postgres://user:password@host:5432/warehouse
 WEATHER_API_KEY=a1b2c3d4
 ```
 
-Only the classes a given task actually instantiates are resolved, so a task
-that doesn't need the weather API never requires `WEATHER_API_KEY` to be set.
+A task that declares only `WeatherApiSecrets` doesn't require `WAREHOUSE_URI`
+to be set, and vice versa: a missing secret only affects the pipelines whose
+tasks declare it.
+
+## Checking secrets at startup
+
+Because a task declares the secrets it needs as arguments, Plombery knows,
+when it starts, exactly which secrets every registered pipeline requires. It
+checks them in one pass at startup and logs a warning naming any pipeline that
+can't run because a secret it needs is unset, so a missing value surfaces
+immediately instead of only when the pipeline runs — potentially much later.
+
+This is a warning, not a fatal error: the rest of the app starts normally, and
+only the pipelines missing a secret are affected. When one of those does run,
+the task raises where the secret is injected.

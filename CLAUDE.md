@@ -147,7 +147,7 @@ register_pipeline(pipeline)
 app = get_app()  # pass to uvicorn
 ```
 
-A task's arguments are resolved by name against upstream task ids declared with `>>`/`<<` (never by position — the DAG isn't a sequence), or explicitly with `OutputOf(task)` when the argument shouldn't have to be named after it. `>>`/`<<` is the only thing that declares an edge; `OutputOf` only binds data, and `Pipeline` rejects the two disagreeing. The pipeline's Pydantic params model comes in via a `params` keyword argument; `params`, `context`/`ctx`, and any upstream-bound argument can all be omitted from a task's signature.
+A task's arguments are resolved by name against upstream task ids declared with `>>`/`<<` (never by position — the DAG isn't a sequence), or explicitly with `OutputOf(task)` when the argument shouldn't have to be named after it. `>>`/`<<` is the only thing that declares an edge; `OutputOf` only binds data, and `Pipeline` rejects the two disagreeing. Everything a task receives is dependency-injected by matching its signature (`orchestrator/executor.py:check_task_signature`): `params` (the pipeline's Pydantic params model), `context`/`ctx` (the `Context`), an argument annotated with a `BaseSecrets` subclass (an injected, validated secrets instance — matched by annotation, so it can have any name), and everything else as upstream task output. Any of them can be omitted. Because secrets are declared in the signature, `get_pipelines_missing_secrets()` (called at startup) reports which registered pipelines can't run for lack of a secret.
 
 `Pipeline(fail_fast=False)` keeps a fan-out's healthy branches running to completion when one branch fails, instead of cancelling everything downstream of the branches still in flight.
 

@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   it with the fields a task requires, and it resolves them from an
   environment variable of the same name, or from a `.env` file — no YAML, no
   code generation, the class itself is the declaration
+- A task receives its secrets by declaring an argument annotated with a
+  `BaseSecrets` subclass, which Plombery injects when the task runs. Because
+  the dependency is declared, Plombery checks at startup which secrets every
+  registered pipeline needs and warns about any pipeline that can't run for
+  lack of one, instead of that surfacing only at run time
 
 ### Fixed
 

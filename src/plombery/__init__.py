@@ -46,6 +46,70 @@ def _apply_retention():
         _logger.error("Cannot apply the retention policy: %s", error, exc_info=error)
 
 
+def get_pipelines_missing_secrets() -> dict:
+    """Which registered pipelines can't run because a secret they need is unset.
+
+    Returns a mapping of pipeline id -> {secrets class name -> missing env var
+    names}; a pipeline with everything it declares available is absent from it.
+    Computed by inspecting each task's signature for `BaseSecrets`-annotated
+    arguments and constructing each distinct class once.
+
+    Meant to be called once every pipeline is registered — at server startup,
+    and by the API so the UI can show which pipelines are runnable.
+    """
+
+    from pydantic import ValidationError
+    from plombery.orchestrator.executor import check_task_signature
+
+    # secrets class -> the env var names it's missing ([] when satisfied)
+    missing_by_class: dict = {}
+
+    def missing_for(secrets_cls) -> list:
+        if secrets_cls not in missing_by_class:
+            try:
+                secrets_cls()
+                missing_by_class[secrets_cls] = []
+            except ValidationError as error:
+                missing_by_class[secrets_cls] = [
+                    str(err["loc"][0]) for err in error.errors() if err["loc"]
+                ]
+
+        return missing_by_class[secrets_cls]
+
+    result: dict = {}
+
+    for pipeline in orchestrator.pipelines.values():
+        for pipeline_task in pipeline.tasks:
+            signature = check_task_signature(pipeline_task.run)
+
+            for secrets_cls in signature.secret_args.values():
+                missing = missing_for(secrets_cls)
+
+                if missing:
+                    result.setdefault(pipeline.id, {})[secrets_cls.__name__] = missing
+
+    return result
+
+
+def _report_missing_secrets():
+    """Warn, at startup, about pipelines that can't run for lack of a secret.
+
+    Not fatal on purpose: the rest of the app comes up, the affected pipelines
+    are named so they can be fixed, and the same information is available to
+    the UI through `get_pipelines_missing_secrets`.
+    """
+
+    for pipeline_id, by_class in get_pipelines_missing_secrets().items():
+        details = "; ".join(
+            f"{cls} ({', '.join(names)})" for cls, names in by_class.items()
+        )
+        _logger.warning(
+            "Pipeline '%s' is missing secrets and won't run until they are set: %s",
+            pipeline_id,
+            details,
+        )
+
+
 class _Plombery:
     def __init__(self) -> None:
         self._apply_settings()
@@ -69,6 +133,11 @@ class _Plombery:
         setup_database()
 
         _apply_retention()
+
+        # Every pipeline has registered by now (registration happens at import,
+        # this runs on the FastAPI startup event), so the secrets each one needs
+        # can be checked in one pass.
+        _report_missing_secrets()
 
         try:
             orchestrator.start()

@@ -22,7 +22,9 @@ on its own — nothing here is blocked on a phase after it.
 - `Task` is safe to reuse across pipelines: dependency edges live on
   `Pipeline`, not on `Task`.
 - `BaseSecrets`: typed secret declarations, resolved from environment
-  variables or a `.env` file, no YAML or code generation involved.
+  variables or a `.env` file, no YAML or code generation involved. A task
+  declares the secrets it needs as an injected argument, so Plombery checks
+  at startup which pipelines can't run for lack of a secret.
 
 ## Phase 1 — Own scheduler
 
