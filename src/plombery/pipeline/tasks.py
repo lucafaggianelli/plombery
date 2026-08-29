@@ -102,6 +102,17 @@ class Task(BaseModel, Generic[P, R]):
         self.downstream_task_ids.add(task.id)
         task.upstream_task_ids.add(self.id)
 
+        # Tasks defined outside a `with Pipeline()` block are only added to it
+        # by `add_task_to_pipeline` at creation time, which does nothing when
+        # there's no active pipeline yet. Wiring them with `>>` inside the
+        # block is the only place left to register them.
+        from .context import pipeline_context
+
+        pipeline = pipeline_context.get(None)
+        if pipeline:
+            pipeline.add_task(self)
+            pipeline.add_task(task)
+
     # Optional: Implement the reverse operator << (left shift) via __lshift__
     def __lshift__(self, other):
         # other << self is the same as other >> self

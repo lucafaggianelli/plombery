@@ -91,6 +91,16 @@ class Pipeline(BaseModel):
             if task.id == task_id:
                 return task
 
+    def add_task(self, task: Task) -> None:
+        """Add a task to this pipeline, unless it's already part of it.
+
+        Idempotent so that wiring the same task more than once, such as the
+        join of a diamond, doesn't add it twice.
+        """
+
+        if self.get_task_by_id(task.id) is None:
+            self.tasks.append(task)
+
     def __enter__(self):
         from .context import pipeline_context
 

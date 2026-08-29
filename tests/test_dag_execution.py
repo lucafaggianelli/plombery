@@ -615,3 +615,36 @@ async def test_register_pipeline_accepts_a_built_pipeline(app: Plombery):
     run = await wait_for_run((await run_pipeline_now(pipeline)).id)
     assert run.status == PipelineRunStatus.COMPLETED
 
+
+@pytest.mark.asyncio
+async def test_tasks_defined_outside_the_context_are_registered_by_wiring(
+    app: Plombery,
+):
+    """A task defined outside `with Pipeline()` must join it once wired with `>>`.
+
+    `add_task_to_pipeline` only fires when a `@task` is created, which for a
+    task defined at module level happens with no pipeline context active, so
+    it's never added anywhere. Wiring it with `>>` inside the block used to be
+    silently unable to fix that: `pipeline.tasks` stayed empty even though the
+    upstream/downstream ids were set correctly.
+    """
+
+    app.start()
+
+    @task
+    def extract():
+        return [1, 2, 3]
+
+    @task
+    def transform(extract):
+        return [v * 2 for v in extract]
+
+    with Pipeline(id="outside_context") as pipeline:
+        extract >> transform
+
+    assert {t.id for t in pipeline.tasks} == {"extract", "transform"}
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+    assert run.status == PipelineRunStatus.COMPLETED
