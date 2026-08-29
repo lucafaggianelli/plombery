@@ -19,6 +19,7 @@ from .orchestrator.context import Context  # noqa F401
 from .pipeline.tasks import Task, task, MappingMode, OutputOf  # noqa F401
 from .pipeline.pipeline import Pipeline, Trigger  # noqa F401
 from .schemas import PipelineRunStatus  # noqa F401
+from .secrets import BaseSecrets  # noqa F401
 from ._version import __version__  # noqa F401
 
 
