@@ -37,7 +37,8 @@ Then install the library:
 pip install plombery
 ```
 
-Now you're ready to write your first pipeline!
+This also installs the `plombery` command, which you'll use to run your
+pipelines. Now you're ready to write your first pipeline!
 
 ## 🎮 Try on GitHub Codespaces
 

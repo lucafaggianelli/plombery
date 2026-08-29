@@ -62,6 +62,10 @@ pip install -r requirements.txt
 
 The example app runs with `--reload` pointing at the parent directory, so changes to the `plombery` package are picked up live.
 
+### The `plombery` CLI
+
+`plombery run` (`cli.py`, a `click` group, entry point in `pyproject.toml`) imports a `pipelines` module/package — a `pipelines/` folder, importing every submodule so each `register_pipeline` runs — then serves the app with uvicorn. It's the no-`app.py` way to start; `app.py` + `get_app()` still works. Single process for now; the `serve`/`worker` split waits for the scheduler rework.
+
 ### Documentation
 
 ```sh

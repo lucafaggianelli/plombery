@@ -38,6 +38,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   the dependency is declared, Plombery checks at startup which secrets every
   registered pipeline needs and warns about any pipeline that can't run for
   lack of one, instead of that surfacing only at run time
+- A `plombery` command: `plombery run` discovers the pipelines in a
+  `pipelines/` folder and serves the web app, so a project no longer needs an
+  `app.py` with the uvicorn boilerplate
 
 ### Fixed
 

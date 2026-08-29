@@ -25,6 +25,9 @@ on its own — nothing here is blocked on a phase after it.
   variables or a `.env` file, no YAML or code generation involved. A task
   declares the secrets it needs as an injected argument, so Plombery checks
   at startup which pipelines can't run for lack of a secret.
+- `plombery run`: discovers the pipelines in a `pipelines/` folder and serves
+  the web app, replacing the hand-written `app.py`. Single process for now;
+  the `serve`/`worker` split comes with the scheduler in Phase 1.
 
 ## Phase 1 — Own scheduler
 
