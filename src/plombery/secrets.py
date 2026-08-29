@@ -5,10 +5,10 @@ class BaseSecrets(BaseSettings):
     """Base class for declaring the secrets a pipeline or task needs, typed.
 
     A subclass is a plain schema: no YAML, no code generation, the class *is*
-    the declaration, the same way `Pipeline.params` already works. Values are
-    read from environment variables prefixed `PLOMBERY_SECRET_` (case
-    insensitive), or from a `.env` file in the current working directory —
-    the same two sources `plombery.config.yaml` itself is read from.
+    the declaration, the same way `Pipeline.params` already works. A field's
+    value is read from the environment variable of the same name (case
+    insensitive, no prefix), or from a `.env` file in the current working
+    directory:
 
         class WarehouseSecrets(BaseSecrets):
             WAREHOUSE_URI: SecretStr
@@ -23,7 +23,6 @@ class BaseSecrets(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_prefix="PLOMBERY_SECRET_",
         env_file=".env",
         env_file_encoding="utf-8",
     )

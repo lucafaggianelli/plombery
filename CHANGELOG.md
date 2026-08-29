@@ -30,8 +30,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   It only binds data: the dependency itself still has to be declared with
   `>>`/`<<`, and a mismatch between the two is now a validation error
 - `BaseSecrets`, a typed way to declare the secrets a pipeline needs: subclass
-  it with the fields a task requires, and it resolves them from environment
-  variables prefixed `PLOMBERY_SECRET_`, or from a `.env` file — no YAML, no
+  it with the fields a task requires, and it resolves them from an
+  environment variable of the same name, or from a `.env` file — no YAML, no
   code generation, the class itself is the declaration
 
 ### Fixed

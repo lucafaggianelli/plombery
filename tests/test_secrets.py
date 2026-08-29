@@ -8,8 +8,8 @@ class WarehouseSecrets(BaseSecrets):
     WAREHOUSE_URI: SecretStr
 
 
-def test_resolves_from_a_prefixed_env_var(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setenv("PLOMBERY_SECRET_WAREHOUSE_URI", "postgres://user:pass@host/db")
+def test_resolves_from_an_env_var_of_the_same_name(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("WAREHOUSE_URI", "postgres://user:pass@host/db")
 
     secrets = WarehouseSecrets()
 
@@ -17,7 +17,7 @@ def test_resolves_from_a_prefixed_env_var(monkeypatch: pytest.MonkeyPatch):
 
 
 def test_value_is_masked_in_repr(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setenv("PLOMBERY_SECRET_WAREHOUSE_URI", "postgres://user:pass@host/db")
+    monkeypatch.setenv("WAREHOUSE_URI", "postgres://user:pass@host/db")
 
     secrets = WarehouseSecrets()
 
@@ -29,7 +29,7 @@ def test_a_missing_secret_fails_clearly(monkeypatch: pytest.MonkeyPatch):
     """A missing value must raise at construction, not resolve to None and
     fail later wherever the task happens to use it."""
 
-    monkeypatch.delenv("PLOMBERY_SECRET_WAREHOUSE_URI", raising=False)
+    monkeypatch.delenv("WAREHOUSE_URI", raising=False)
 
     with pytest.raises(ValidationError):
         WarehouseSecrets()
