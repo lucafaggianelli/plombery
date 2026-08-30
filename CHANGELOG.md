@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   it. Pass `Pipeline(auto_register=False)` to opt out
 - A task argument annotated with `Context` receives it whatever its name,
   matched by type like a secrets argument; `context`/`ctx` still work by name
+- The web UI marks a pipeline that can't run (a missing secret) with a
+  badge, lists what's wrong on the pipeline page, and disables its run button
 
 ### Fixed
 

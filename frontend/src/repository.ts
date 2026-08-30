@@ -128,7 +128,9 @@ export const listPipelines = (): UseQueryOptions<Pipeline[], HTTPError> => ({
           pipeline.description,
           pipeline.tasks,
           pipeline.triggers,
-          pipeline.version
+          pipeline.version,
+          pipeline.issues,
+          pipeline.runnable
         )
     )
   },
@@ -154,7 +156,9 @@ export const getPipeline = (
       pipeline.description,
       pipeline.tasks,
       pipeline.triggers,
-      pipeline.version
+      pipeline.version,
+      pipeline.issues,
+      pipeline.runnable
     )
   },
   initialData: new Pipeline('', '', '', [], []),
