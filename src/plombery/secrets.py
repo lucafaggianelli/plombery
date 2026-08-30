@@ -20,6 +20,15 @@ class BaseSecrets(BaseSettings):
     `repr()`/logs; `BaseSecrets` doesn't do this for you, since not every
     secret-shaped value (an API key that must be a plain `str` for some
     client library, say) can be a `SecretStr`.
+
+    Where values come from is a `pydantic_settings` concern — the environment
+    and `.env` are two of its sources. A backend such as a cloud secret
+    manager (GCP Secret Manager, Infisical, ...) is added the same way the
+    system settings add their YAML file: by overriding
+    `settings_customise_sources` on a base class to append a custom source.
+    A pipeline's own `BaseSecrets` subclasses and the way tasks declare and
+    receive secrets don't change when a backend is added — only where the
+    values are looked up does.
     """
 
     model_config = SettingsConfigDict(

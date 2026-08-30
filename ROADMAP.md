@@ -59,6 +59,10 @@ across restarts.
 - `Connection`: a named, typed resource (a database, a bucket) that a block
   can request without knowing how it's backed. Declared as a Python object,
   like `BaseSecrets`.
+- Secret backends: resolve `BaseSecrets` from a cloud secret manager (GCP
+  Secret Manager, Infisical, ...) as well as the environment. Added as a
+  `pydantic_settings` source on the base class, so no pipeline's secret
+  declarations or task signatures change — only where values are looked up.
 - `plombery init`: project scaffolding via the CLI.
 
 ## Phase 3 — Visual editor
