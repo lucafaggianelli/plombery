@@ -49,6 +49,8 @@ theme:
   custom_dir: docs/overrides
 
 extra:
+  status:
+    new: Recently added or updated
   analytics:
     provider: plausible
     property:

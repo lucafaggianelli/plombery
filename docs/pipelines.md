@@ -1,3 +1,7 @@
+---
+status: new
+---
+
 A pipeline is a graph of tasks: each task declares which tasks must run before
 it, and Plombery runs them in that order, in parallel whenever the graph allows
 it. The graph must be acyclic, and Plombery refuses to register a pipeline that

@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - A pipeline built with the `Pipeline` context manager registers itself when
   its block ends, so `register_pipeline(pipeline)` is no longer needed after
   it. Pass `Pipeline(auto_register=False)` to opt out
+- A task argument annotated with `Context` receives it whatever its name,
+  matched by type like a secrets argument; `context`/`ctx` still work by name
 
 ### Fixed
 

@@ -1,3 +1,7 @@
+---
+status: new
+---
+
 # Create your first pipeline
 
 Plombery discovers your pipelines from a `pipelines/` folder and runs them with

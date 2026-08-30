@@ -279,29 +279,40 @@ def check_task_signature(func: Callable) -> TaskFunctionSignature:
     Inspect a task function's signature to decide how each argument is supplied.
 
     An argument is one of:
-    - `params`: the pipeline's input params model
-    - `context`/`ctx`: the runtime `Context`
+    - one annotated with `Context`: the runtime `Context` (or, by name,
+      `context`/`ctx`)
     - one annotated with a `BaseSecrets` subclass: an injected secrets instance
+    - `params`: the pipeline's input params model
     - anything else: input data resolved from an upstream task (by name, or by
       `OutputOf(...)`)
+
+    The injected arguments (`Context`, secrets) are matched by their annotation,
+    so they can be called anything; `params` is matched by name, because typing
+    it would collide with an upstream output annotated as the same model.
     """
 
     result = TaskFunctionSignature(inspect.signature(func).parameters)
 
     for name, parameter in result.func_params.items():
         annotation = parameter.annotation
+        is_class = isinstance(annotation, type)
 
-        # Check for special arguments
-        if name == "params":
-            result.has_params_arg = True
-        elif name in ["context", "ctx"]:
+        # An argument annotated with `Context` or with a secrets schema is
+        # injected, not resolved from upstream. Matched by annotation, not
+        # name, so it can be called anything.
+        if is_class and issubclass(annotation, Context):
             result.context_arg = name
 
-        # An argument annotated with a secrets schema is injected, not resolved
-        # from upstream. Matched by annotation, not name, so it can be called
-        # anything.
-        elif isinstance(annotation, type) and issubclass(annotation, BaseSecrets):
+        elif is_class and issubclass(annotation, BaseSecrets):
             result.secret_args[name] = annotation
+
+        # `params` and the `context`/`ctx` names stay matched by name, for the
+        # common case where the argument isn't annotated.
+        elif name == "params":
+            result.has_params_arg = True
+
+        elif name in ["context", "ctx"]:
+            result.context_arg = name
 
         # Check for input data arguments (any other argument)
         else:

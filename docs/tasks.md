@@ -1,3 +1,7 @@
+---
+status: new
+---
+
 A task is just a regular Python function decorated with the `task` decorator,
 the functions can be also `async`, Plombery will take care of everything:
 
@@ -31,6 +35,42 @@ with Pipeline(id="my_pipeline") as pipeline:
 
     Tasks with no `>>` between them are independent and run at the same time.
     See [Pipelines](pipelines.md) for how the graph is declared.
+
+## What a task receives
+
+A task declares what it needs as function arguments, and Plombery supplies
+each one — nothing is global. Every argument is optional; a task takes only
+what it uses.
+
+| Argument | Matched by | Receives |
+| --- | --- | --- |
+| annotated with `Context` | type | the run's [context](#context) |
+| annotated with a [`BaseSecrets`](secrets.md) subclass | type | an injected, validated secrets instance |
+| named `params` | name | the pipeline's [input parameters](#input-parameters) |
+| anything else | name (an upstream task's id) or [`OutputOf`](pipelines.md#naming-an-upstream-task-explicitly) | that task's [output](#output-data) |
+
+The injected arguments — the context and secrets — are matched by their type,
+so they can be named anything. `params` is matched by name.
+
+## Context
+
+An argument annotated with `Context` receives the run's context, which exposes
+a logger already bound to the run:
+
+```py
+from plombery import Context, task
+
+@task
+def process(ctx: Context):
+    ctx.logger.info("Processing")
+```
+
+The argument can have any name — it's matched by its `Context` type. An
+argument named `context` or `ctx` also receives it even without the
+annotation.
+
+`ctx.logger` is the same logger as [`get_logger()`](#logging); use whichever
+reads better.
 
 ## Input parameters
 

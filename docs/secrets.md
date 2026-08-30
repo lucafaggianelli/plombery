@@ -1,3 +1,7 @@
+---
+status: new
+---
+
 # Secrets
 
 A secret is a credential a task needs at runtime — a database password, an API

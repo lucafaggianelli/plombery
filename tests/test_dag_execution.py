@@ -794,3 +794,26 @@ async def test_auto_register_false_leaves_the_pipeline_unregistered(app: Plomber
     # It can still be registered explicitly afterwards.
     app.register_pipeline(pipeline)
     assert orchestrator.pipelines.get("not_registered") is pipeline
+
+
+@pytest.mark.asyncio
+async def test_context_is_injected_by_type_under_any_argument_name(app: Plombery):
+    """An argument annotated with `Context` receives it, whatever its name —
+    the same type-based injection used for secrets, not the reserved names."""
+
+    from plombery import Context
+
+    seen = []
+
+    app.start()
+
+    with Pipeline(id="typed_context") as pipeline:
+
+        @task
+        def only_task(whatever: Context):
+            seen.append(isinstance(whatever, Context))
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert seen == [True]
