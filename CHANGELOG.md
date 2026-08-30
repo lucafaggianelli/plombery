@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Support for DAGs and Fan-out / Dynamic Mapping tasks ([#529](https://github.com/lucafaggianelli/plombery/issues/529))
-- Add `context` arg to tasks
 - Show pipeline tasks as an interactive graph
 - Deployment documentation
 - Retention policy for runs data, with independent thresholds for log
@@ -22,8 +21,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Pipeline(fail_fast=False)` keeps the healthy branches of a fan-out running
   when one of them fails, for pipelines whose branches are independent of each
   other, such as one per input file
-- `register_pipeline` also accepts a `Pipeline` built with the `with Pipeline()`
-  context manager, not only the flat `id`/`tasks`/... form
 - `OutputOf(task)` binds a task argument to a specific upstream task's output,
   so the argument doesn't have to be named after it. A type checker still
   verifies the argument's declared type against what `task` actually returns.
@@ -33,9 +30,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   it with the fields a task requires, and it resolves them from an
   environment variable of the same name, or from a `.env` file — no YAML, no
   code generation, the class itself is the declaration
-- A task receives its secrets by declaring an argument annotated with a
-  `BaseSecrets` subclass, which Plombery injects when the task runs. Because
-  the dependency is declared, Plombery checks at startup which secrets every
+- A task receives its secrets and its `Context` by declaring an argument
+  annotated with a `BaseSecrets` subclass or with `Context`, matched by type
+  (an argument named `context`/`ctx` also still works). Because secrets are
+  declared this way, Plombery checks at startup which secrets every
   registered pipeline needs, instead of that surfacing only at run time. The
   result is stored on each pipeline as `issues` (scoped to the task that needs
   the secret) with a computed `runnable`, both served by the API without being
@@ -45,40 +43,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   `app.py` with the uvicorn boilerplate
 - A pipeline built with the `Pipeline` context manager registers itself when
   its block ends, so `register_pipeline(pipeline)` is no longer needed after
-  it. Pass `Pipeline(auto_register=False)` to opt out
-- A task argument annotated with `Context` receives it whatever its name,
-  matched by type like a secrets argument; `context`/`ctx` still work by name
+  it. Pass `Pipeline(auto_register=False)` to opt out, or call
+  `register_pipeline(pipeline)` explicitly with an already-built `Pipeline`
 - The web UI marks a pipeline that can't run (a missing secret) with a
   badge, lists what's wrong on the pipeline page, and disables its run button
-
-### Fixed
-
-- A task downstream of a fan-out now receives the output of every mapped
-  instance, instead of `None`
-- An orchestration error, such as a fan-out over a non collection, now fails the
-  run instead of leaving it running forever
-- A task argument with a default value is no longer overwritten with `None` when
-  it doesn't name an upstream task
-- Tasks annotated with generic types, such as `List[int]`, no longer fail
-- Close the log file descriptors of every task and mapped instance, not only the
-  ones of the pipeline logger
-- A run no longer hangs in `running` forever when two mapped branches are
-  skipped at once, when the pipeline has no tasks, or when the input params
-  fail validation
-- Every `run-update` websocket event now carries the run, so the runs list
-  stops showing a finished run as still going
-- Live log lines are no longer labelled with the wrong task when several
-  tasks run at the same time, and are streamed on the server event loop
-  instead of a new one per line
-- A fan-in task is scheduled once instead of once per branch when several
-  branches finish while a websocket client is connected
-- A task returning a `pandas.DataFrame` is stored instead of failing the run
-- When a fan-out branch fails, the tasks below the branches that were still
-  running are recorded as cancelled rather than silently left out of the run
-- Wiring the same `Task` object into two different pipelines no longer makes
-  one pipeline's dependencies leak into the other's scheduling decisions
-- A task defined outside a `with Pipeline()` block now joins the pipeline when
-  wired with `>>` inside it, instead of being silently left out
 
 ### Changed
 
