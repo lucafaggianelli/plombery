@@ -71,13 +71,14 @@ async def test_a_declared_secret_is_injected_into_the_task(
 
 
 @pytest.mark.asyncio
-async def test_a_missing_secret_is_reported_at_startup_not_only_at_runtime(
+async def test_a_missing_secret_is_stored_on_the_pipeline_at_startup(
     app, monkeypatch: pytest.MonkeyPatch
 ):
     """The secrets a registered pipeline needs are known from task signatures,
-    so a missing one is surfaced up front instead of only when the run fails."""
+    so a missing one is recorded on the pipeline up front, scoped to the task
+    that declares it, instead of surfacing only when the run fails."""
 
-    from plombery import Pipeline, task, get_pipelines_missing_secrets
+    from plombery import Pipeline, task, check_registered_pipelines
 
     monkeypatch.delenv("WAREHOUSE_URI", raising=False)
 
@@ -89,18 +90,23 @@ async def test_a_missing_secret_is_reported_at_startup_not_only_at_runtime(
         def load(warehouse: WarehouseSecrets):
             return warehouse.WAREHOUSE_URI.get_secret_value()
 
-    app.register_pipeline(pipeline)
+    check_registered_pipelines()
 
-    missing = get_pipelines_missing_secrets()
+    assert pipeline.runnable is False
+    assert len(pipeline.issues) == 1
 
-    assert missing == {"needs_secret": {"WarehouseSecrets": ["WAREHOUSE_URI"]}}
+    issue = pipeline.issues[0]
+    assert issue.level == "error"
+    assert issue.code == "missing_secret"
+    assert issue.task_id == "load"
+    assert "WAREHOUSE_URI" in issue.message
 
 
 @pytest.mark.asyncio
-async def test_a_pipeline_with_its_secrets_set_is_not_reported_as_missing(
+async def test_a_pipeline_with_its_secrets_set_has_no_issues(
     app, monkeypatch: pytest.MonkeyPatch
 ):
-    from plombery import Pipeline, task, get_pipelines_missing_secrets
+    from plombery import Pipeline, task, check_registered_pipelines
 
     monkeypatch.setenv("WAREHOUSE_URI", "postgres://user:pass@host/db")
 
@@ -112,9 +118,10 @@ async def test_a_pipeline_with_its_secrets_set_is_not_reported_as_missing(
         def load(warehouse: WarehouseSecrets):
             return warehouse.WAREHOUSE_URI.get_secret_value()
 
-    app.register_pipeline(pipeline)
+    check_registered_pipelines()
 
-    assert get_pipelines_missing_secrets() == {}
+    assert pipeline.issues == []
+    assert pipeline.runnable is True
 
 
 def test_a_secrets_annotated_argument_is_routed_to_injection():

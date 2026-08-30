@@ -36,8 +36,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - A task receives its secrets by declaring an argument annotated with a
   `BaseSecrets` subclass, which Plombery injects when the task runs. Because
   the dependency is declared, Plombery checks at startup which secrets every
-  registered pipeline needs and warns about any pipeline that can't run for
-  lack of one, instead of that surfacing only at run time
+  registered pipeline needs, instead of that surfacing only at run time. The
+  result is stored on each pipeline as `issues` (scoped to the task that needs
+  the secret) with a computed `runnable`, both served by the API without being
+  recomputed per request
 - A `plombery` command: `plombery run` discovers the pipelines in a
   `pipelines/` folder and serves the web app, so a project no longer needs an
   `app.py` with the uvicorn boilerplate

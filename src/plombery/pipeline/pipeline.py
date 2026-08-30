@@ -8,11 +8,13 @@ from pydantic import (
     ConfigDict,
     Field,
     PrivateAttr,
+    computed_field,
     field_serializer,
     model_validator,
 )
 
 from plombery.orchestrator.dag import is_graph_acyclic
+from plombery.schemas import PipelineIssue
 from .tasks import OutputOfMarker, Task
 from .trigger import Trigger
 from ._utils import prettify_name
@@ -54,8 +56,23 @@ class Pipeline(BaseModel):
             "without registering it, for a test or to register it later."
         ),
     )
+    issues: list[PipelineIssue] = Field(
+        default_factory=list,
+        description=(
+            "Problems found when the pipeline was checked at startup, such as a "
+            "required secret that isn't set. Computed once at startup and stored "
+            "here, so it doesn't have to be recomputed on every request."
+        ),
+    )
 
     model_config = ConfigDict(validate_assignment=True)
+
+    @computed_field
+    @property
+    def runnable(self) -> bool:
+        """Whether the pipeline can run, i.e. has no error-level issue."""
+
+        return not any(issue.level == "error" for issue in self.issues)
 
     # The dependency graph, keyed by task id. Deliberately not on `Task`
     # itself: a `Task` is a reusable definition, and if two pipelines wired it

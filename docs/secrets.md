@@ -111,10 +111,15 @@ tasks declare it.
 
 Because a task declares the secrets it needs as arguments, Plombery knows,
 when it starts, exactly which secrets every registered pipeline requires. It
-checks them in one pass at startup and logs a warning naming any pipeline that
-can't run because a secret it needs is unset, so a missing value surfaces
-immediately instead of only when the pipeline runs — potentially much later.
+checks them in one pass at startup, so a missing value surfaces immediately
+instead of only when the pipeline runs — potentially much later.
 
-This is a warning, not a fatal error: the rest of the app starts normally, and
-only the pipelines missing a secret are affected. When one of those does run,
-the task raises where the secret is injected.
+The result is recorded on each pipeline as its `issues` (a missing secret is
+reported against the task that declares it) and a computed `runnable`, and
+served by the API as-is, so it isn't recomputed on every request. A warning is
+logged too, naming each pipeline that can't run and why.
+
+This is not a fatal error: the rest of the app starts normally, and only the
+pipelines missing a secret are affected. When one of those does run, the task
+raises where the secret is injected. A secret set after startup is picked up
+on the next restart.

@@ -4,7 +4,7 @@ import os
 
 from apscheduler.schedulers.base import SchedulerAlreadyRunningError
 from apscheduler.triggers.interval import IntervalTrigger
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from .api import app
 from .config import settings
@@ -13,12 +13,13 @@ from .logger import get_logger  # noqa F401
 from .logger.web_socket_handler import bind_event_loop
 from .notifications import NotificationRule, notification_manager
 from .orchestrator import orchestrator
+from .orchestrator.executor import check_task_signature
 from .orchestrator.watchdog import start_watchdog, stop_watchdog
 from .retention import apply_retention, delete_orphan_data
 from .orchestrator.context import Context  # noqa F401
 from .pipeline.tasks import Task, task, MappingMode, OutputOf  # noqa F401
 from .pipeline.pipeline import Pipeline, Trigger  # noqa F401
-from .schemas import PipelineRunStatus  # noqa F401
+from .schemas import PipelineIssue, PipelineRunStatus  # noqa F401
 from .secrets import BaseSecrets  # noqa F401
 from ._version import __version__  # noqa F401
 
@@ -46,20 +47,13 @@ def _apply_retention():
         _logger.error("Cannot apply the retention policy: %s", error, exc_info=error)
 
 
-def get_pipelines_missing_secrets() -> dict:
-    """Which registered pipelines can't run because a secret they need is unset.
+def _find_pipeline_issues(pipeline: Pipeline) -> List[PipelineIssue]:
+    """The problems that keep a pipeline, or one of its tasks, from running.
 
-    Returns a mapping of pipeline id -> {secrets class name -> missing env var
-    names}; a pipeline with everything it declares available is absent from it.
-    Computed by inspecting each task's signature for `BaseSecrets`-annotated
-    arguments and constructing each distinct class once.
-
-    Meant to be called once every pipeline is registered — at server startup,
-    and by the API so the UI can show which pipelines are runnable.
+    For now this is the secrets each task declares that aren't set. Inspecting
+    a task's signature for `BaseSecrets`-annotated arguments is what turns a
+    runtime failure into something known up front.
     """
-
-    from pydantic import ValidationError
-    from plombery.orchestrator.executor import check_task_signature
 
     # secrets class -> the env var names it's missing ([] when satisfied)
     missing_by_class: dict = {}
@@ -76,38 +70,48 @@ def get_pipelines_missing_secrets() -> dict:
 
         return missing_by_class[secrets_cls]
 
-    result: dict = {}
+    issues: List[PipelineIssue] = []
 
-    for pipeline in orchestrator.pipelines.values():
-        for pipeline_task in pipeline.tasks:
-            signature = check_task_signature(pipeline_task.run)
+    for pipeline_task in pipeline.tasks:
+        signature = check_task_signature(pipeline_task.run)
 
-            for secrets_cls in signature.secret_args.values():
-                missing = missing_for(secrets_cls)
+        for secrets_cls in signature.secret_args.values():
+            for name in missing_for(secrets_cls):
+                issues.append(
+                    PipelineIssue(
+                        level="error",
+                        code="missing_secret",
+                        message=(
+                            f"Secret '{name}' (from {secrets_cls.__name__}) is not "
+                            f"set, so task '{pipeline_task.id}' can't run."
+                        ),
+                        task_id=pipeline_task.id,
+                    )
+                )
 
-                if missing:
-                    result.setdefault(pipeline.id, {})[secrets_cls.__name__] = missing
-
-    return result
+    return issues
 
 
-def _report_missing_secrets():
-    """Warn, at startup, about pipelines that can't run for lack of a secret.
+def check_registered_pipelines() -> None:
+    """Check every registered pipeline once and store the result on it.
 
-    Not fatal on purpose: the rest of the app comes up, the affected pipelines
-    are named so they can be fixed, and the same information is available to
-    the UI through `get_pipelines_missing_secrets`.
+    Populates `pipeline.issues` so the API can serve it — and the UI show which
+    pipelines are runnable and why — without recomputing on every request.
+    Called at startup; a fix (a secret now set) is picked up on the next
+    restart. Not fatal: the app comes up, and only the affected pipelines
+    can't run.
     """
 
-    for pipeline_id, by_class in get_pipelines_missing_secrets().items():
-        details = "; ".join(
-            f"{cls} ({', '.join(names)})" for cls, names in by_class.items()
-        )
-        _logger.warning(
-            "Pipeline '%s' is missing secrets and won't run until they are set: %s",
-            pipeline_id,
-            details,
-        )
+    for pipeline in orchestrator.pipelines.values():
+        pipeline.issues = _find_pipeline_issues(pipeline)
+
+        errors = [issue for issue in pipeline.issues if issue.level == "error"]
+        if errors:
+            _logger.warning(
+                "Pipeline '%s' can't run: %s",
+                pipeline.id,
+                "; ".join(issue.message for issue in errors),
+            )
 
 
 class _Plombery:
@@ -135,9 +139,9 @@ class _Plombery:
         _apply_retention()
 
         # Every pipeline has registered by now (registration happens at import,
-        # this runs on the FastAPI startup event), so the secrets each one needs
-        # can be checked in one pass.
-        _report_missing_secrets()
+        # this runs on the FastAPI startup event), so each one can be checked
+        # once and its result stored on it.
+        check_registered_pipelines()
 
         try:
             orchestrator.start()

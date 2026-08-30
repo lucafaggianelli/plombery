@@ -201,7 +201,9 @@ async def execute_task_instance(
 
         await sio.emit("run-update", build_run_update_payload(pipeline_run))
 
-        # Avoid circular import
+        # The `orchestrator` singleton is created at the end of
+        # orchestrator/__init__.py, which imports this module on the way there,
+        # so it can't be imported at the top — only once, lazily, at call time.
         from plombery.orchestrator import orchestrator
 
         try:
