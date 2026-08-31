@@ -12,6 +12,9 @@ import ManualRunDialog from '@/components/ManualRunDialog'
 import TriggersList from '@/components/TriggersList'
 import PageLayout from '@/components/PageLayout'
 import DagViewer from '@/components/DagViewer'
+import PipelineIssues, {
+  PipelineRunnableBadge,
+} from '@/components/PipelineIssues'
 
 const PipelineView: React.FC = () => {
   const urlParams = useParams()
@@ -32,8 +35,9 @@ const PipelineView: React.FC = () => {
         <div>
           <Flex className="items-start">
             <Flex className="justify-start items-start md:items-center flex-col md:flex-row min-w-0">
-              <Title className="truncate max-w-full">
+              <Title className="truncate max-w-full flex items-center gap-x-2">
                 Pipeline {pipeline.name}
+                <PipelineRunnableBadge pipeline={pipeline} />
               </Title>
               {pipeline.description && (
                 <Text className="truncate max-w-full">
@@ -47,6 +51,8 @@ const PipelineView: React.FC = () => {
           </Flex>
 
           <Breadcrumbs pipeline={pipeline} className="mt-4 md:mt-0" />
+
+          <PipelineIssues pipeline={pipeline} />
         </div>
       }
     >

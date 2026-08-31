@@ -1,6 +1,6 @@
 ## Prerequisites
 
-To run Plombery you only need Python (v3.8 or later), if you don't have it installed yet, go
+To run Plombery you only need Python (v3.9 or later), if you don't have it installed yet, go
 to the [official Python website](https://www.python.org/downloads/), download it
 and install it.
 
@@ -37,7 +37,8 @@ Then install the library:
 pip install plombery
 ```
 
-Now you're ready to write your first pipeline!
+This also installs the `plombery` command, which you'll use to run your
+pipelines. Now you're ready to write your first pipeline!
 
 ## 🎮 Try on GitHub Codespaces
 

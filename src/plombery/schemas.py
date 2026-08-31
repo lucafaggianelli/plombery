@@ -1,8 +1,22 @@
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional
 from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeFloat
+
+
+class PipelineIssue(BaseModel):
+    """A problem found while checking a pipeline at startup.
+
+    An `error` means the pipeline can't run as it is (a required secret that
+    isn't set); a `warning` is worth surfacing but doesn't stop it. `task_id`
+    scopes the issue to a single task when it belongs to one.
+    """
+
+    level: Literal["error", "warning"] = "error"
+    code: str
+    message: str
+    task_id: Optional[str] = None
 
 
 class PipelineRunStatus(str, Enum):
