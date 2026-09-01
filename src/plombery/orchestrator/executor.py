@@ -375,7 +375,7 @@ async def _execute_task(
     if result.context_arg:
         kwargs[result.context_arg] = runtime_context
 
-    if asyncio.iscoroutinefunction(task.run):
+    if inspect.iscoroutinefunction(task.run):
         task_output = await task.run(**kwargs)
     else:
         # Run in thread rather than in event loop to propagate context
