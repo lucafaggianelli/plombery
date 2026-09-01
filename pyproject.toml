@@ -48,8 +48,25 @@ dev = [
   # Returning a DataFrame from a task is a supported pattern, so the
   # regression test covering it has to actually run
   "pandas>=2.0.0",
+  "watchfiles>1.0.0",
 ]
 docs = ["mkdocs-material>=9.1,<9.7"]
+# What the demo pipelines in `examples/` import, so that running them needs no
+# environment of their own. `python-dateutil` arrives with pandas anyway, but
+# `ssl_certificates.py` imports it directly and should say so
+examples = ["pandas>=2.0.0", "python-dateutil>=2.8.0"]
+
+[tool.uv]
+# So that a plain `uv sync` gives a contributor everything: the library, what
+# the tests need, and what the examples need
+default-groups = ["dev", "examples"]
+
+# Declared explicitly rather than left to the PEP 517 fallback: without a
+# build system uv treats the project as virtual, installing the dependencies
+# but not Plombery itself, so the `plombery` command never lands in the venv
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
 version = { attr = "plombery._version.__version__" }

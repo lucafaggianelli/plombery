@@ -1397,7 +1397,7 @@ wheels = [
 
 [[package]]
 name = "plombery"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "alembic" },
     { name = "apprise" },
@@ -1430,6 +1430,11 @@ dev = [
 docs = [
     { name = "mkdocs-material" },
 ]
+examples = [
+    { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "pandas", version = "3.0.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "python-dateutil" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -1461,6 +1466,10 @@ dev = [
     { name = "pytest-env", specifier = ">=1.1.0" },
 ]
 docs = [{ name = "mkdocs-material", specifier = ">=9.1,<9.7" }]
+examples = [
+    { name = "pandas", specifier = ">=2.0.0" },
+    { name = "python-dateutil", specifier = ">=2.8.0" },
+]
 
 [[package]]
 name = "pluggy"

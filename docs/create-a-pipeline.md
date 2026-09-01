@@ -85,6 +85,32 @@ binds to `127.0.0.1:8000`. Change any of that:
 plombery run --pipelines flows --host 0.0.0.0 --port 9000
 ```
 
+While you're writing pipelines, `--reload` restarts Plombery
+whenever a file changes, so a new or edited pipeline shows up without you
+stopping the server. A file that doesn't import yet is reported and skipped,
+so a half-written pipeline doesn't take the app down with it:
+
+```sh
+plombery run --reload
+```
+
+Only the folder you run from is watched. If your pipelines import a library
+that lives elsewhere, add it with `--reload-dir path/to/it`, as many times as
+you need.
+
+Without `watchfiles` installed, reloading falls back to polling: edits are
+still picked up promptly, but a pipeline file you *add* only shows up once you
+edit a file that already existed, and polling slows down if a virtualenv sits
+in a watched folder. Install it to avoid both:
+
+```sh
+pip install watchfiles
+```
+
+Reloading is for developing pipelines only — don't use it to serve Plombery
+in production, where a file that fails to import should stop the deploy
+rather than be skipped.
+
 ## Schedule it
 
 A pipeline with no trigger can be run manually from the web UI or its HTTP
