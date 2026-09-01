@@ -1,4 +1,4 @@
-from typing import List, Optional, Type, Union, overload
+from typing import overload
 import logging
 import os
 
@@ -47,7 +47,7 @@ def _apply_retention():
         _logger.error("Cannot apply the retention policy: %s", error, exc_info=error)
 
 
-def _find_pipeline_issues(pipeline: Pipeline) -> List[PipelineIssue]:
+def _find_pipeline_issues(pipeline: Pipeline) -> list[PipelineIssue]:
     """The problems that keep a pipeline, or one of its tasks, from running.
 
     For now this is the secrets each task declares that aren't set. Inspecting
@@ -70,7 +70,7 @@ def _find_pipeline_issues(pipeline: Pipeline) -> List[PipelineIssue]:
 
         return missing_by_class[secrets_cls]
 
-    issues: List[PipelineIssue] = []
+    issues: list[PipelineIssue] = []
 
     for pipeline_task in pipeline.tasks:
         signature = check_task_signature(pipeline_task.run)
@@ -176,29 +176,29 @@ def get_app():
 
 
 @overload
-def register_pipeline(pipeline: Pipeline) -> Pipeline:
+def register_pipeline(id: Pipeline) -> Pipeline:
     """Register a `Pipeline` already built, typically with the `with Pipeline()` context manager."""
 
 
 @overload
 def register_pipeline(
     id: str,
-    tasks: List[Task],
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    params: Optional[Type[BaseModel]] = None,
-    triggers: Optional[List[Trigger]] = None,
+    tasks: list[Task],
+    name: str | None = None,
+    description: str | None = None,
+    params: type[BaseModel] | None = None,
+    triggers: list[Trigger] | None = None,
 ) -> Pipeline:
     """Build and register a pipeline from its parts, the flat alternative to the context manager."""
 
 
 def register_pipeline(
-    id: Union[str, Pipeline],
-    tasks: Optional[List[Task]] = None,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    params: Optional[Type[BaseModel]] = None,
-    triggers: Optional[List[Trigger]] = None,
+    id: str | Pipeline,
+    tasks: list[Task] | None = None,
+    name: str | None = None,
+    description: str | None = None,
+    params: type[BaseModel] | None = None,
+    triggers: list[Trigger] | None = None,
 ) -> Pipeline:
     if isinstance(id, Pipeline):
         pipeline = id

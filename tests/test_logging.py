@@ -6,6 +6,7 @@ from plombery import _Plombery as Plombery
 from plombery.database.repository import get_pipeline_run
 from plombery.orchestrator import run_pipeline_now
 from plombery.orchestrator.data_storage import read_logs_file
+from .failing_pipeline import failing_pipeline
 from .pipeline_1 import pipeline1
 
 
@@ -48,9 +49,9 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
         {
             "level": "INFO",
             "message": f"Executing task pipe_1_task_1 in pipeline pipeline1 (id={task_run_id})",
-            "loggerName": f"plombery.{run_id}",
+            "loggerName": f"plombery.{run_id}-pipe_1_task_1",
             "pipeline": "pipeline1",
-            "task": None,
+            "task": "pipe_1_task_1",
             "map_index": None,
         },
         {
@@ -94,3 +95,26 @@ async def test_pipeline_logs_are_correclty_captured(app: Plombery):
             "map_index": None,
         },
     ]
+
+
+@pytest.mark.asyncio
+async def test_failing_task_logs_are_attributed_to_the_task(app: Plombery):
+    """The error logged when a task raises belongs to that task.
+
+    It's the line one goes looking for first, and a log without a task on it
+    doesn't say which task of the pipeline failed.
+    """
+
+    app.start()
+    app.register_pipeline(failing_pipeline)
+
+    run = await run_pipeline_now(failing_pipeline)
+
+    await sleep(1)
+
+    errors = [log for log in get_parsed_logs(run.id) if log["level"] == "ERROR"]
+
+    assert len(errors) == 1
+    assert errors[0]["message"] == "task failed"
+    assert errors[0]["task"] == "failing_task"
+    assert errors[0]["loggerName"] == f"plombery.{run.id}-failing_task"

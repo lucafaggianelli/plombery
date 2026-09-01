@@ -36,9 +36,9 @@ const PipelineHttpRun: React.FC<Props> = ({ pipelineId, triggerId }) => {
     {
       language: 'python',
       name: 'Python',
-      code: `import httpx
+      code: `import httpx2
 
-httpx.post('${getPipelineRunUrl(pipelineId)}', json={${
+httpx2.post('${getPipelineRunUrl(pipelineId)}', json={${
         triggerId ? `\n  "trigger_id": "${triggerId}",` : ''
       }
   "params": {

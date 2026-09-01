@@ -1,7 +1,7 @@
-from typing import Callable
+from collections.abc import Callable
 
-from plombery.config.model import AuthSettings
 from plombery.config import settings
+from plombery.config.model import AuthSettings
 
 
 def _get_google(settings: AuthSettings):

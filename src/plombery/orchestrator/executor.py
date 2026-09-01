@@ -1,19 +1,13 @@
 import asyncio
+import inspect
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Optional, Type
-import inspect
+from typing import Any
 
 from pydantic import BaseModel
 
 from plombery.constants import MANUAL_TRIGGER_ID
-from plombery.exceptions import InvalidDataPath
-from plombery.logger import close_logger, get_logger
-from plombery.notifications import notification_manager
-from plombery.orchestrator.context import Context
-from plombery.orchestrator.watchdog import track_running_task
-from plombery.utils import run_all_coroutines, utcnow
-from plombery.websocket import sio
 from plombery.database.models import PipelineRun, TaskRun
 from plombery.database.repository import (
     create_pipeline_run,
@@ -28,22 +22,24 @@ from plombery.database.schemas import (
     TaskRunOutputCreate,
     TaskRunUpdate,
 )
-from plombery.pipeline.pipeline import Pipeline, Trigger, Task
+from plombery.exceptions import InvalidDataPath
+from plombery.logger import close_logger, get_logger
+from plombery.notifications import notification_manager
+from plombery.orchestrator.context import Context
+from plombery.orchestrator.watchdog import track_running_task
+from plombery.pipeline.context import use_context
+from plombery.pipeline.pipeline import Pipeline, Task, Trigger
 from plombery.pipeline.tasks import OutputOfMarker
-from plombery.secrets import BaseSecrets
-from plombery.pipeline.context import (
-    pipeline_context,
-    task_context,
-    run_context,
-    task_run_context,
-)
 from plombery.schemas import PipelineRunStatus
+from plombery.secrets import BaseSecrets
+from plombery.utils import run_all_coroutines, utcnow
+from plombery.websocket import sio
 
 
 def _on_pipeline_start(
     pipeline: Pipeline,
-    trigger: Optional[Trigger] = None,
-    input_params: Optional[Dict[str, Any]] = None,
+    trigger: Trigger | None = None,
+    input_params: dict[str, Any] | None = None,
 ):
     pipeline_run = create_pipeline_run(
         PipelineRunCreate(
@@ -75,7 +71,7 @@ def on_pipeline_status_changed(
     return pipeline_run
 
 
-def build_run_update_payload(pipeline_run: PipelineRun) -> Dict[str, Any]:
+def build_run_update_payload(pipeline_run: PipelineRun) -> dict[str, Any]:
     """The payload of a `run-update` event.
 
     Every emitter has to send the same shape: the frontend reads `run` to
@@ -83,18 +79,18 @@ def build_run_update_payload(pipeline_run: PipelineRun) -> Dict[str, Any]:
     run as still going long after it finished.
     """
 
-    return dict(
-        run=dict(
-            id=pipeline_run.id,
-            status=pipeline_run.status,
-            start_time=(
+    return {
+        "run": {
+            "id": pipeline_run.id,
+            "status": pipeline_run.status,
+            "start_time": (
                 pipeline_run.start_time.isoformat() if pipeline_run.start_time else None
             ),
-            duration=pipeline_run.duration,
-        ),
-        pipeline=pipeline_run.pipeline_id,
-        trigger=pipeline_run.trigger_id,
-    )
+            "duration": pipeline_run.duration,
+        },
+        "pipeline": pipeline_run.pipeline_id,
+        "trigger": pipeline_run.trigger_id,
+    }
 
 
 def _send_pipeline_event(pipeline: Pipeline, pipeline_run: PipelineRun):
@@ -112,118 +108,133 @@ async def execute_task_instance(
     Executes a single task instance within a running pipeline.
     This function is called directly by the Orchestrator.
     """
-    logger = get_logger()
-
     task_run = get_task_run_by_id(task_run_id)
-    if not task_run:
-        # Without the row there is no way to advance the DAG from here, so fail
-        # the run rather than leave it RUNNING forever.
-        logger.error("TaskRun %s not found", task_run_id)
-        on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.FAILED)
-        return
 
-    task_start_time = utcnow()
-    task_run_status = PipelineRunStatus.FAILED  # Assume failure until success
-    task_run_output = None
+    # The contexts are bound around the whole execution, and not just around the
+    # call to the task function: `get_logger` reads out of them the task a log
+    # line belongs to, so anything logged outside them — a failing task, most of
+    # all — would be labelled with no task at all, with no way to tell which one
+    # produced it. They are bound explicitly rather than inherited from the
+    # context that scheduled this instance, which is the one of the task that
+    # completed before it, or of the pipeline for an entry point.
+    with use_context(pipeline=pipeline, run=pipeline_run, task=task, task_run=task_run):
+        logger = get_logger()
 
-    # Everything that can raise belongs inside the try: an exception escaping
-    # this function skips the `finally` that advances the DAG, and the run would
-    # hang. Resolving the input params is the likeliest offender, since invalid
-    # params raise a Pydantic ValidationError.
-    try:
-        logger.info(
-            "Executing task %s %sin pipeline %s (id=%s)",
-            task.id,
-            "" if task_run.map_index is None else f"index {task_run.map_index} ",
-            pipeline.id,
-            task_run.id,
-        )
+        if not task_run:
+            # Without the row there is no way to advance the DAG from here, so
+            # fail the run rather than leave it RUNNING forever.
+            logger.error("TaskRun %s not found", task_run_id)
+            on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.FAILED)
+            return
 
-        update_task_run(
-            task_run.id,
-            TaskRunUpdate(
-                status=PipelineRunStatus.RUNNING,
-            ),
-        )
+        task_start_time = utcnow()
+        task_run_status = PipelineRunStatus.FAILED  # Assume failure until success
+        task_run_output = None
 
-        await sio.emit("run-update", build_run_update_payload(pipeline_run))
-
-        # Prepare arguments using the TaskRun's context/inputs determined by the Orchestrator
-        # The Orchestrator should have resolved all upstream tasks' data into task_run.context
-        if task_run.context:
-            dict_params = task_run.context.get("params", None)
-
-            if pipeline.params:
-                # Pydantic models always need a dict input, so provide one as default if the dict_params is None
-                # typically because the pipeline was triggered by a trigger with no params
-                pipeline_params = pipeline.params.model_validate(dict_params or {})
-            else:
-                # TODO: This should raise at least a warning
-                pipeline_params = dict_params
-        else:
-            pipeline_params = None
-
-        # Pass resolved XCom inputs and pipeline params to the execution wrapper
-        with track_running_task(task_run.id, task.id):
-            task_output = await _execute_task(pipeline, task, task_run, pipeline_params)
-
-        # Store output and set success status
-        if task_output is not None:
-            task_run_output = create_task_run_output(
-                TaskRunOutputCreate(
-                    data=task_output,
-                ),
+        # Everything that can raise belongs inside the try: an exception escaping
+        # this function skips the `finally` that advances the DAG, and the run would
+        # hang. Resolving the input params is the likeliest offender, since invalid
+        # params raise a Pydantic ValidationError.
+        try:
+            logger.info(
+                "Executing task %s %sin pipeline %s (id=%s)",
+                task.id,
+                "" if task_run.map_index is None else f"index {task_run.map_index} ",
+                pipeline.id,
                 task_run.id,
             )
 
-        task_run_status = PipelineRunStatus.COMPLETED
-
-    except InvalidDataPath as error:
-        logger.error(
-            "Can't store the task output as the path is invalid", exc_info=error
-        )
-    except Exception as e:
-        logger.error(str(e), exc_info=e)
-    finally:
-        end_time = utcnow()
-        task_duration = (end_time - task_start_time).total_seconds() * 1000
-
-        # Update the TaskRun record in the database
-        task_run = update_task_run(
-            task_run.id,
-            TaskRunUpdate(
-                status=task_run_status,
-                duration=task_duration,
-                end_time=end_time,
-                task_output_id=task_run_output.id if task_run_output else None,
-            ),
-        )
-
-        await sio.emit("run-update", build_run_update_payload(pipeline_run))
-
-        # The `orchestrator` singleton is created at the end of
-        # orchestrator/__init__.py, which imports this module on the way there,
-        # so it can't be imported at the top — only once, lazily, at call time.
-        from plombery.orchestrator import orchestrator
-
-        try:
-            await orchestrator.handle_task_completion(task_run)
-        except Exception as error:
-            # Orchestration itself failed (bad fan-out input, missing task, ...).
-            # Without this guard the exception escapes into the executor and the
-            # pipeline run stays RUNNING forever, as nothing else will ever
-            # advance the DAG.
-            logger.error(
-                "Cannot schedule the tasks downstream of %s", task.id, exc_info=error
+            update_task_run(
+                task_run.id,
+                TaskRunUpdate(
+                    status=PipelineRunStatus.RUNNING,
+                ),
             )
-            on_pipeline_status_changed(pipeline, pipeline_run, PipelineRunStatus.FAILED)
+
+            await sio.emit("run-update", build_run_update_payload(pipeline_run))
+
+            # Prepare arguments using the TaskRun's context/inputs determined by the Orchestrator
+            # The Orchestrator should have resolved all upstream tasks' data into task_run.context
+            if task_run.context:
+                dict_params = task_run.context.get("params", None)
+
+                if pipeline.params:
+                    # Pydantic models always need a dict input, so provide one as default if the dict_params is None
+                    # typically because the pipeline was triggered by a trigger with no params
+                    pipeline_params = pipeline.params.model_validate(dict_params or {})
+                else:
+                    # TODO: This should raise at least a warning
+                    pipeline_params = dict_params
+            else:
+                pipeline_params = None
+
+            # Pass resolved XCom inputs and pipeline params to the execution wrapper
+            with track_running_task(task_run.id, task.id):
+                task_output = await _execute_task(
+                    pipeline, task, task_run, pipeline_params
+                )
+
+            # Store output and set success status
+            if task_output is not None:
+                task_run_output = create_task_run_output(
+                    TaskRunOutputCreate(
+                        data=task_output,
+                    ),
+                    task_run.id,
+                )
+
+            task_run_status = PipelineRunStatus.COMPLETED
+
+        except InvalidDataPath as error:
+            logger.error(
+                "Can't store the task output as the path is invalid", exc_info=error
+            )
+        except Exception as e:
+            logger.error(str(e), exc_info=e)
+        finally:
+            end_time = utcnow()
+            task_duration = (end_time - task_start_time).total_seconds() * 1000
+
+            # Update the TaskRun record in the database
+            task_run = update_task_run(
+                task_run.id,
+                TaskRunUpdate(
+                    status=task_run_status,
+                    duration=task_duration,
+                    end_time=end_time,
+                    task_output_id=task_run_output.id if task_run_output else None,
+                ),
+            )
+
+            await sio.emit("run-update", build_run_update_payload(pipeline_run))
+
+            # The `orchestrator` singleton is created at the end of
+            # orchestrator/__init__.py, which imports this module on the way there,
+            # so it can't be imported at the top — only once, lazily, at call time.
+            from plombery.orchestrator import orchestrator
+
+            try:
+                await orchestrator.handle_task_completion(task_run)
+            except Exception as error:
+                # Orchestration itself failed (bad fan-out input, missing task, ...).
+                # Without this guard the exception escapes into the executor and the
+                # pipeline run stays RUNNING forever, as nothing else will ever
+                # advance the DAG.
+                logger.error(
+                    "Cannot schedule the tasks downstream of %s",
+                    task.id,
+                    exc_info=error,
+                )
+                on_pipeline_status_changed(
+                    pipeline, pipeline_run, PipelineRunStatus.FAILED
+                )
 
 
 async def run(
     pipeline: Pipeline,
-    trigger: Optional[Trigger] = None,
-    params: Optional[Dict[str, Any]] = None,
-    pipeline_run: Optional[PipelineRun] = None,
+    trigger: Trigger | None = None,
+    params: dict[str, Any] | None = None,
+    pipeline_run: PipelineRun | None = None,
 ):
     """
     This is the function that actually runs the pipeline, running all its tasks.
@@ -242,36 +253,31 @@ async def run(
             pipeline, trigger=trigger, input_params=params
         )
 
-    pipeline_token = pipeline_context.set(pipeline)
-    run_token = run_context.set(pipeline_run)
+    with use_context(pipeline=pipeline, run=pipeline_run):
+        logger = get_logger()
 
-    logger = get_logger()
+        logger.info(
+            "Executing pipeline `%s` #%d via trigger `%s`",
+            pipeline.id,
+            pipeline_run.id,
+            trigger.id if trigger else MANUAL_TRIGGER_ID,
+        )
 
-    logger.info(
-        "Executing pipeline `%s` #%d via trigger `%s`",
-        pipeline.id,
-        pipeline_run.id,
-        trigger.id if trigger else MANUAL_TRIGGER_ID,
-    )
+        from plombery.orchestrator import orchestrator  # Avoid circular import
 
-    from plombery.orchestrator import orchestrator  # Avoid circular import
-
-    orchestrator.start_pipeline_tasks(pipeline, pipeline_run, params)
-
-    pipeline_context.reset(pipeline_token)
-    run_context.reset(run_token)
+        orchestrator.start_pipeline_tasks(pipeline, pipeline_run, params)
 
 
 @dataclass
 class TaskFunctionSignature:
     func_params: MappingProxyType[str, inspect.Parameter]
     has_params_arg: bool = False
-    context_arg: Optional[str] = None
+    context_arg: str | None = None
     input_arg_names: list[str] = field(default_factory=list)
     # Argument name -> the `BaseSecrets` subclass it's annotated with. These
     # are resolved by injecting a fresh, validated instance, not from upstream
     # task output, and are what lets the required secrets be checked at startup.
-    secret_args: Dict[str, Type[BaseSecrets]] = field(default_factory=dict)
+    secret_args: dict[str, type[BaseSecrets]] = field(default_factory=dict)
 
 
 def check_task_signature(func: Callable) -> TaskFunctionSignature:
@@ -333,7 +339,7 @@ async def _execute_task(
     pipeline: Pipeline,
     task: Task,
     task_run: TaskRun,
-    pipeline_params: Optional[BaseModel] = None,
+    pipeline_params: BaseModel | None = None,
 ):
     """Entrypoint to actually run a Task `run` function
 
@@ -347,9 +353,6 @@ async def _execute_task(
     Returns:
         Any: The task output to be stored in the TaskRunOutput table, optional.
     """
-
-    token = task_context.set(task)
-    tr_token = task_run_context.set(task_run)
 
     result = check_task_signature(task.run)
 
@@ -430,8 +433,5 @@ async def _execute_task(
         # This fixes:
         # https://github.com/lucafaggianelli/plombery/issues/153
         task_output = await asyncio.to_thread(task.run, **kwargs)
-
-    task_context.reset(token)
-    task_run_context.reset(tr_token)
 
     return task_output

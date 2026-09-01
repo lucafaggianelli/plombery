@@ -1,7 +1,7 @@
 from authlib.integrations.starlette_client import OAuth, StarletteOAuth2App
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from httpx import HTTPStatusError
+from httpx2 import HTTPStatusError
 from pydantic import HttpUrl
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -40,7 +40,10 @@ def build_auth_router(app: FastAPI) -> APIRouter:
                 f"Unsupported authentication provider: {settings.auth.provider}"
             )
 
-        settings.auth.server_metadata_url = HttpUrl(provider_config.get("metadata_url"))
+        metadata_url = provider_config.get("server_metadata_url")
+        settings.auth.server_metadata_url = (
+            HttpUrl(metadata_url) if metadata_url else None
+        )
         settings.auth.client_kwargs = provider_config.get("client_kwargs")
 
     # Explicitly convert the URL objects to str as from Pydantic v2 they're not converted automatically

@@ -1,8 +1,7 @@
 from pathlib import Path
-from typing import Any, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, Literal
 
 from pydantic import AnyHttpUrl, AnyUrl, BaseModel, Field, HttpUrl, SecretStr
-from pydantic_core import Url
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic_settings.sources import PydanticBaseSettingsSource
 
@@ -15,14 +14,14 @@ BASE_SETTINGS_FOLDER = Path()
 class AuthSettings(BaseModel):
     client_id: SecretStr
     client_secret: SecretStr
-    provider: Optional[str] = None
-    server_metadata_url: Optional[HttpUrl] = None
-    access_token_url: Optional[HttpUrl] = None
-    authorize_url: Optional[HttpUrl] = None
-    jwks_uri: Optional[HttpUrl] = None
-    client_kwargs: Optional[Any] = None
+    provider: str | None = None
+    server_metadata_url: HttpUrl | None = None
+    access_token_url: HttpUrl | None = None
+    authorize_url: HttpUrl | None = None
+    jwks_uri: HttpUrl | None = None
+    client_kwargs: Any | None = None
     secret_key: SecretStr = SecretStr("not-very-secret-string")
-    microsoft_tenant_id: Optional[str] = None
+    microsoft_tenant_id: str | None = None
 
 
 class RetentionSettings(BaseModel):
@@ -33,7 +32,7 @@ class RetentionSettings(BaseModel):
     the charts and is worth keeping much longer.
     """
 
-    files_days: Optional[int] = Field(
+    files_days: int | None = Field(
         default=None,
         gt=0,
         description=(
@@ -42,7 +41,7 @@ class RetentionSettings(BaseModel):
         ),
     )
 
-    runs_days: Optional[int] = Field(
+    runs_days: int | None = Field(
         default=None,
         gt=0,
         description=(
@@ -53,8 +52,8 @@ class RetentionSettings(BaseModel):
 
 
 class Settings(BaseSettings):
-    auth: Optional[AuthSettings] = None
-    blocked_loop_threshold: Optional[float] = Field(
+    auth: AuthSettings | None = None
+    blocked_loop_threshold: float = Field(
         default=2.0,
         description=(
             "Log a warning when the event loop stays blocked for longer than "
@@ -64,12 +63,12 @@ class Settings(BaseSettings):
         ),
     )
     retention: RetentionSettings = Field(default_factory=RetentionSettings)
-    allowed_origins: Union[List[AnyHttpUrl], Literal["*"]] = "*"
+    allowed_origins: list[AnyHttpUrl] | Literal["*"] = "*"
     data_path: Path = Field(default_factory=Path.cwd)
     database_url: AnyUrl = AnyUrl("sqlite:///./plombery.db")
-    database_auth_token: Optional[str] = None
-    frontend_url: AnyHttpUrl = Url("http://localhost:8000")
-    notifications: Optional[List[NotificationRule]] = None
+    database_auth_token: str | None = None
+    frontend_url: AnyHttpUrl = AnyHttpUrl("http://localhost:8000")
+    notifications: list[NotificationRule] | None = None
 
     model_config = SettingsConfigDict(
         env_file=BASE_SETTINGS_FOLDER / ".env",
@@ -79,12 +78,12 @@ class Settings(BaseSettings):
     @classmethod
     def settings_customise_sources(
         cls,
-        settings_cls: Type[BaseSettings],
+        settings_cls: type[BaseSettings],
         init_settings: PydanticBaseSettingsSource,
         env_settings: PydanticBaseSettingsSource,
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
-    ) -> Tuple[PydanticBaseSettingsSource, ...]:
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
         return (
             init_settings,
             env_settings,

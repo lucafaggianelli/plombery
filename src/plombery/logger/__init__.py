@@ -6,6 +6,7 @@ from plombery.logger.web_socket_handler import build_queue_handler
 from plombery.orchestrator.data_storage import get_logs_filename
 from plombery.pipeline.context import (
     run_context,
+    task_context,
     task_run_context,
 )
 
@@ -21,13 +22,20 @@ def get_logger() -> logging.LoggerAdapter:
 
     pipeline_run = run_context.get()
     task_run = task_run_context.get(None)
+    task = task_context.get(None)
+
+    # A log line is attributed to the task run it belongs to; the task context
+    # is the fallback for the few lines written while a task is being set up and
+    # its run row isn't at hand, which are still that task's lines.
+    task_id = task_run.task_id if task_run else (task.id if task else None)
+    map_index = task_run.map_index if task_run else None
 
     filename = get_logs_filename(pipeline_run.id)
 
     json_formatter = JsonFormatter(
         pipeline=pipeline_run.pipeline_id,
-        task=task_run.task_id if task_run else None,
-        map_index=task_run.map_index if task_run else None,
+        task=task_id,
+        map_index=map_index,
     )
 
     json_handler = logging.FileHandler(filename)
@@ -51,11 +59,11 @@ def get_logger() -> logging.LoggerAdapter:
     # On top of that, create 2 different loggers: 1 for pipelines and
     # 1 for tasks and be sure they're not in a parent-child
     # relationships otherwise it will generate double logs
-    if task_run:
-        logger_name += f"-{task_run.task_id}"
+    if task_id:
+        logger_name += f"-{task_id}"
 
-        if task_run.map_index is not None:
-            logger_name += f"-{task_run.map_index}"
+        if map_index is not None:
+            logger_name += f"-{map_index}"
 
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.DEBUG)
@@ -69,8 +77,8 @@ def get_logger() -> logging.LoggerAdapter:
     extra_log_info = {
         "pipeline": pipeline_run.pipeline_id,
         "run_id": pipeline_run.id,
-        "task": task_run.task_id if task_run else None,
-        "map_index": task_run.map_index if task_run else None,
+        "task": task_id,
+        "map_index": map_index,
     }
 
     return logging.LoggerAdapter(logger, extra_log_info)
