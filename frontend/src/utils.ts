@@ -124,12 +124,30 @@ export const getTaskRunsStatus = (taskRuns: TaskRun[]): PipelineRunStatus => {
 }
 
 /**
- * How long a set of task runs took from the first start to the last end.
+ * Whether a task run is one instance of a mapped task.
  *
- * Mapped instances run concurrently, so summing their durations overstates
- * the time the task actually took: this measures the wall clock instead.
+ * The API sends `map_index: null` for a plain task, so the index — and not
+ * the number of runs — is what tells a fan out apart: a fan out over a
+ * single item still produces one indexed instance.
  */
-export const getTaskRunsWallClock = (taskRuns: TaskRun[]): number | undefined => {
+export const isMappedRun = (taskRun: TaskRun): boolean =>
+  taskRun.map_index !== null && taskRun.map_index !== undefined
+
+/**
+ * Whether these runs belong to a mapped task.
+ */
+export const areMappedRuns = (taskRuns: TaskRun[]): boolean =>
+  taskRuns.some(isMappedRun)
+
+/**
+ * The first start and the last end of a set of task runs.
+ *
+ * `end` is undefined while any instance is still missing an end time, as the
+ * task as a whole hasn't finished yet.
+ */
+export const getTaskRunsTimeSpan = (
+  taskRuns: TaskRun[]
+): { start?: Date; end?: Date } => {
   const startTimes = taskRuns
     .map((taskRun) => taskRun.start_time?.getTime())
     .filter((time): time is number => time !== undefined)
@@ -138,12 +156,49 @@ export const getTaskRunsWallClock = (taskRuns: TaskRun[]): number | undefined =>
     .map((taskRun) => taskRun.end_time?.getTime())
     .filter((time): time is number => time !== undefined)
 
-  if (!startTimes.length || endTimes.length !== taskRuns.length) {
+  return {
+    start: startTimes.length ? new Date(Math.min(...startTimes)) : undefined,
+    end:
+      endTimes.length === taskRuns.length && taskRuns.length
+        ? new Date(Math.max(...endTimes))
+        : undefined,
+  }
+}
+
+/**
+ * How long a set of task runs took from the first start to the last end.
+ *
+ * Mapped instances run concurrently, so summing their durations overstates
+ * the time the task actually took: this measures the wall clock instead.
+ */
+export const getTaskRunsWallClock = (taskRuns: TaskRun[]): number | undefined => {
+  const { start, end } = getTaskRunsTimeSpan(taskRuns)
+
+  if (!start || !end) {
     // Still running, or never recorded a time: no meaningful total yet
     return undefined
   }
 
-  return Math.max(...endTimes) - Math.min(...startTimes)
+  return end.getTime() - start.getTime()
+}
+
+export const MAPPING_MODE_LABELS: Record<string, string> = {
+  fan_out: 'Fan out',
+  chained_fan_out: 'Chained fan out',
+}
+
+/**
+ * How a mapped task is described in the UI, e.g. `Fan out over fetch_items`,
+ * or an empty string for a plain task.
+ */
+export const getMappingLabel = (task?: Task): string => {
+  if (!task?.mapping_mode) {
+    return ''
+  }
+
+  const mode = MAPPING_MODE_LABELS[task.mapping_mode] ?? task.mapping_mode
+
+  return task.map_upstream_id ? `${mode} over ${task.map_upstream_id}` : mode
 }
 
 export const countByStatus = (

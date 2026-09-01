@@ -26,7 +26,10 @@ import {
   TaskRun,
 } from '@/types'
 import TaskRunStatusIcon from './TaskRunStatusIcon'
-import { getTaskRunsStatus } from '@/utils'
+import { getMappingLabel, getTaskRunsStatus } from '@/utils'
+
+/** The id of the synthetic node standing for the trigger that fired the run */
+export const TRIGGER_NODE_ID = 'trigger'
 
 interface Props extends PropsWithChildren {
   pipeline: Pipeline
@@ -51,11 +54,7 @@ export function TaskNode({
 }: NodeProps<Node<TaskWithRun, 'task'>>) {
   const numberInstances = data.runs?.length ?? 0
 
-  const mappingLabel = data.task.mapping_mode
-    ? `${
-        data.task.mapping_mode === 'fan_out' ? 'Fan out' : 'Chained fan out'
-      }${data.task.map_upstream_id ? ` over ${data.task.map_upstream_id}` : ''}`
-    : ''
+  const mappingLabel = getMappingLabel(data.task)
 
   return (
     <div className="relative">
@@ -138,9 +137,16 @@ export function TaskNode({
 
 export function TriggerNode({
   data,
+  selected,
 }: NodeProps<Node<TriggerWithParams, 'trigger'>>) {
   return (
-    <div className="bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle">
+    <div
+      className={twMerge(
+        'bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle cursor-pointer hover:dark:border-dark-tremor-background-emphasis hover:border-tremor-background-emphasis transition-colors',
+        selected &&
+          'dark:border-dark-tremor-background-emphasis border-tremor-background-emphasis'
+      )}
+    >
       <div className="flex gap-2 items-center">{data.trigger.id}</div>
 
       <Handle type="source" position={Position.Right} />
@@ -237,7 +243,7 @@ export default function DagViewer({
 
     if (run) {
       initialNodes.push({
-        id: 'trigger',
+        id: TRIGGER_NODE_ID,
         type: 'trigger',
         position: { x: 0, y: 0 },
         data: {
@@ -251,8 +257,8 @@ export default function DagViewer({
         .filter((task) => task.upstream_task_ids.length === 0)
         .forEach((task) =>
           initialEdges.push({
-            id: `trigger-${task.id}`,
-            source: 'trigger',
+            id: `${TRIGGER_NODE_ID}-${task.id}`,
+            source: TRIGGER_NODE_ID,
             target: task.id,
             animated: false,
           })

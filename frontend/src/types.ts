@@ -74,8 +74,9 @@ export interface TaskRun {
   status: PipelineRunStatus
   task_id: string
   task_output_id?: string
-  map_index?: number
-  parent_task_run_id?: string
+  /** The index within a fan out, `null` for a plain (unmapped) task */
+  map_index?: number | null
+  parent_task_run_id?: string | null
 }
 
 export interface PipelineRun {
@@ -88,6 +89,8 @@ export interface PipelineRun {
   duration: number
   task_runs: TaskRun[]
   input_params: Record<string, any>
+  /** What started the run: `scheduled`, `web`, `api`... */
+  reason?: string | null
   /** The pipeline definition this run executed */
   pipeline_version?: string
 }

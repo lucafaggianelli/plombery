@@ -1,60 +1,71 @@
 import { Button, Card, Metric, Title } from '@tremor/react'
-import { isSameDay } from 'date-fns'
 import { TableCellsIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 
 import StatusBadge from './StatusBadge'
 import TaskRunStatusIcon from './TaskRunStatusIcon'
-import { Task, TaskRun } from '@/types'
+import TimeRange from './TimeRange'
+import { PipelineRunStatus, Task, TaskRun } from '@/types'
 import {
+  areMappedRuns,
   countByStatus,
-  formatDate,
   formatDuration,
   formatTime,
+  getMappingLabel,
   getTaskRunsStatus,
+  getTaskRunsTimeSpan,
   getTaskRunsWallClock,
+  isMappedRun,
 } from '@/utils'
 import Timer from './Timer'
 import DataViewerDialog from './DataViewerDialog'
 
 interface Props {
+  /** Missing if the pipeline changed since this run and no longer has the task */
   task?: Task
+  taskId: string
   runs: TaskRun[]
+  /** The status of the pipeline run, to tell a pending task from a skipped one */
+  runStatus: PipelineRunStatus
 }
 
-const MAPPING_MODE_LABELS: Record<string, string> = {
-  fan_out: 'Fan out',
-  chained_fan_out: 'Chained fan out',
-}
-
-function Times({ run }: { run: TaskRun }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
   return (
-    <div className="space-y-4 mt-4">
-      <div>
-        <div className="text-xs">Started at</div>
-
-        <div className="flex gap-2 justify-between">
-          <p className="tabular-nums">
-            {run.start_time ? formatTime(run.start_time) : '-'}
-          </p>
-          <p>{run.end_time ? formatDate(run.end_time) : '-'}</p>
-        </div>
-      </div>
-
-      <div>
-        <div className="text-xs">Finished at</div>
-
-        <p className="tabular-nums">
-          {run.end_time ? formatTime(run.end_time) : '-'}
-        </p>
-
-        {run.start_time &&
-          run.end_time &&
-          !isSameDay(run.start_time, run.end_time) && (
-            <p>{formatDate(run.end_time)}</p>
-          )}
-      </div>
+    <div className="mt-4">
+      <div className="text-xs mb-1">{title}</div>
+      {children}
     </div>
+  )
+}
+
+/**
+ * The tasks a task is wired to, so the dependencies are readable without
+ * tracing the edges back through the graph.
+ */
+function TaskIdsList({ title, ids }: { title: string; ids: string[] }) {
+  if (!ids.length) {
+    return null
+  }
+
+  return (
+    <Section title={title}>
+      <div className="flex flex-wrap gap-1">
+        {[...ids].sort().map((id) => (
+          <span
+            key={id}
+            className="font-mono text-xs px-1.5 py-0.5 rounded bg-tremor-background-subtle dark:bg-dark-tremor-background-subtle"
+          >
+            {id}
+          </span>
+        ))}
+      </div>
+    </Section>
   )
 }
 
@@ -99,9 +110,7 @@ function InstancesList({
   )
 
   return (
-    <div className="mt-4">
-      <div className="text-xs mb-1">Instances</div>
-
+    <Section title="Instances">
       <ul className="max-h-64 overflow-y-auto divide-y divide-tremor-border dark:divide-dark-tremor-border">
         {sorted.map((run) => (
           <li
@@ -140,29 +149,41 @@ function InstancesList({
           </li>
         ))}
       </ul>
-    </div>
+    </Section>
   )
 }
 
-export default function TaskRunDetails({ task, runs }: Props) {
+export default function TaskRunDetails({
+  task,
+  taskId,
+  runs,
+  runStatus,
+}: Props) {
   const [outputRun, setOutputRun] = useState<TaskRun | undefined>()
 
   const firstRun = runs[0]
 
-  if (!firstRun) {
-    return null
-  }
-
   // A task is mapped when its runs carry an index, not when there is more than
   // one of them: a fan out over a single item still produces one instance.
-  const isMapped = runs.some((run) => run.map_index !== undefined)
+  // The pipeline definition has the last word, as a task can be declared as
+  // mapped before it has produced any instance at all.
+  const isMapped = !!task?.mapping_mode || areMappedRuns(runs)
 
-  const status = getTaskRunsStatus(runs)
+  const status = runs.length ? getTaskRunsStatus(runs) : 'pending'
+  const { start, end } = getTaskRunsTimeSpan(runs)
   const wallClock = getTaskRunsWallClock(runs)
   const statusCounts = countByStatus(runs)
+  const mappingLabel = getMappingLabel(task) || (isMapped ? 'Mapped' : '')
+
+  const dependencies = (
+    <>
+      <TaskIdsList title="Upstream" ids={task?.upstream_task_ids ?? []} />
+      <TaskIdsList title="Downstream" ids={task?.downstream_task_ids ?? []} />
+    </>
+  )
 
   return (
-    <Card className="p-3 max-w-[350px]">
+    <Card className="p-3 max-w-[350px] max-h-[460px] overflow-y-auto">
       <DataViewerDialog
         runId={outputRun?.id || ''}
         taskId={outputRun?.task_output_id || ''}
@@ -171,50 +192,98 @@ export default function TaskRunDetails({ task, runs }: Props) {
       />
 
       <header className="flex items-start gap-4 justify-between">
-        <Title className="mb-4">
-          {firstRun.task_id}
-          {isMapped && !task?.mapping_mode && `[${firstRun.map_index ?? 0}]`}
-        </Title>
+        <div className="min-w-0">
+          <Title className="truncate" title={task?.name ?? taskId}>
+            {task?.name ?? taskId}
+          </Title>
+
+          <p className="font-mono text-xs truncate text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
+            {taskId}
+            {/* The index only belongs here when the panel shows a single
+                instance, the list below carries it otherwise */}
+            {runs.length === 1 &&
+              isMappedRun(firstRun) &&
+              `[${firstRun.map_index}]`}
+          </p>
+        </div>
+
         <StatusBadge status={status} />
       </header>
 
-      {task?.mapping_mode && (
-        <div className="mb-4 text-xs text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
-          {MAPPING_MODE_LABELS[task.mapping_mode] ?? task.mapping_mode}
-          {task.map_upstream_id && <> over {task.map_upstream_id}</>}
+      {task?.description && (
+        <p className="mt-2 text-sm text-tremor-content dark:text-dark-tremor-content">
+          {task.description}
+        </p>
+      )}
+
+      {mappingLabel && (
+        <div className="mt-2 text-xs text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
+          {mappingLabel}
         </div>
       )}
 
-      <div>
-        <div className="text-xs">
-          {isMapped && runs.length > 1 ? 'Total duration' : 'Duration'}
-        </div>
-        <Metric className="tabular-nums text-lg">
-          {status === 'running' && firstRun.start_time ? (
-            <Timer startTime={firstRun.start_time} />
-          ) : wallClock !== undefined ? (
-            formatDuration(wallClock)
-          ) : (
-            formatDuration(firstRun.duration)
-          )}
-        </Metric>
+      {!runs.length ? (
+        <>
+          <p className="mt-4 text-sm text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
+            {['pending', 'running'].includes(runStatus)
+              ? 'Waiting for its upstream tasks to complete.'
+              : 'This task never ran in this pipeline run.'}
+          </p>
 
-        {isMapped && runs.length > 1 && (
-          <div className="text-xs text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
-            {runs.length} instances,{' '}
-            {Object.entries(statusCounts)
-              .map(([name, count]) => `${count} ${name}`)
-              .join(', ')}
-          </div>
-        )}
-      </div>
-
-      {isMapped && runs.length > 1 ? (
-        <InstancesList runs={runs} onViewOutput={setOutputRun} />
+          {dependencies}
+        </>
       ) : (
         <>
-          <Times run={firstRun} />
-          <OutputButton run={firstRun} onView={setOutputRun} />
+          <div className="mt-4">
+            <div className="text-xs">
+              {isMapped && runs.length > 1 ? 'Total duration' : 'Duration'}
+            </div>
+
+            <Metric className="tabular-nums text-lg">
+              {status === 'running' && start ? (
+                <Timer startTime={start} />
+              ) : wallClock !== undefined ? (
+                formatDuration(wallClock)
+              ) : (
+                formatDuration(firstRun.duration)
+              )}
+            </Metric>
+
+            {isMapped && (
+              <div className="text-xs text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
+                {runs.length} {runs.length === 1 ? 'instance' : 'instances'}
+                {runs.length > 1 && (
+                  <>
+                    ,{' '}
+                    {Object.entries(statusCounts)
+                      .map(([name, count]) => `${count} ${name}`)
+                      .join(', ')}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4">
+            <TimeRange
+              start={start}
+              end={end}
+              startLabel={
+                isMapped && runs.length > 1 ? 'First started at' : 'Started at'
+              }
+              endLabel={
+                isMapped && runs.length > 1 ? 'Last finished at' : 'Finished at'
+              }
+            />
+          </div>
+
+          {isMapped && runs.length > 1 ? (
+            <InstancesList runs={runs} onViewOutput={setOutputRun} />
+          ) : (
+            <OutputButton run={firstRun} onView={setOutputRun} />
+          )}
+
+          {dependencies}
         </>
       )}
     </Card>

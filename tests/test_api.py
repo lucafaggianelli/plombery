@@ -1,8 +1,12 @@
 from fastapi.testclient import TestClient
 import pytest
 
-from plombery import _Plombery as Plombery
+from plombery import Pipeline, task, _Plombery as Plombery
 from plombery.api import app
+from plombery.database.schemas import PipelineRunWithTaskRuns
+from plombery.orchestrator import run_pipeline_now
+from plombery.pipeline.tasks import MappingMode
+from .conftest import wait_for_run
 from .pipeline_1 import pipeline1, pipeline1_serialized
 
 
@@ -73,3 +77,45 @@ async def test_api_with_auth_when_not_authenticated(with_auth, app: Plombery):
     response = client.get("/api/pipelines/pipeid")
     assert response.status_code == 401
     assert response.json() == NOT_AUTH_MSG
+
+
+@pytest.mark.asyncio
+async def test_run_serializes_an_index_only_for_mapped_task_runs(app: Plombery):
+    """`map_index` tells a fan out instance from a plain task run.
+
+    The UI has nothing else to go by: a fan out over a single item produces
+    exactly one task run, so the number of runs cannot be used. A plain task
+    must therefore serialize a null index, never 0.
+
+    This asserts on the response model rather than on a request, as the API
+    runs in another thread and the test database lives in memory, one per
+    thread.
+    """
+
+    app.start()
+
+    with Pipeline(id="mapping") as pipeline:
+
+        @task
+        def plain():
+            return ["a", "b"]
+
+        @task(mapping_mode=MappingMode.FAN_OUT, map_upstream_id="plain")
+        def mapped(plain):
+            return plain.upper()
+
+        plain >> mapped
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    serialized = PipelineRunWithTaskRuns.model_validate(run).model_dump(mode="json")
+
+    indexes = {"plain": [], "mapped": []}
+
+    for task_run in serialized["task_runs"]:
+        indexes[task_run["task_id"]].append(task_run["map_index"])
+
+    assert indexes["plain"] == [None]
+    assert sorted(indexes["mapped"]) == [0, 1]
