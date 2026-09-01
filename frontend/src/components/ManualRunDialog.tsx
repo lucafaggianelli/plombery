@@ -51,6 +51,12 @@ const ManualRunDialog: React.FC<Props> = ({ pipeline, trigger }) => {
         size="xs"
         icon={PlayIcon}
         onClick={() => setOpen(true)}
+        disabled={!pipeline.runnable}
+        tooltip={
+          pipeline.runnable
+            ? undefined
+            : pipeline.issues.map((issue) => issue.message).join('\n')
+        }
       >
         Run
       </Button>

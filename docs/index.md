@@ -24,6 +24,24 @@ hide:
     <img src="assets/images/minimal-code.png" />
   </article>
 
+  <article>
+    <i>🕸️</i>
+    <h2>DAGs & fan-out</h2>
+    <p>Wire tasks into a graph with <code>&gt;&gt;</code>, fan out over a list and fan back in</p>
+  </article>
+
+  <article>
+    <i>⚡</i>
+    <h2>One command</h2>
+    <p><code>plombery run</code> discovers your pipelines and serves the UI — no <code>app.py</code> boilerplate</p>
+  </article>
+
+  <article>
+    <i>🔑</i>
+    <h2>Typed secrets</h2>
+    <p>Declare the secrets a task needs; Plombery injects them and checks they're set at startup</p>
+  </article>
+
   <article class="large" style="grid-column: span 2 / span 1;">
     <div>
       <i>🎛️</i>

@@ -1,3 +1,7 @@
+---
+status: new
+---
+
 A pipeline is a graph of tasks: each task declares which tasks must run before
 it, and Plombery runs them in that order, in parallel whenever the graph allows
 it. The graph must be acyclic, and Plombery refuses to register a pipeline that
@@ -6,8 +10,9 @@ contains a cycle.
 ## Declaring the graph
 
 The recommended way to build a pipeline is the `Pipeline` context manager: every
-task defined inside it is added to the pipeline automatically, and dependencies
-are declared with the `>>` operator.
+task defined inside it is added to the pipeline automatically, dependencies are
+declared with the `>>` operator, and the pipeline registers itself with Plombery
+when the block ends — so importing the file that defines it is all it takes.
 
 ```py
 from plombery import Pipeline, task
@@ -44,6 +49,53 @@ extract >> notify
     between them have no relationship and will run at the same time. This is a
     breaking change from the versions of Plombery where `tasks=[a, b, c]` meant
     "run a, then b, then c".
+
+A task doesn't have to be defined inside the `with Pipeline()` block: only the
+dependency declarations do. This keeps the block itself short when a task's
+body is long, or when the same function is easier to read at module level:
+
+```py
+@task
+def extract():
+    return [1, 2, 3]
+
+@task
+def transform(extract):
+    return [value * 2 for value in extract]
+
+with Pipeline(id="sales_pipeline") as pipeline:
+    extract >> transform
+```
+
+### Naming an upstream task explicitly
+
+By default, an argument's value comes from the upstream task whose id matches
+the argument's name — `transform(extract)` above works because the argument is
+called `extract`. Renaming either one silently breaks this, since nothing
+checks that an argument name still matches a real task.
+
+`OutputOf(task)` binds an argument to a specific task's output instead, so the
+argument is free to have any name:
+
+```py
+@task
+def fetch_data() -> list[dict]:
+    ...
+
+@task
+def process(data: list[dict] = OutputOf(fetch_data)):
+    ...
+
+fetch_data >> process
+```
+
+The type is written twice — once on `fetch_data`, once on `process` — but that
+duplication is checked, not just cosmetic: a type checker flags it if the two
+disagree, because `OutputOf` is declared to return `fetch_data`'s own return
+type. `OutputOf` only binds the data, though: it never creates the dependency
+by itself, so `fetch_data >> process` (or `<<`) still has to be there. Leaving
+it out is a validation error when the pipeline is built, naming the missing
+line to add.
 
 ## Fan-out: dynamic task mapping
 
@@ -108,63 +160,96 @@ The run itself still ends as `failed` either way: something didn't get through.
 
 ## Registering a pipeline
 
-`register_pipeline` is the alternative, flat way to declare a pipeline, and the
-only 2 mandatory fields are `id` and `tasks`. Dependencies still have to be
-declared with `>>`:
+A pipeline built with the `Pipeline` context manager registers itself when the
+`with` block ends: nothing else to call.
 
 ```py
-from plombery import register_pipeline, task
+from plombery import Pipeline, task
 
-class InputParams(BaseModel):
-  some_value: int
+with Pipeline(id="sales_pipeline") as pipeline:
+    @task
+    def get_sales_data():
+        ...
+# registered here, at the end of the block
+```
+
+To build a pipeline without registering it — for a test, or to register it
+later — pass `auto_register=False`, then register it explicitly with
+`register_pipeline` when you're ready:
+
+```py
+from plombery import Pipeline, register_pipeline, task
+
+with Pipeline(id="sales_pipeline", auto_register=False) as pipeline:
+    @task
+    def get_sales_data():
+        ...
+
+register_pipeline(pipeline)
+```
+
+`register_pipeline` also accepts a pipeline's parts directly, without the
+context manager — a flat alternative useful when a pipeline has a single task
+and the graph itself needs no `>>`:
+
+```py
+from apscheduler.triggers.interval import IntervalTrigger
+from plombery import register_pipeline, task, Trigger
 
 @task
 def get_sales_data():
-  pass
+    ...
 
 register_pipeline(
     # (required) the id identifies the pipeline univocally
-    id="sales_pipeline_2345",
+    id="sales_pipeline",
     # (required) the list of tasks to execute
     tasks=[get_sales_data],
-    # This pipeline is configurable via input parameters
-    params=InputParams,
     # The name is optional, if absent it would be generated from the ID
     name="Sales pipeline",
-    description="""This is a very useless pipeline""",
+    description="Aggregate sales activity from all stores across the country",
     # Triggers with schedules
     triggers=[
         Trigger(
             id="daily",
             name="Daily",
             description="Run the pipeline every day",
-            # the input params value for this specific trigger
-            params=InputParams(some_value=2),
-            schedule=IntervalTrigger(
-                days=1,
-            ),
+            schedule=IntervalTrigger(days=1),
         )
     ],
 )
 ```
 
+The `params` argument, covered next, is accepted by every form.
+
 ## Parameters
 
-A pipeline is configurable if it declares some input parameters in the registration
-via the `params` argument:
+A pipeline is configurable if it declares input parameters via the `params`
+argument, a [Pydantic model](https://docs.pydantic.dev/latest/usage/models/):
+
+```py
+from pydantic import BaseModel
+from plombery import Pipeline, task
+
+
+class InputParams(BaseModel):
+    some_value: int
+
+
+with Pipeline(id="sales_pipeline", params=InputParams) as pipeline:
+    @task
+    def get_sales_data(params: InputParams):
+        return params.some_value
+```
+
+The flat form takes the same argument:
 
 ```py
 register_pipeline(
-  # ...
-  params=InputParams
+    id="sales_pipeline",
+    tasks=[get_sales_data],
+    params=InputParams,
 )
-```
-
-The `InputParams` is a [Pydantic Model](https://docs.pydantic.dev/latest/usage/models/):
-
-```py
-class InputParams(BaseModel):
-  some_value: int
 ```
 
 If the pipeline has input parameters, when you click the manual run button,

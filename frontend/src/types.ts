@@ -38,6 +38,13 @@ export interface Task {
   map_upstream_id: string | null
 }
 
+export interface PipelineIssue {
+  level: 'error' | 'warning'
+  code: string
+  message: string
+  task_id: string | null
+}
+
 export class Pipeline {
   constructor(
     public id: string,
@@ -45,7 +52,9 @@ export class Pipeline {
     public description: string,
     public tasks: Task[],
     public triggers: Trigger[],
-    public version?: string
+    public version?: string,
+    public issues: PipelineIssue[] = [],
+    public runnable: boolean = true
   ) {}
 
   hasTrigger(): boolean {

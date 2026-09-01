@@ -1,7 +1,4 @@
-from typing import Any, List, Dict, Set
-
-# Can't import it due to circular deps
-# from plombery.pipeline.task import Task
+from typing import Any, Collection, Dict, Set
 
 # Constants
 UNVISITED = 0
@@ -9,31 +6,31 @@ VISITING = 1
 VISITED = 2
 
 
-def is_graph_acyclic(all_tasks: List) -> bool:
+def is_graph_acyclic(
+    task_ids: Collection[str], upstream_of: Dict[str, Set[str]]
+) -> bool:
     """
-    Checks for cycles in the pipeline's task structure using Depth First Search (DFS).
-    The graph structure is implicitly defined by the Task objects' upstream_task_ids.
+    Checks for cycles in a task graph using Depth First Search (DFS).
+
+    `upstream_of` maps a task id to the ids of the tasks that must complete
+    before it, and doesn't have to cover every id in `task_ids`: a task with
+    no dependencies simply doesn't need an entry.
     """
 
-    # 1. Map ID to Task Object and initialize state
-    task_map: Dict[str, Any] = {task.id: task for task in all_tasks}
-    states: Dict[str, int] = {task_id: UNVISITED for task_id in task_map.keys()}
+    states: Dict[str, int] = {task_id: UNVISITED for task_id in task_ids}
 
-    # 2. Build the Downstream Map (Adjacency List)
-    # We need to know where to go FROM a task, but our dependency model only
-    # stores where we came FROM (upstream_task_ids). We must reverse it.
-    downstream_map: Dict[str, Set[str]] = {
-        task_id: set() for task_id in task_map.keys()
-    }
+    # Build the Downstream Map (Adjacency List): we need to know where to go
+    # FROM a task, but `upstream_of` stores where we came FROM. Reverse it.
+    downstream_map: Dict[str, Set[str]] = {task_id: set() for task_id in task_ids}
 
-    for task_id, task in task_map.items():
-        for upstream_id in task.upstream_task_ids:
+    for task_id in task_ids:
+        for upstream_id in upstream_of.get(task_id, set()):
             if upstream_id in downstream_map:
                 downstream_map[upstream_id].add(task_id)
             # NOTE: Any dependency check (like ensuring upstream_id exists)
             # should happen BEFORE this function, in the Pipeline validator.
 
-    # 3. DFS Traversal (following DOWNSTREAM edges)
+    # DFS traversal, following downstream edges
     def dfs(task_id: str):
 
         if states[task_id] == VISITING:
@@ -55,8 +52,8 @@ def is_graph_acyclic(all_tasks: List) -> bool:
         states[task_id] = VISITED
         return True  # Node and its branch are acyclic
 
-    # 4. Start DFS from all tasks (ensuring all disconnected components are covered)
-    for task_id in task_map.keys():
+    # Start DFS from every task, so disconnected components are all covered
+    for task_id in task_ids:
         if states[task_id] == UNVISITED:
             if not dfs(task_id):
                 return False  # Cycle detected

@@ -49,6 +49,8 @@ theme:
   custom_dir: docs/overrides
 
 extra:
+  status:
+    new: Recently added or updated
   analytics:
     provider: plausible
     property:
@@ -73,6 +75,7 @@ nav:
   - Docs:
       - Pipelines: pipelines.md
       - Tasks: tasks.md
+      - Secrets: secrets.md
       - Triggers: triggers.md
       - Deployment: deployment.md
   - Configuration:

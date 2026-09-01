@@ -1,7 +1,7 @@
 import asyncio
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Type
 import inspect
 
 from pydantic import BaseModel
@@ -29,6 +29,8 @@ from plombery.database.schemas import (
     TaskRunUpdate,
 )
 from plombery.pipeline.pipeline import Pipeline, Trigger, Task
+from plombery.pipeline.tasks import OutputOfMarker
+from plombery.secrets import BaseSecrets
 from plombery.pipeline.context import (
     pipeline_context,
     task_context,
@@ -163,7 +165,7 @@ async def execute_task_instance(
 
         # Pass resolved XCom inputs and pipeline params to the execution wrapper
         with track_running_task(task_run.id, task.id):
-            task_output = await _execute_task(task, task_run, pipeline_params)
+            task_output = await _execute_task(pipeline, task, task_run, pipeline_params)
 
         # Store output and set success status
         if task_output is not None:
@@ -199,7 +201,9 @@ async def execute_task_instance(
 
         await sio.emit("run-update", build_run_update_payload(pipeline_run))
 
-        # Avoid circular import
+        # The `orchestrator` singleton is created at the end of
+        # orchestrator/__init__.py, which imports this module on the way there,
+        # so it can't be imported at the top — only once, lazily, at call time.
         from plombery.orchestrator import orchestrator
 
         try:
@@ -264,26 +268,49 @@ class TaskFunctionSignature:
     has_params_arg: bool = False
     context_arg: Optional[str] = None
     input_arg_names: list[str] = field(default_factory=list)
+    # Argument name -> the `BaseSecrets` subclass it's annotated with. These
+    # are resolved by injecting a fresh, validated instance, not from upstream
+    # task output, and are what lets the required secrets be checked at startup.
+    secret_args: Dict[str, Type[BaseSecrets]] = field(default_factory=dict)
 
 
 def check_task_signature(func: Callable) -> TaskFunctionSignature:
     """
-    Check if a function signature declares positional args.
+    Inspect a task function's signature to decide how each argument is supplied.
 
-    This is meant to be used to check if a task function accepts data inputs from another task.
+    An argument is one of:
+    - one annotated with `Context`: the runtime `Context` (or, by name,
+      `context`/`ctx`)
+    - one annotated with a `BaseSecrets` subclass: an injected secrets instance
+    - `params`: the pipeline's input params model
+    - anything else: input data resolved from an upstream task (by name, or by
+      `OutputOf(...)`)
 
-    The signature of the task run function should be:
-    `def task_fn(previous_task_output: Any, params: Model):`
-
-    Where the params argument is the Pipeline input params.
+    The injected arguments (`Context`, secrets) are matched by their annotation,
+    so they can be called anything; `params` is matched by name, because typing
+    it would collide with an upstream output annotated as the same model.
     """
 
     result = TaskFunctionSignature(inspect.signature(func).parameters)
 
     for name, parameter in result.func_params.items():
-        # Check for special arguments
-        if name == "params":
+        annotation = parameter.annotation
+        is_class = isinstance(annotation, type)
+
+        # An argument annotated with `Context` or with a secrets schema is
+        # injected, not resolved from upstream. Matched by annotation, not
+        # name, so it can be called anything.
+        if is_class and issubclass(annotation, Context):
+            result.context_arg = name
+
+        elif is_class and issubclass(annotation, BaseSecrets):
+            result.secret_args[name] = annotation
+
+        # `params` and the `context`/`ctx` names stay matched by name, for the
+        # common case where the argument isn't annotated.
+        elif name == "params":
             result.has_params_arg = True
+
         elif name in ["context", "ctx"]:
             result.context_arg = name
 
@@ -303,6 +330,7 @@ def check_task_signature(func: Callable) -> TaskFunctionSignature:
 
 
 async def _execute_task(
+    pipeline: Pipeline,
     task: Task,
     task_run: TaskRun,
     pipeline_params: Optional[BaseModel] = None,
@@ -310,6 +338,8 @@ async def _execute_task(
     """Entrypoint to actually run a Task `run` function
 
     Args:
+        pipeline (Pipeline): The pipeline `task` belongs to, whose dependency
+            graph resolves the task's upstream ids
         task (Task): The task to run
         task_run (TaskRun): The TaskRun object
         pipeline_params (Optional[BaseModel], optional): Input params for the pipeline. Defaults to None.
@@ -325,9 +355,11 @@ async def _execute_task(
 
     kwargs = {}
 
+    upstream_task_ids = pipeline.upstream_of(task.id)
+
     # Load the TaskRuns for all upstream dependencies
     upstream_runs_metadata = get_task_runs_for_pipeline_run(
-        task_run.pipeline_run_id, task_ids=task.upstream_task_ids
+        task_run.pipeline_run_id, task_ids=upstream_task_ids
     )
 
     # Build the map of task_id -> TaskRun model instance
@@ -345,19 +377,26 @@ async def _execute_task(
     for arg_name in result.input_arg_names:
         parameter = result.func_params[arg_name]
 
+        # `OutputOf(some_task)` names the upstream task explicitly, so the
+        # argument itself is free to have any name. It's still a default
+        # value, but not the "plain optional argument" kind handled below.
+        if isinstance(parameter.default, OutputOfMarker):
+            upstream_task_id = parameter.default.task.id
         # An argument that doesn't name an upstream task but declares a default
         # is a plain optional argument of the function: leave the default alone
         # rather than overwriting it with None.
-        if (
-            arg_name not in task.upstream_task_ids
+        elif (
+            arg_name not in upstream_task_ids
             and parameter.default is not inspect.Parameter.empty
         ):
             continue
+        else:
+            upstream_task_id = arg_name
 
         # The context handles the mapping logic:
         # - If mapped, resolves to single item if arg_name == map_upstream_id.
         # - Otherwise, resolves to the full output of the upstream task named arg_name.
-        input_data = runtime_context.get_output_data(task_id=arg_name)
+        input_data = runtime_context.get_output_data(task_id=upstream_task_id)
 
         arg_annotation = parameter.annotation
 
@@ -374,6 +413,13 @@ async def _execute_task(
 
     if result.context_arg:
         kwargs[result.context_arg] = runtime_context
+
+    # Inject a fresh, validated instance of each declared secrets schema.
+    # Fresh, so rotating a secret takes effect without a restart; validated,
+    # because constructing the class reads and checks the environment. A
+    # missing secret raises here, but startup analysis has already surfaced it.
+    for arg_name, secrets_cls in result.secret_args.items():
+        kwargs[arg_name] = secrets_cls()
 
     if inspect.iscoroutinefunction(task.run):
         task_output = await task.run(**kwargs)

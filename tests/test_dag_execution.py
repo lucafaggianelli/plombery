@@ -578,3 +578,242 @@ async def test_fan_out_without_fail_fast_finishes_the_healthy_branches(
         2: PipelineRunStatus.COMPLETED,
         3: PipelineRunStatus.COMPLETED,
     }
+
+
+@pytest.mark.asyncio
+async def test_register_pipeline_accepts_a_built_pipeline(app: Plombery):
+    """`register_pipeline` must accept a `Pipeline` built with the context manager.
+
+    Without this, a user who builds a pipeline with `with Pipeline()` and then
+    calls the flat `register_pipeline(id=..., tasks=[...])` on it hits a
+    TypeError, and the natural workaround is to redeclare the whole task list
+    by hand, duplicating what `>>` already expressed.
+    """
+
+    from plombery import register_pipeline
+    from plombery.orchestrator import orchestrator
+
+    app.start()
+
+    with Pipeline(id="via_register_pipeline") as pipeline:
+
+        @task
+        def start():
+            return 1
+
+        @task
+        def finish(start):
+            return start + 1
+
+        start >> finish
+
+    returned = register_pipeline(pipeline)
+
+    assert returned is pipeline
+    assert orchestrator.pipelines["via_register_pipeline"] is pipeline
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+    assert run.status == PipelineRunStatus.COMPLETED
+
+
+@pytest.mark.asyncio
+async def test_tasks_defined_outside_the_context_are_registered_by_wiring(
+    app: Plombery,
+):
+    """A task defined outside `with Pipeline()` must join it once wired with `>>`.
+
+    `add_task_to_pipeline` only fires when a `@task` is created, which for a
+    task defined at module level happens with no pipeline context active, so
+    it's never added anywhere. Wiring it with `>>` inside the block used to be
+    silently unable to fix that: `pipeline.tasks` stayed empty even though the
+    upstream/downstream ids were set correctly.
+    """
+
+    app.start()
+
+    @task
+    def extract():
+        return [1, 2, 3]
+
+    @task
+    def transform(extract):
+        return [v * 2 for v in extract]
+
+    with Pipeline(id="outside_context") as pipeline:
+        extract >> transform
+
+    assert {t.id for t in pipeline.tasks} == {"extract", "transform"}
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+    assert run.status == PipelineRunStatus.COMPLETED
+
+
+@pytest.mark.asyncio
+async def test_output_of_binds_by_reference_not_by_name(app: Plombery):
+    """`OutputOf` resolves the right upstream task regardless of the argument's name."""
+
+    from plombery import OutputOf
+
+    app.start()
+
+    with Pipeline(id="output_of_run") as pipeline:
+
+        @task
+        def fetch_data():
+            return [1, 2, 3]
+
+        @task
+        def process(data=OutputOf(fetch_data)):
+            return sum(data)
+
+        fetch_data >> process
+
+    app.register_pipeline(pipeline)
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+
+    process_run = next(tr for tr in run.task_runs if tr.task_id == "process")
+    output = get_task_run_output_by_id(process_run.task_output_id)
+    assert output.data == 6
+
+
+def test_output_of_without_a_declared_dependency_is_rejected():
+    """`OutputOf` only binds data; the edge must still be declared with `>>`.
+
+    Deriving the graph from the signature was explicitly ruled out (too many
+    edge cases, and it would make a pure refactor of a function's arguments
+    silently change the DAG's topology), so a mismatch between the two must
+    be a hard error, not a silently working accident.
+    """
+
+    with pytest.raises(ValueError, match="OutputOf.*no declared dependency"):
+        with Pipeline(id="output_of_missing_edge"):
+            from plombery import OutputOf
+
+            @task
+            def fetch_data():
+                return [1, 2, 3]
+
+            @task
+            def process(data=OutputOf(fetch_data)):
+                return sum(data)
+
+            # No `fetch_data >> process` here on purpose.
+
+
+@pytest.mark.asyncio
+async def test_a_task_can_be_reused_across_pipelines(app: Plombery):
+    """Wiring the same `Task` object into two pipelines must not leak edges.
+
+    Edges used to be mutated directly onto the `Task` object by `>>`, so
+    wiring an already-defined task into a second pipeline changed what the
+    first pipeline saw as its own dependencies too, corrupting scheduling
+    decisions for a run that had nothing to do with the second pipeline.
+    """
+
+    app.start()
+
+    @task
+    def shared():
+        return 1
+
+    with Pipeline(id="reuse_a") as pipeline_a:
+
+        @task
+        def only_in_a(shared):
+            return shared + 10
+
+        shared >> only_in_a
+
+    with Pipeline(id="reuse_b") as pipeline_b:
+
+        @task
+        def only_in_b(shared):
+            return shared + 100
+
+        shared >> only_in_b
+
+    # Each pipeline must see only its own edge for the shared task.
+    assert pipeline_a.downstream_of("shared") == {"only_in_a"}
+    assert pipeline_b.downstream_of("shared") == {"only_in_b"}
+
+    app.register_pipeline(pipeline_a)
+    app.register_pipeline(pipeline_b)
+
+    run_a = await wait_for_run((await run_pipeline_now(pipeline_a)).id)
+    run_b = await wait_for_run((await run_pipeline_now(pipeline_b)).id)
+
+    assert run_a.status == PipelineRunStatus.COMPLETED
+    assert run_b.status == PipelineRunStatus.COMPLETED
+
+    # Neither run has a task run for the other pipeline's exclusive task.
+    assert {tr.task_id for tr in run_a.task_runs} == {"shared", "only_in_a"}
+    assert {tr.task_id for tr in run_b.task_runs} == {"shared", "only_in_b"}
+
+
+@pytest.mark.asyncio
+async def test_a_pipeline_registers_itself_when_its_block_ends(app: Plombery):
+    """A `with Pipeline()` block registers the pipeline on exit, so importing
+    the module that defines it is enough — no explicit `register_pipeline`."""
+
+    from plombery.orchestrator import orchestrator
+
+    app.start()
+
+    with Pipeline(id="self_registered") as pipeline:
+
+        @task
+        def only_task():
+            return 1
+
+    # No register_pipeline call here on purpose.
+    assert orchestrator.pipelines.get("self_registered") is pipeline
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+    assert run.status == PipelineRunStatus.COMPLETED
+
+
+@pytest.mark.asyncio
+async def test_auto_register_false_leaves_the_pipeline_unregistered(app: Plombery):
+    from plombery.orchestrator import orchestrator
+
+    app.start()
+
+    with Pipeline(id="not_registered", auto_register=False) as pipeline:
+
+        @task
+        def only_task():
+            return 1
+
+    assert "not_registered" not in orchestrator.pipelines
+
+    # It can still be registered explicitly afterwards.
+    app.register_pipeline(pipeline)
+    assert orchestrator.pipelines.get("not_registered") is pipeline
+
+
+@pytest.mark.asyncio
+async def test_context_is_injected_by_type_under_any_argument_name(app: Plombery):
+    """An argument annotated with `Context` receives it, whatever its name —
+    the same type-based injection used for secrets, not the reserved names."""
+
+    from plombery import Context
+
+    seen = []
+
+    app.start()
+
+    with Pipeline(id="typed_context") as pipeline:
+
+        @task
+        def only_task(whatever: Context):
+            seen.append(isinstance(whatever, Context))
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert seen == [True]

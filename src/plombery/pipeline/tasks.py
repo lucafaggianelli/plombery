@@ -10,7 +10,7 @@ from typing import (
     overload,
 )
 
-from pydantic import BaseModel, model_validator, Field
+from pydantic import BaseModel, PrivateAttr, model_validator, Field
 
 from ._utils import prettify_name
 
@@ -27,6 +27,48 @@ R = TypeVar("R")  # The return type of the user's function
 P = ParamSpec("P")  # The parameters of the task
 
 
+class OutputOfMarker(Generic[R]):
+    """Runtime marker left behind by `OutputOf`, in place of an actual default.
+
+    The executor reads `.task` off it to resolve the argument's value from
+    that specific upstream task's output, and `Pipeline` validation reads it
+    to check that the dependency was also declared with `>>`/`<<`. It's never
+    used as a value itself.
+    """
+
+    __slots__ = ("task",)
+
+    def __init__(self, task: "Task") -> None:
+        self.task = task
+
+    def __repr__(self) -> str:
+        return f"OutputOf({self.task.id})"
+
+
+def OutputOf(task: "Task[P, R]") -> R:
+    """Bind a task argument to a specific upstream task's output.
+
+    Use it when the argument name shouldn't have to match the upstream task's
+    id, which is otherwise how an argument is resolved:
+
+        @task
+        def fetch_data() -> list[dict]: ...
+
+        @task
+        def process(data: list[dict] = OutputOf(fetch_data)): ...
+
+    Declared to statically return `R`, the return type of `task`, so a type
+    checker flags a mismatch between the argument's own annotation and what
+    `task` actually returns. At runtime this returns a marker instead, read by
+    the executor rather than ever being the parameter's real default value.
+
+    This only binds the data: the dependency itself still has to be declared
+    with `>>` or `<<`, and `Pipeline` rejects a pipeline where the two disagree.
+    """
+
+    return OutputOfMarker(task)  # type: ignore[return-value]
+
+
 class Task(BaseModel, Generic[P, R]):
     id: str
     run: Callable = Field(
@@ -35,8 +77,21 @@ class Task(BaseModel, Generic[P, R]):
     name: Optional[str] = None
     description: Optional[str] = None
 
+    # Purely a display/serialization cache — the DAG viewer reads these off
+    # the API response. A `Pipeline` overwrites them, scoped to itself,
+    # whenever it adopts this task; nothing else should ever read them, since
+    # after a second pipeline reuses this object they only reflect whichever
+    # pipeline touched it last.
     downstream_task_ids: set["str"] = set()
     upstream_task_ids: set[str] = set()
+
+    # Edges recorded by `>>`/`<<` before any `Pipeline` exists to claim them
+    # (the flat `register_pipeline` form, where wiring happens before the
+    # `Pipeline(tasks=[...])` call). Private: a `Pipeline` drains these once,
+    # the first time it adopts this task, and never again — which is what
+    # keeps the task safe to wire into a second pipeline afterwards.
+    _pending_upstream_ids: set[str] = PrivateAttr(default_factory=set)
+    _pending_downstream_ids: set[str] = PrivateAttr(default_factory=set)
 
     mapping_mode: Optional[MappingMode] = None
     # The Task ID that provides the list/map item. Required for all non-None modes.
@@ -51,7 +106,13 @@ class Task(BaseModel, Generic[P, R]):
 
         return data
 
-    def validate_mapping(self):
+    def validate_mapping(self, upstream_ids: set[str]) -> None:
+        """Checks the mapping configuration against `upstream_ids`, the ids
+        of this task's dependencies *in one specific pipeline* — passed in
+        rather than read off this object, since the same task can be wired
+        differently in another pipeline.
+        """
+
         # Check for required map_upstream_id when mapping_mode is active
         if self.mapping_mode and not self.map_upstream_id:
             raise ValueError(
@@ -59,12 +120,10 @@ class Task(BaseModel, Generic[P, R]):
             )
 
         # Ensure map_upstream_id is actually an upstream dependency
-        if self.map_upstream_id and self.map_upstream_id not in self.upstream_task_ids:
+        if self.map_upstream_id and self.map_upstream_id not in upstream_ids:
             raise ValueError(
                 f"Task {self.id} 'map_upstream_id' must be in 'upstream_task_ids'."
             )
-
-        return self
 
     @model_validator(mode="after")
     def add_task_to_pipeline(self):
@@ -97,8 +156,28 @@ class Task(BaseModel, Generic[P, R]):
 
     def _set_downstream(self, task: "Task"):
         # A runs before B: A is UPSTREAM of B; B is DOWNSTREAM of A
-        self.downstream_task_ids.add(task.id)
-        task.upstream_task_ids.add(self.id)
+        from .context import pipeline_context
+
+        pipeline = pipeline_context.get(None)
+
+        if pipeline:
+            # Record the edge on the pipeline, never on the tasks themselves:
+            # a `Task` is a reusable definition, and mutating it here would
+            # leak this pipeline's edges into whichever other pipeline reuses
+            # the same object. `add_task` also mirrors the edge back onto
+            # `upstream_task_ids`/`downstream_task_ids` for display (the
+            # DAG viewer reads them from the API), scoped to this pipeline.
+            pipeline.add_edge(self.id, task.id)
+            pipeline.add_task(self)
+            pipeline.add_task(task)
+        else:
+            # No pipeline exists yet: this is the flat `register_pipeline`
+            # form, where `>>` runs before any `Pipeline` is constructed.
+            # Stash the edge on the pending, private fields; `Pipeline.
+            # add_task` drains them once it adopts the task, so the objects
+            # are safe to wire into a different pipeline afterwards.
+            self._pending_downstream_ids.add(task.id)
+            task._pending_upstream_ids.add(self.id)
 
     # Optional: Implement the reverse operator << (left shift) via __lshift__
     def __lshift__(self, other):

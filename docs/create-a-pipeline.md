@@ -1,17 +1,18 @@
+---
+status: new
+---
+
 # Create your first pipeline
 
-Create a new folder in your project root with
-a file named `app.py` (or any name you want) in it,
-as in Python files should be in a top-level package.
-
-This should be your folder structure:
+Plombery discovers your pipelines from a `pipelines/` folder and runs them with
+the `plombery` command. A minimal project is just that folder with one file in
+it:
 
 ``` { .sh .no-copy }
 .
-├─ .venv/ # virtual environment folder
-└─ src/
-   ├─ __init__.py # empty file needed to declare Python modules
-   └─ app.py # entrypoint to the project
+├─ .venv/          # virtual environment folder
+└─ pipelines/
+   └─ sales.py     # a pipeline
 ```
 
 ## Glossary
@@ -19,108 +20,29 @@ This should be your folder structure:
 Before starting, let's define some naming so there will be no confusion!
 
 * **Task**: a python function that performs some job, it's the base block for building a pipeline
-* **Pipeline**: a sequence of 1 or more *Task*s, a pipeline can be run via a schedule, manually, etc.
+* **Pipeline**: a graph of one or more *Task*s, a pipeline can be run via a schedule, manually, etc.
 * **Trigger**: is the entrypoint to run a pipeline, a trigger can be a schedule, a webhook, a button on the web UI, etc.
 * **Pipeline Run**: (sometimes simply referred as *Run*) is the result of running a pipeline
 
-## Basic pipeline
+## Write a pipeline
 
-### Create a task
+Create `pipelines/sales.py`. A *Task* is a Python function decorated with
+`@task`, and a *Pipeline* groups the tasks defined inside its `with` block:
 
-A *Task* is the base block in Plombery and it's just a Python function that
-performs an action, i.e. download some data from an HTTP API, runs a query on a DB, etc.
-
-!!! info
-
-    notice how the `@task` decorator is used to declare a task
-
-```py title="src/app.py"
+```py title="pipelines/sales.py"
 from datetime import datetime
 from random import randint
 
-from apscheduler.triggers.interval import IntervalTrigger
-from plombery import task, get_logger, Trigger, register_pipeline
+from plombery import Pipeline, task, get_logger
 
 
-@task
-async def fetch_raw_sales_data():
-    """Fetch latest 50 sales of the day"""
-
-    # using Plombery logger your logs will be stored
-    # and accessible on the web UI
-    logger = get_logger()
-
-    logger.debug("Fetching sales data...")
-
-    sales = [
-        {
-            "price": randint(1, 1000),
-            "store_id": randint(1, 10),
-            "date": datetime.today(),
-            "sku": randint(1, 50),
-        }
-        for _ in range(50)
-    ]
-
-    logger.info("Fetched %s sales data rows", len(sales))
-
-    # Return the results of your task to have it stored
-    # and accessible on the web UI
-    # If you have other tasks, the output of a task is
-    # passed to the following one
-    return sales
-```
-
-### Create a pipeline
-
-A *Pipeline* contains a list of tasks and eventually a list of triggers,
-so in your `app.py` add this:
-
-```py title="src/app.py"
-register_pipeline(
-    id="sales_pipeline",
-    description="Aggregate sales activity from all stores across the country",
-    tasks = [fetch_raw_sales_data],
-    triggers = [
-        Trigger(
-            id="daily",
-            name="Daily",
-            description="Run the pipeline every day",
-            schedule=IntervalTrigger(days=1),
-        ),
-    ],
-)
-```
-
-Finally add this at the bottom of your file to start the app:
-
-```py title="src/app.py"
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run("plombery:get_app", reload=True, factory=True)
-```
-
-Now your `src/app.py` should look like this:
-
-??? Example "Click to see the full content of src/app.py"
-
-    ```py title="src/app.py"
-    from datetime import datetime
-    from random import randint
-
-    from apscheduler.triggers.interval import IntervalTrigger
-    from plombery import task, get_logger, Trigger, register_pipeline
-
-
+with Pipeline(id="sales_pipeline") as pipeline:
     @task
     async def fetch_raw_sales_data():
         """Fetch latest 50 sales of the day"""
 
-        # using Plombery logger your logs will be stored
-        # and accessible on the web UI
+        # Using Plombery's logger, your logs are stored and shown in the web UI
         logger = get_logger()
-
         logger.debug("Fetching sales data...")
 
         sales = [
@@ -135,42 +57,84 @@ Now your `src/app.py` should look like this:
 
         logger.info("Fetched %s sales data rows", len(sales))
 
-        # Return the results of your task to have it stored
-        # and accessible on the web UI
+        # Returning a value stores it and makes it available in the web UI;
+        # it's also passed to any task downstream of this one
         return sales
-
-
-    register_pipeline(
-        id="sales_pipeline",
-        description="Aggregate sales activity from all stores across the country",
-        tasks=[fetch_raw_sales_data],
-        triggers=[
-            Trigger(
-                id="daily",
-                name="Daily",
-                description="Run the pipeline every day",
-                schedule=IntervalTrigger(days=1),
-            ),
-        ],
-    )
-
-    if __name__ == "__main__":
-        import uvicorn
-
-        uvicorn.run("plombery:get_app", reload=True, factory=True)
-
-    ```
-
-### Run the app
-
-Plombery is based on FastAPI so you can run it as a normal FastAPI app
-via `uvicorn` (as in this example) or another ASGI web server.
-
-So install `uvicorn` and run the app:
-
-```sh
-pip install uvicorn
-python src/app.py
 ```
 
-Now open the page [http://localhost:8000](http://localhost:8000){target=_blank} in your browser and enjoy!
+Every task defined inside the `with Pipeline()` block is added to the pipeline
+automatically, and the pipeline registers itself with Plombery when the block
+ends — importing the file is all it takes. See [Pipelines](pipelines.md) for
+how to add more tasks and declare dependencies between them with `>>`.
+
+## Run it
+
+```sh
+plombery run
+```
+
+`plombery run` imports every file in the `pipelines/` folder, so each
+`register_pipeline` runs, and serves the web app. Open
+[http://localhost:8000](http://localhost:8000){target=_blank} and you'll find
+your pipeline, ready to run manually.
+
+By default it looks for a `pipelines/` folder in the current directory and
+binds to `127.0.0.1:8000`. Change any of that:
+
+```sh
+plombery run --pipelines flows --host 0.0.0.0 --port 9000
+```
+
+## Schedule it
+
+A pipeline with no trigger can be run manually from the web UI or its HTTP
+endpoint. To have Plombery run it on a schedule, add a `Trigger`:
+
+```py title="pipelines/sales.py"
+from apscheduler.triggers.interval import IntervalTrigger
+from plombery import Pipeline, Trigger, task
+
+
+with Pipeline(
+    id="sales_pipeline",
+    description="Aggregate sales activity from all stores across the country",
+    triggers=[
+        Trigger(
+            id="daily",
+            name="Daily",
+            description="Run the pipeline every day",
+            schedule=IntervalTrigger(days=1),
+        ),
+    ],
+) as pipeline:
+    @task
+    async def fetch_raw_sales_data():
+        ...
+```
+
+See [Triggers](triggers.md) for cron schedules and triggers with parameters.
+
+## Without the CLI
+
+`plombery run` is the quickest way to start, but Plombery is a FastAPI app, so
+you can also run it yourself — useful to embed it in a larger app, or to use a
+different ASGI server. Import your pipelines, expose the app with `get_app()`,
+and serve it:
+
+```py title="app.py"
+from plombery import get_app
+
+# import the modules that register pipelines
+import pipelines.sales  # noqa: F401
+
+app = get_app()
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app)
+```
+
+```sh
+python app.py
+```

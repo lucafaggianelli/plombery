@@ -20,6 +20,7 @@ dependencies = [
   "alembic>=1.16.5",
   "apprise>=1.8.0",
   "authlib==1.8.0",
+  "click>=8.1.0",
   "fastapi>=0.115.8",
   "httpx>=0.25.0",
   "itsdangerous>=2.1.2",
@@ -32,6 +33,9 @@ dependencies = [
   "uuid6>=2025.0.1",
 ]
 dynamic = ["version"]
+
+[project.scripts]
+plombery = "plombery.cli:main"
 
 [dependency-groups]
 dev = [

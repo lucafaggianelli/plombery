@@ -1,5 +1,6 @@
 from typing import Any, Collection, Dict, Optional, Tuple
 from datetime import datetime, timedelta
+import logging
 
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.job import Job
@@ -34,6 +35,9 @@ from plombery.utils import utcnow
 from plombery.websocket import sio
 
 
+_logger = logging.getLogger(__name__)
+
+
 class _Orchestrator:
     _all_pipelines: Dict[str, Pipeline] = {}
     _all_triggers: Dict[str, Tuple[Pipeline, Trigger]] = {}
@@ -42,8 +46,17 @@ class _Orchestrator:
         self.scheduler = AsyncIOScheduler()
 
     def register_pipeline(self, pipeline: Pipeline):
-        if pipeline.id in self._all_pipelines:
-            print(f"Pipeline {pipeline.id} already registered")
+        already_registered = self._all_pipelines.get(pipeline.id)
+        if already_registered is not None:
+            # The same pipeline registering again is a no-op — it happens
+            # whenever a `with Pipeline()` block (which registers itself on
+            # exit) is also passed to `register_pipeline` explicitly.
+            if already_registered is not pipeline:
+                _logger.warning(
+                    "A different pipeline with id '%s' is already registered; "
+                    "keeping the first one. Pipeline ids must be unique.",
+                    pipeline.id,
+                )
             return
 
         self._all_pipelines[pipeline.id] = pipeline
@@ -100,7 +113,9 @@ class _Orchestrator:
         """
 
         # Find tasks with no dependencies (DAG entry points)
-        initial_tasks = [task for task in pipeline.tasks if not task.upstream_task_ids]
+        initial_tasks = [
+            task for task in pipeline.tasks if not pipeline.upstream_of(task.id)
+        ]
 
         if not initial_tasks:
             # Nothing will ever be scheduled, so nothing will ever report a
@@ -179,7 +194,7 @@ class _Orchestrator:
         downstream_task_ids = [
             task.id
             for task in pipeline.tasks
-            if task_run.task_id in task.upstream_task_ids
+            if task_run.task_id in pipeline.upstream_of(task.id)
         ]
 
         skipped_tasks: list[Task] = []
@@ -255,7 +270,7 @@ class _Orchestrator:
 
             # Check if ALL upstream tasks for the downstream task are complete
             elif self._are_upstream_tasks_complete(
-                task_run.pipeline_run_id, downstream_task
+                pipeline, task_run.pipeline_run_id, downstream_task
             ):
                 self._schedule_task_instance(
                     pipeline,
@@ -336,19 +351,20 @@ class _Orchestrator:
 
         on_pipeline_status_changed(pipeline, task_run.pipeline_run, status)
 
-    def _are_upstream_tasks_complete(self, pipeline_run_id: int, task: Task) -> bool:
+    def _are_upstream_tasks_complete(
+        self, pipeline: Pipeline, pipeline_run_id: int, task: Task
+    ) -> bool:
         """Verifies all dependencies are met."""
-        finished_tasks = get_finished_tasks_ids(
-            pipeline_run_id,
-            task.upstream_task_ids,
-        )
+        upstream_ids = pipeline.upstream_of(task.id)
 
-        ready = len(finished_tasks) == len(task.upstream_task_ids)
+        finished_tasks = get_finished_tasks_ids(pipeline_run_id, upstream_ids)
+
+        ready = len(finished_tasks) == len(upstream_ids)
 
         if not ready:
             print(
                 f"Upstream tasks of {task.id} not ready because",
-                set(task.upstream_task_ids) - finished_tasks,
+                upstream_ids - finished_tasks,
             )
 
         return ready
@@ -440,16 +456,14 @@ orchestrator = _Orchestrator()
 def get_downstream_task_ids(task_id: str, pipeline: Pipeline):
     """Given a task ID it finds all downstream tasks at any level in a pipeline"""
 
-    task = pipeline.get_task_by_id(task_id)
-    if not task:
+    if not pipeline.get_task_by_id(task_id):
         raise ValueError(f"Task {task_id} not found")
 
-    downstream_tasks = task.downstream_task_ids.copy()
+    direct_downstream = pipeline.downstream_of(task_id)
+    downstream_tasks = direct_downstream.copy()
 
-    for ds_task in task.downstream_task_ids:
-        downstream_tasks = downstream_tasks.union(
-            get_downstream_task_ids(ds_task, pipeline)
-        )
+    for ds_task_id in direct_downstream:
+        downstream_tasks |= get_downstream_task_ids(ds_task_id, pipeline)
 
     return downstream_tasks
 
