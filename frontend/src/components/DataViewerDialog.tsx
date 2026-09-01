@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 
 import { getApiUrl, getRunData, getRunDataUrl } from '@/repository'
+import DataTable from './DataTable'
 import Dialog from './Dialog'
 
 interface Props {
@@ -13,7 +14,6 @@ interface Props {
   onClose: () => any
 }
 
-const HotTable = React.lazy(() => import('./HandsonTable.js'))
 const ReactJson = React.lazy(() => import('@microlink/react-json-view'))
 
 const JsonComponent: React.FC<{ data: any }> = ({ data }) => {
@@ -46,19 +46,8 @@ const PrimitiveComponent: React.FC<{ data: any }> = ({ data }) => {
 }
 
 const DataViewer: React.FC<{ data: any }> = ({ data }) => {
-  if (Array.isArray(data) && typeof data[0] === 'object') {
-    return (
-      <Suspense fallback={<div>Loading table UI...</div>}>
-        <HotTable
-          data={data}
-          rowHeaders={true}
-          colHeaders={Object.keys(data[0])}
-          height="70vh"
-          width="700px"
-          licenseKey="non-commercial-and-evaluation"
-        />
-      </Suspense>
-    )
+  if (Array.isArray(data) && typeof data[0] === 'object' && data[0] !== null) {
+    return <DataTable data={data} />
   } else if (typeof data === 'object' && data !== null) {
     return <JsonComponent data={data} />
   } else {

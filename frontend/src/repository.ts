@@ -1,5 +1,5 @@
 import { UseMutationOptions, UseQueryOptions } from '@tanstack/react-query'
-import ky, { HTTPError, Options } from 'ky'
+import ky, { HTTPError, isHTTPError, Options } from 'ky'
 
 import { LogEntry, Pipeline, PipelineRun, WhoamiResponse } from './types'
 import { JSONSchema7 } from 'json-schema'
@@ -39,7 +39,7 @@ const DEFAULT_BASE_URL = import.meta.env.DEV
 const BASE_URL: string = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 
 const client = ky.create({
-  prefixUrl: BASE_URL,
+  prefix: BASE_URL,
   credentials: 'include',
   redirect: 'follow',
 })
@@ -66,12 +66,17 @@ const post = async <ResponseType = any>(
   try {
     return await client.post(url, request).json<ResponseType>()
   } catch (e) {
-    const error = e as HTTPError
+    // A network or timeout error never carries a response to unwrap
+    if (!isHTTPError(e)) {
+      throw e
+    }
 
+    // ky reads the body to build the error, so it is only available
+    // pre-parsed on the error itself
     throw new PlomberyHttpError(
-      error.message,
-      error.response.status,
-      await error.response.json()
+      e.message,
+      e.response.status,
+      e.data as AllErrors
     )
   }
 }
