@@ -28,8 +28,12 @@ Options available
 
 *from v0.5.0*
 
-Provider is `generic`
-See dedicated pages for others providers on how to configure them.
+Set it to `generic` for an OAuth provider that Plombery has no preset for.
+Omitting it entirely is equivalent: the endpoints are then taken from the
+options below exactly as they are configured.
+
+For a pre-configured provider, set it to the provider's name and see its
+dedicated page.
 
 ### `client_id`
 

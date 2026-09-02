@@ -20,6 +20,22 @@ are decoupled from the configuration file that is normally versioned in git,
 you can modify the name of those variables as long as they match the names used in the `plombery.config.yaml`:
 
 ```env title=".env"
-GOOGLE_TENANT_ID=""
 GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+```
+
+## Scope
+
+The preset requests the `openid email profile` scope, which is what Plombery
+needs to identify the signed-in user. To request more, set `client_kwargs`
+alongside the provider — it replaces the preset's scope, so list every scope
+needed:
+
+```yaml title="plombery.config.yaml"
+auth:
+  provider: google
+  client_id: $GOOGLE_CLIENT_ID
+  client_secret: $GOOGLE_CLIENT_SECRET
+  client_kwargs:
+    scope: openid email profile https://www.googleapis.com/auth/drive.readonly
 ```

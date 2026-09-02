@@ -99,7 +99,7 @@ export const logout = async () => {
 }
 
 export const getAuthProviders = (): UseQueryOptions<
-  { id: string; name: string; redirect_uri: string }[],
+  { id: string; name: string; redirect_url: string }[],
   HTTPError
 > => ({
   queryKey: ['auth-providers'],

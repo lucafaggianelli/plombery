@@ -49,8 +49,11 @@ class TaskOutputData(BaseModel):
 
     id: str
     data: Any
-    mimetype: Optional[str]
+    mimetype: Optional[str] = None
+    encoding: Optional[str] = None
     size: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TaskRun(BaseModel):

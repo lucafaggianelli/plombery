@@ -33,6 +33,22 @@ MICROSOFT_CLIENT_ID=""
 MICROSOFT_CLIENT_SECRET=""
 ```
 
+## Scope
+
+The preset requests the `openid email profile` scope, which is what Plombery
+needs to identify the signed-in user. To request more, set `client_kwargs`
+alongside the provider — it replaces the preset's scope, so list every scope
+needed:
+
+```yaml title="plombery.config.yaml"
+auth:
+  provider: microsoft
+  client_id: $MICROSOFT_CLIENT_ID
+  client_secret: $MICROSOFT_CLIENT_SECRET
+  client_kwargs:
+    scope: openid email profile User.Read
+```
+
 ## Tenant ID
 
 The `microsoft_tenant_id` config is optional and depends on how you registered your application in Azure.

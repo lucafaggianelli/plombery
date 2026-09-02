@@ -1,8 +1,12 @@
+from apscheduler.triggers.interval import IntervalTrigger
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
 import pytest
 
-from plombery import Pipeline, task, _Plombery as Plombery
+from plombery import Pipeline, Trigger, task, _Plombery as Plombery
 from plombery.api import app
+from plombery.api.routers.runs import get_run_data
 from plombery.database.schemas import PipelineRunWithTaskRuns
 from plombery.orchestrator import run_pipeline_now
 from plombery.pipeline.tasks import MappingMode
@@ -119,3 +123,63 @@ async def test_run_serializes_an_index_only_for_mapped_task_runs(app: Plombery):
 
     assert indexes["plain"] == [None]
     assert sorted(indexes["mapped"]) == [0, 1]
+
+
+@pytest.mark.asyncio
+async def test_api_serializes_the_params_of_a_trigger(app: Plombery):
+    """A trigger's params are serialized with the model the pipeline declared.
+
+    `Trigger.params` is annotated as a bare `BaseModel`, so without
+    `SerializeAsAny` pydantic serializes it with the base class' serializer and
+    every trigger answers an empty object, whatever it was configured with.
+    """
+
+    class Params(BaseModel):
+        n: int = 0
+        label: str = ""
+
+    # The scheduler has to be running before the trigger's job is added, as the
+    # route reads the job's next fire time and APScheduler only computes it
+    # once the job leaves the pending queue.
+    app.start()
+
+    with Pipeline(
+        id="with_trigger",
+        params=Params,
+        triggers=[
+            Trigger(
+                id="hourly",
+                name="Hourly",
+                schedule=IntervalTrigger(hours=1),
+                params=Params(n=7, label="from-trigger"),
+            )
+        ],
+    ) as pipeline:
+
+        @task
+        def noop(): ...
+
+    app.register_pipeline(pipeline)
+
+    response = client.get("/api/pipelines/with_trigger")
+
+    assert response.status_code == 200
+
+    trigger = response.json()["triggers"][0]
+    assert trigger["params"] == {"n": 7, "label": "from-trigger"}
+    assert trigger["schedule"] == "interval[1:00:00]"
+
+
+@pytest.mark.asyncio
+async def test_api_get_run_data_of_a_task_without_output(app: Plombery):
+    """A task run with no stored output is a 404, not a 200 with a null body:
+    the UI tells the two apart to show "The task has no data".
+
+    This calls the route directly rather than over HTTP, as the API runs in
+    another thread and the test database lives in memory, one per thread.
+    """
+
+    with pytest.raises(HTTPException) as exc_info:
+        get_run_data("not-an-output")
+
+    assert exc_info.value.status_code == 404
