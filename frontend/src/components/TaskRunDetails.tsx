@@ -1,4 +1,4 @@
-import { Button, Card, Metric, Title } from '@tremor/react'
+import { Button, Metric, Title } from '@tremor/react'
 import { TableCellsIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 
@@ -106,7 +106,7 @@ function InstancesList({
   onViewOutput: (run: TaskRun) => void
 }) {
   const sorted = [...runs].sort(
-    (a, b) => (a.map_index ?? 0) - (b.map_index ?? 0)
+    (a, b) => (a.map_index ?? 0) - (b.map_index ?? 0),
   )
 
   return (
@@ -183,7 +183,7 @@ export default function TaskRunDetails({
   )
 
   return (
-    <Card className="p-3 max-w-[350px] max-h-[460px] overflow-y-auto">
+    <>
       <DataViewerDialog
         runId={outputRun?.id || ''}
         taskId={outputRun?.task_output_id || ''}
@@ -286,6 +286,6 @@ export default function TaskRunDetails({
           {dependencies}
         </>
       )}
-    </Card>
+    </>
   )
 }

@@ -62,7 +62,7 @@ export function TaskNode({
         className={twMerge(
           'max-w-[250px] bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle cursor-pointer hover:dark:border-dark-tremor-background-emphasis hover:border-tremor-background-emphasis transition-colors',
           selected &&
-            'dark:border-dark-tremor-background-emphasis border-tremor-background-emphasis'
+            'dark:border-dark-tremor-background-emphasis border-tremor-background-emphasis',
         )}
       >
         <div className="flex gap-2 items-center">
@@ -88,14 +88,11 @@ export function TaskNode({
             position={Position.Left}
             className={twMerge(
               data.task.mapping_mode &&
-                '!size-5 flex items-center justify-center !-translate-x-full !-translate-y-1/2 text-tremor-content-inverted dark:text-dark-tremor-content-inverted'
+                '!size-5 flex items-center justify-center !-translate-x-full !-translate-y-1/2 text-tremor-content-inverted dark:text-dark-tremor-content-inverted',
             )}
           >
             {data.task.mapping_mode === 'fan_out' && (
-              <SplitIcon
-                className="size-3 rotate-90"
-                aria-label={mappingLabel}
-              >
+              <SplitIcon className="size-3 rotate-90" aria-label={mappingLabel}>
                 <title>{mappingLabel}</title>
               </SplitIcon>
             )}
@@ -144,7 +141,7 @@ export function TriggerNode({
       className={twMerge(
         'bg-tremor-background dark:bg-dark-tremor-background px-2 py-2 rounded-lg border dark:border-dark-tremor-background-subtle cursor-pointer hover:dark:border-dark-tremor-background-emphasis hover:border-tremor-background-emphasis transition-colors',
         selected &&
-          'dark:border-dark-tremor-background-emphasis border-tremor-background-emphasis'
+          'dark:border-dark-tremor-background-emphasis border-tremor-background-emphasis',
       )}
     >
       <div className="flex gap-2 items-center">{data.trigger.id}</div>
@@ -162,7 +159,7 @@ const nodeTypes = {
 const getLayoutedElements = (
   nodes: Node[],
   edges: Edge[],
-  options: { direction: 'TB' | 'LR' }
+  options: { direction: 'TB' | 'LR' },
 ) => {
   const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}))
   g.setGraph({ rankdir: options.direction })
@@ -173,7 +170,7 @@ const getLayoutedElements = (
       ...node,
       width: node.measured?.width ?? 0,
       height: node.measured?.height ?? 0,
-    })
+    }),
   )
 
   Dagre.layout(g)
@@ -218,7 +215,7 @@ export default function DagViewer({
             ? getTaskRunsStatus(groupedTaskRuns[task.id])
             : undefined,
         },
-      ])
+      ]),
     )
 
     const initialNodes: Node[] = pipeline.tasks.map((task) => ({
@@ -238,7 +235,7 @@ export default function DagViewer({
           ? !tasksMap[upstream]?.status ||
             ['running', 'pending'].includes(tasksMap[upstream]?.status)
           : false,
-      }))
+      })),
     )
 
     if (run) {
@@ -261,7 +258,7 @@ export default function DagViewer({
             source: TRIGGER_NODE_ID,
             target: task.id,
             animated: false,
-          })
+          }),
         )
     }
 
@@ -276,12 +273,6 @@ export default function DagViewer({
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
 
-  const fitViewOptions: FitViewOptions | undefined = run
-    ? {
-        padding: { right: '382px', left: '16px', y: '16px' },
-      }
-    : undefined
-
   return (
     <div style={{ width: '100%', height: '500px' }} className={className}>
       <ReactFlow
@@ -293,11 +284,10 @@ export default function DagViewer({
         multiSelectionKeyCode={null}
         nodeTypes={nodeTypes}
         fitView
-        fitViewOptions={fitViewOptions}
         colorMode={isDark ? 'dark' : 'light'}
       >
         <Background />
-        <Controls fitViewOptions={fitViewOptions} />
+        <Controls />
         <Panel position="top-right">{children}</Panel>
       </ReactFlow>
     </div>

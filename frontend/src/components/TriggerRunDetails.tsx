@@ -1,4 +1,4 @@
-import { Card, Title } from '@tremor/react'
+import { Title } from '@tremor/react'
 
 import { MANUAL_TRIGGER } from '@/constants'
 import { Pipeline, PipelineRun } from '@/types'
@@ -22,7 +22,7 @@ export default function TriggerRunDetails({ pipeline, run }: Props) {
   const inputParams = Object.entries(run.input_params ?? {})
 
   return (
-    <Card className="p-3 max-w-[350px] max-h-[460px] overflow-y-auto">
+    <>
       <header className="min-w-0">
         <Title className="truncate" title={trigger?.name ?? run.trigger_id}>
           {trigger?.name ?? run.trigger_id}
@@ -68,6 +68,6 @@ export default function TriggerRunDetails({ pipeline, run }: Props) {
           )}
         </div>
       </div>
-    </Card>
+    </>
   )
 }

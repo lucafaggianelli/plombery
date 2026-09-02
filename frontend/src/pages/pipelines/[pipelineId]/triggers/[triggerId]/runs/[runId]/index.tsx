@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { Card, Grid, Title } from '@tremor/react'
+import { Card, Title } from '@tremor/react'
+import { ReactFlowProvider } from '@xyflow/react'
 import { useParams } from 'react-router'
 import { useEffect } from 'react'
 
@@ -71,13 +72,21 @@ const RunViewPage = () => {
         </div>
       }
     >
-      <Grid numItemsMd={2} className="gap-6 mt-6">
-        <Card className="col-span-2 p-0">
-          <DagViewer pipeline={pipeline} run={run}>
-            <DagDetailsPanel pipeline={pipeline} run={run} />
-          </DagViewer>
-        </Card>
-      </Grid>
+      <Card className="p-0 mt-6">
+        <ReactFlowProvider>
+          <div className="grid md:grid-cols-4">
+            <DagViewer
+              pipeline={pipeline}
+              run={run}
+              className="md:col-span-3"
+            />
+
+            <div className="p-3 size-full border-l dark:border-dark-tremor-border">
+              <DagDetailsPanel pipeline={pipeline} run={run} />
+            </div>
+          </div>
+        </ReactFlowProvider>
+      </Card>
 
       <div className="mt-6">
         <Card className="p-0 overflow-hidden">

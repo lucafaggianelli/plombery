@@ -1,4 +1,4 @@
-import { Card, Metric, Title } from '@tremor/react'
+import { Metric, Title } from '@tremor/react'
 
 import StatusBadge from './StatusBadge'
 import TimeRange from './TimeRange'
@@ -30,7 +30,7 @@ export default function PipelineRunDetails({ pipeline, run }: Props) {
   const completedTaskRuns = taskStatusCounts.completed ?? 0
 
   return (
-    <Card className="p-3 max-w-[350px] max-h-[460px] overflow-y-auto">
+    <>
       <header className="flex items-start gap-4 justify-between">
         <div className="min-w-0">
           <Title className="truncate" title={pipeline.name}>
@@ -94,11 +94,12 @@ export default function PipelineRunDetails({ pipeline, run }: Props) {
               }
             >
               {run.pipeline_version}
-              {pipeline.version && run.pipeline_version !== pipeline.version && (
-                <span className="ml-2 text-xs text-amber-600 dark:text-amber-500">
-                  outdated
-                </span>
-              )}
+              {pipeline.version &&
+                run.pipeline_version !== pipeline.version && (
+                  <span className="ml-2 text-xs text-amber-600 dark:text-amber-500">
+                    outdated
+                  </span>
+                )}
             </p>
           </div>
         )}
@@ -107,6 +108,6 @@ export default function PipelineRunDetails({ pipeline, run }: Props) {
       <p className="mt-4 text-xs text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
         Select a node to see its details
       </p>
-    </Card>
+    </>
   )
 }
