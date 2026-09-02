@@ -41,7 +41,7 @@ dev = [
   "pytest_asyncio>=1.0.0",
   "pytest-env>=1.1.0",
 ]
-docs = ["mkdocs-material>=9.1,<9.7"]
+docs = ["mkdocs-material>=9.1,<9.8"]
 
 [tool.setuptools.dynamic]
 version = { attr = "plombery._version.__version__" }
