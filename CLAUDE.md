@@ -34,6 +34,16 @@ black .
 
 Tests automatically use an in-memory SQLite database (`DATABASE_URL=sqlite:///:memory:`) — no setup needed.
 
+### Python version and syntax
+
+The package supports **Python 3.10+** (`requires-python = ">=3.10,<3.15"` in `pyproject.toml`). Write code against 3.10 as the baseline: use every syntax feature available there, and none introduced later.
+
+- Built-in generics and PEP 604 unions instead of `typing` aliases: `str | None`, not `Optional[str]`; `int | str`, not `Union[int, str]`; `list[Task]` / `dict[str, Any]` / `tuple[int, ...]`, not `List` / `Dict` / `Tuple`.
+- `X | Y` works in `isinstance`/`issubclass` too: `isinstance(v, str | bytes)`.
+- Structural pattern matching (`match`/`case`), `zip(..., strict=...)` and parenthesized context managers are fine.
+- Still import from `typing` what has no builtin equivalent: `Any`, `Callable`, `TypeVar`, `Protocol`, `Annotated`, `TYPE_CHECKING`, `cast`, `Literal`.
+- Do **not** use 3.11+ features: `Self`, `LiteralString`, `assert_type`, `typing.Never`, `TypeVarTuple`/`Unpack` syntax, `enum.StrEnum`, `asyncio.TaskGroup`, `except*`, `tomllib`, `datetime.UTC` (use `timezone.utc`), or 3.12's `type` statement and PEP 695 generic syntax (`def f[T](...)`, `class C[T]`).
+
 ### Frontend (React/TypeScript)
 
 The frontend uses **pnpm** as the package manager.

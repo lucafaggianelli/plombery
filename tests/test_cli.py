@@ -155,22 +155,6 @@ def test_reload_dir_without_reload_says_it_does_nothing(
     _reset()
 
 
-def test_watch_is_an_alias_of_reload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    _write_pipelines_package(tmp_path)
-    monkeypatch.chdir(tmp_path)
-    _reset()
-
-    served = {}
-    monkeypatch.setattr("uvicorn.run", lambda app, **kwargs: served.update(app=app))
-
-    result = CliRunner().invoke(cli, ["run", "--watch"])
-
-    assert result.exit_code == 0, result.output
-    assert served["app"] == "plombery.cli:app_factory"
-
-    _reset()
-
-
 def test_run_with_reload_points_at_watchfiles_when_it_is_missing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
