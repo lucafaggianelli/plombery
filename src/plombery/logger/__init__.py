@@ -65,12 +65,33 @@ def get_logger() -> logging.LoggerAdapter:
 
 def close_logger(logger: logging.LoggerAdapter):
     """
-    Close all the resources and file descriptors opened by the logger.
+    Close all the resources and file descriptors opened by the logger,
+    including any sibling task-scoped loggers (named ``plombery.{run_id}-*``)
+    created by ``get_logger()`` from within task functions.
     Solves issue 491: https://github.com/lucafaggianelli/plombery/issues/491
 
     Args:
         logger (logging.LoggerAdapter): logger obtained with get_logger
     """
-    for handler in logger.logger.handlers:
+    # Snapshot handlers before iterating since removeHandler mutates the list.
+    for handler in list(logger.logger.handlers):
         logger.logger.removeHandler(handler)
         handler.close()
+
+    # Also close handlers on any task-scoped sibling loggers. get_logger()
+    # creates these as `plombery.{run_id}-{task.id}` (siblings, not children,
+    # to avoid double logging), so close_logger on the pipeline-level logger
+    # alone would leave their FileHandlers open — the leak in issue #491.
+    # Snapshot loggerDict items because we mutate it via `del` below.
+    prefix = logger.logger.name + "-"
+    for name, sibling in list(logging.Logger.manager.loggerDict.items()):
+        if not name.startswith(prefix):
+            continue
+        # PlaceHolder entries (no handlers attribute) can appear in loggerDict;
+        # skip them safely.
+        for handler in list(getattr(sibling, "handlers", []) or []):
+            sibling.removeHandler(handler)
+            handler.close()
+        # Drop the now-empty Logger object so loggerDict doesn't grow
+        # unboundedly on long-running instances.
+        del logging.Logger.manager.loggerDict[name]
