@@ -92,3 +92,14 @@ up as well.
 The URL of the frontend, by default is the same as the backend,
 change it if the frontend is served at a different URL, for example
 during the frontend development.
+
+## `pipeline_version`
+
+The [version](../pipelines.md#versioning) recorded on every run, for the
+pipelines that don't declare a `version` of their own.
+
+Set it to the revision the deployment was built from — as an environment
+variable, `PIPELINE_VERSION=$(git describe --tags --always)` — since an image
+ships without the git history Plombery would otherwise read the version from.
+
+When it's unset and there is no repository either, runs record no version.

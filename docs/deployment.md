@@ -99,8 +99,31 @@ ENV DATABASE_URL=sqlite:////data/plombery.db
 ENV DATA_PATH=/data
 VOLUME /data
 
+# the version recorded on every run
+ARG PIPELINE_VERSION
+ENV PIPELINE_VERSION=$PIPELINE_VERSION
+
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
+
+## Versioning the deployment
+
+Every run records the [version](pipelines.md#versioning) of the pipeline that
+produced it. Unless a pipeline sets its own, that version comes from the
+[`pipeline_version`](configuration/system.md#pipeline_version) setting, and a
+deployment is exactly where it has to be set: the git repository the version
+would otherwise be read from is not part of the image.
+
+Pass it from the build, where the repository is still available:
+
+```sh
+docker build --build-arg PIPELINE_VERSION=$(git describe --tags --always) .
+```
+
+In a CI pipeline the revision is already in the environment — `$GITHUB_SHA` on
+GitHub Actions, `$CI_COMMIT_SHA` on GitLab CI — and any string identifying the
+deployed code works just as well, a release number included. Without it, runs
+record no version.
 
 ## systemd
 

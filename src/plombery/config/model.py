@@ -69,6 +69,15 @@ class Settings(BaseSettings):
     database_auth_token: str | None = None
     frontend_url: AnyHttpUrl = AnyHttpUrl("http://localhost:8000")
     notifications: list[NotificationRule] | None = None
+    pipeline_version: str | None = Field(
+        default=None,
+        description=(
+            "The version recorded on every run, for the pipelines that don't "
+            "declare one of their own. Set it to the revision the deployment "
+            "was built from: an image ships without the git history Plombery "
+            "would otherwise read the version from."
+        ),
+    )
 
     model_config = SettingsConfigDict(
         env_file=BASE_SETTINGS_FOLDER / ".env",

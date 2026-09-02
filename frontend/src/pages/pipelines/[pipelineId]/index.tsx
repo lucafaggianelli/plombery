@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Card, Title, Col, Text, Flex, Grid } from '@tremor/react'
+import { Card, Title, Col, Text, Flex, Grid, Badge } from '@tremor/react'
 import { useParams } from 'react-router'
 import React from 'react'
 
@@ -15,6 +15,7 @@ import DagViewer from '@/components/DagViewer'
 import PipelineIssues, {
   PipelineRunnableBadge,
 } from '@/components/PipelineIssues'
+import { TagIcon } from 'lucide-react'
 
 const PipelineView: React.FC = () => {
   const urlParams = useParams()
@@ -35,10 +36,17 @@ const PipelineView: React.FC = () => {
         <div>
           <Flex className="items-start">
             <Flex className="justify-start items-start md:items-center flex-col md:flex-row min-w-0">
-              <Title className="truncate max-w-full flex items-center gap-x-2">
-                Pipeline {pipeline.name}
-                <PipelineRunnableBadge pipeline={pipeline} />
-              </Title>
+              <div>
+                <Title className="truncate max-w-full flex items-center gap-x-2">
+                  Pipeline {pipeline.name}
+                  <PipelineRunnableBadge pipeline={pipeline} />
+                  {pipeline.version && (
+                    <Badge icon={TagIcon} size="xs" color="gray">
+                      {pipeline.version}
+                    </Badge>
+                  )}
+                </Title>
+              </div>
               {pipeline.description && (
                 <Text className="truncate max-w-full">
                   <span className="hidden md:inline mx-2">&middot;</span>

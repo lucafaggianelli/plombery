@@ -166,7 +166,7 @@ async def test_the_run_records_the_pipeline_version(app: Plombery):
 
 
 @pytest.mark.asyncio
-async def test_an_explicit_version_wins_over_the_computed_one(app: Plombery):
+async def test_an_explicit_version_is_recorded_as_is(app: Plombery):
     app.start()
 
     with Pipeline(id="explicit-version", version="v2.1.0") as pipeline:
@@ -180,34 +180,3 @@ async def test_an_explicit_version_wins_over_the_computed_one(app: Plombery):
     run = await wait_for_run((await run_pipeline_now(pipeline)).id, timeout=5)
 
     assert run.pipeline_version == "v2.1.0"
-
-
-def test_the_computed_version_tracks_the_shape_of_the_graph():
-    """The hash has to change when the graph does, and only then."""
-
-    def build(with_extra_dependency: bool) -> Pipeline:
-        pipeline = Pipeline(id="shape")
-
-        with pipeline:
-
-            @task
-            def a():
-                return 1
-
-            @task
-            def b(a):
-                return 2
-
-            @task
-            def c():
-                return 3
-
-            a >> b
-
-            if with_extra_dependency:
-                c >> b
-
-        return pipeline
-
-    assert build(False).get_version() == build(False).get_version()
-    assert build(False).get_version() != build(True).get_version()

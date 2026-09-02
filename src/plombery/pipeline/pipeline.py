@@ -1,7 +1,6 @@
-import hashlib
 import inspect
-import json
-from typing import Any, Optional, Type
+from pathlib import Path
+from typing import Any
 
 from pydantic import (
     BaseModel,
@@ -13,19 +12,21 @@ from pydantic import (
     model_validator,
 )
 
+from plombery.config import settings
 from plombery.orchestrator.dag import is_graph_acyclic
 from plombery.schemas import PipelineIssue
 from .tasks import OutputOfMarker, Task
 from .trigger import Trigger
 from ._utils import prettify_name
+from .versioning import get_version_from_git
 
 
 class Pipeline(BaseModel):
     id: str
     tasks: list[Task] = Field(default_factory=list)
-    name: Optional[str] = None
-    description: Optional[str] = None
-    params: Optional[Type[BaseModel]] = Field(exclude=True, default=None)
+    name: str | None = None
+    description: str | None = None
+    params: type[BaseModel] | None = Field(exclude=True, default=None)
     triggers: list[Trigger] = Field(default_factory=list)
     fail_fast: bool = Field(
         default=True,
@@ -37,14 +38,14 @@ class Pipeline(BaseModel):
             "cancelled. Either way the run finishes as failed."
         ),
     )
-    version: Optional[str] = Field(
+    version: str | None = Field(
         default=None,
         description=(
             "Identifies the definition this pipeline was run with, so that a "
             "run made before a change can be told from one made after. Set it "
-            "to a git commit SHA, a release number or anything meaningful for "
-            "the project; when left empty a hash of the graph is computed, "
-            "which changes whenever tasks or dependencies do."
+            "to a release number or anything meaningful for the project; when "
+            "left empty it is taken from the `pipeline_version` setting, or "
+            "from the git repository the pipeline is defined in."
         ),
     )
     auto_register: bool = Field(
@@ -261,8 +262,8 @@ class Pipeline(BaseModel):
             orchestrator.register_pipeline(self)
 
     @field_serializer("version")
-    def _serialize_version(self, version: Optional[str]) -> str:
-        """Always expose the effective version, computing it when unset.
+    def _serialize_version(self, version: str | None) -> str | None:
+        """Always expose the effective version, resolving it when unset.
 
         The stored field stays empty so that it is clear the project didn't
         pick a version itself, but a client comparing a run against the current
@@ -271,29 +272,42 @@ class Pipeline(BaseModel):
 
         return version or self.get_version()
 
-    def get_version(self) -> str:
+    def get_version(self) -> str | None:
         """The version this pipeline is currently running.
 
-        An explicit `version` wins, so a project can record its own git SHA or
-        release number. Otherwise a short hash of the graph is derived from the
-        task IDs, their dependencies and their mapping: it changes exactly when
-        the shape of the pipeline does, which is what makes it possible to tell
-        whether two runs executed the same definition.
+        The first of these that yields a value wins:
+
+        1. the pipeline's own `version`, when the project sets one;
+        2. the `pipeline_version` setting, which versions every pipeline of a
+           deployment at once — a container image usually ships without the
+           git history that produced it, so this is what a deployment sets,
+           from its build;
+        3. the revision of the git repository the pipeline is defined in, as
+           `git describe --tags --always --dirty` reports it.
+
+        `None` when none of them answers: nothing else identifies the code a
+        run executed. The shape of the graph doesn't, in particular — a task
+        can be rewritten from top to bottom without a single edge moving.
         """
 
-        if self.version:
-            return self.version
+        return (
+            self.version
+            or settings.pipeline_version
+            or get_version_from_git(self._get_source_directory())
+        )
 
-        shape = [
-            (
-                task.id,
-                sorted(self.upstream_of(task.id)),
-                task.mapping_mode.value if task.mapping_mode else None,
-                task.map_upstream_id,
-            )
-            for task in sorted(self.tasks, key=lambda task: task.id)
-        ]
+    def _get_source_directory(self) -> str:
+        """The folder to look for a git repository in.
 
-        digest = hashlib.sha256(json.dumps(shape, default=str).encode())
+        Pipelines aren't necessarily defined under the working directory, so
+        the file defining the first task is a better place to start than
+        `Path.cwd()`, which only serves a pipeline with no task at all.
+        """
 
-        return digest.hexdigest()[:12]
+        for task in self.tasks:
+            try:
+                return str(Path(inspect.getfile(task.run)).parent)
+            except TypeError:
+                continue
+
+        return str(Path.cwd())

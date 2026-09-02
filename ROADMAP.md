@@ -11,6 +11,8 @@ on its own — nothing here is blocked on a phase after it.
   when one branch fails.
 - Retention policy for run history and log files.
 - Pipeline versioning (`Pipeline.get_version()`), recorded on every run.
+  Resolved from the pipeline's own `version`, the `pipeline_version`
+  setting or the git repository the pipeline is defined in.
 - `register_pipeline` accepts a `Pipeline` built with the context manager, not
   only the flat `id`/`tasks`/... form.
 - A task can be defined outside a `with Pipeline()` block and only wired

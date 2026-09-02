@@ -265,3 +265,39 @@ The input form in the dialog is created automatically thanks to the Pydantic's
 
 Parameters are configurable also when you run a pipeline via the HTTP trigger,
 just pass the parameters as JSON body in the HTTP request.
+
+## Versioning
+
+Every run records the version of the pipeline that produced it, so that a run
+made before a change can be told from one made after.
+
+Set it explicitly when the project has a version of its own:
+
+```py
+from plombery import Pipeline, task
+
+
+with Pipeline(id="sales_pipeline", version="2.4.0") as pipeline:
+    @task
+    def get_sales_data():
+        return [1, 2, 3]
+```
+
+When it isn't set, Plombery resolves it on its own, taking the first of these
+that has an answer:
+
+1. the [`pipeline_version`](configuration/system.md#pipeline_version) setting,
+   which versions every pipeline of a deployment at once;
+2. the revision of the git repository the pipeline is defined in, as reported
+   by `git describe --tags --always --dirty` — `v1.2.0-3-gab1c2d3`, or
+   `ab1c2d3-dirty` when the working tree has uncommitted changes.
+
+Git covers development, where the repository is right there. A deployment
+usually has none: an image is built by copying the sources without their
+history, and a pipeline installed as a package has no repository at all. Set
+`pipeline_version` from the build for those, see
+[deployment](deployment.md#versioning-the-deployment).
+
+When neither answers, runs record no version at all: nothing else identifies
+the code that was executed, the graph least of all — a task can be rewritten
+from top to bottom without a single dependency moving.

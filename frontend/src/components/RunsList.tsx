@@ -65,7 +65,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
         })
       }
     },
-    [pipelineId, queryClient, runs, triggerId]
+    [pipelineId, queryClient, runs, triggerId],
   )
 
   useEffect(() => {
@@ -97,6 +97,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
             {!triggerId && <TableHeaderCell>Trigger</TableHeaderCell>}
             <TableHeaderCell>Started at</TableHeaderCell>
             <TableHeaderCell className="text-right">Duration</TableHeaderCell>
+            <TableHeaderCell>Version</TableHeaderCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -106,7 +107,7 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
               className="cursor-pointer hover:bg-slate-50 dark:hover:bg-dark-tremor-background-subtle transition-colors"
               onClick={() =>
                 navigate(
-                  `/pipelines/${run.pipeline_id}/triggers/${run.trigger_id}/runs/${run.id}`
+                  `/pipelines/${run.pipeline_id}/triggers/${run.trigger_id}/runs/${run.id}`,
                 )
               }
             >
@@ -165,6 +166,14 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
                   '-'
                 )}{' '}
                 s
+              </TableCell>
+
+              <TableCell>
+                {run.pipeline_version && (
+                  <Text className="text-xs font-mono text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
+                    {run.pipeline_version}
+                  </Text>
+                )}
               </TableCell>
             </TableRow>
           ))}
