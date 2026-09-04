@@ -5,6 +5,7 @@ on:
       - main
     paths:
       - docs/**
+      - .github/workflows/docs.yaml
 
 permissions:
   contents: write
