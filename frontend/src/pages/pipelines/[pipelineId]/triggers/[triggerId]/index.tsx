@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery, useMutation } from '@tanstack/react-query'
 import {
   Card,
   Title,
@@ -35,7 +35,7 @@ const TriggerView: React.FC = () => {
 
   const pipelineQuery = useQuery(getPipeline(pipelineId))
 
-  const runsQuery = useQuery({
+  const runsQuery = useInfiniteQuery({
     ...listRuns(pipelineId, triggerId),
     enabled: !!triggerId,
   })

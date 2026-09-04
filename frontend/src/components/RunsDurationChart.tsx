@@ -1,13 +1,11 @@
 import { AreaChart, Card, Flex, Metric, Text } from '@tremor/react'
-import { UseQueryResult } from '@tanstack/react-query'
-import { HTTPError } from 'ky'
 
-import { PipelineRun } from '../types'
+import { RunsQuery } from '../repository'
 import ErrorAlert from './queries/Error'
 import { ChartLoader, MetricLoader } from './queries/Loaders'
 
 interface Props {
-  query: UseQueryResult<PipelineRun[], HTTPError>
+  query: RunsQuery
 }
 
 const dataFormatter = (number: number) => (number / 1000).toFixed(1) + ' s'

@@ -1,4 +1,11 @@
-import { UseMutationOptions, UseQueryOptions } from '@tanstack/react-query'
+import {
+  InfiniteData,
+  QueryKey,
+  UseInfiniteQueryOptions,
+  UseInfiniteQueryResult,
+  UseMutationOptions,
+  UseQueryOptions,
+} from '@tanstack/react-query'
 import ky, { HTTPError, isHTTPError, Options } from 'ky'
 
 import { LogEntry, Pipeline, PipelineRun, WhoamiResponse } from './types'
@@ -51,7 +58,7 @@ export const getApiUrl = (): string => BASE_URL
  */
 const get = async <ResponseType = any>(
   url: string,
-  request?: Omit<Options, 'method'>
+  request?: Omit<Options, 'method'>,
 ): Promise<ResponseType> => {
   return (await client.get(url, request)).json<ResponseType>()
 }
@@ -61,7 +68,7 @@ const get = async <ResponseType = any>(
  */
 const post = async <ResponseType = any>(
   url: string,
-  request?: Options
+  request?: Options,
 ): Promise<ResponseType> => {
   try {
     return await client.post(url, request).json<ResponseType>()
@@ -76,7 +83,7 @@ const post = async <ResponseType = any>(
     throw new PlomberyHttpError(
       e.message,
       e.response.status,
-      e.data as AllErrors
+      e.data as AllErrors,
     )
   }
 }
@@ -135,15 +142,15 @@ export const listPipelines = (): UseQueryOptions<Pipeline[], HTTPError> => ({
           pipeline.triggers,
           pipeline.version,
           pipeline.issues,
-          pipeline.runnable
-        )
+          pipeline.runnable,
+        ),
     )
   },
   initialData: [],
 })
 
 export const getPipeline = (
-  pipelineId: string
+  pipelineId: string,
 ): UseQueryOptions<Pipeline, HTTPError> => ({
   queryKey: ['pipeline', pipelineId],
   queryFn: async () => {
@@ -163,7 +170,7 @@ export const getPipeline = (
       pipeline.triggers,
       pipeline.version,
       pipeline.issues,
-      pipeline.runnable
+      pipeline.runnable,
     )
   },
   initialData: new Pipeline('', '', '', [], []),
@@ -171,7 +178,7 @@ export const getPipeline = (
 })
 
 export const getPipelineInputSchema = (
-  pipelineId: string
+  pipelineId: string,
 ): UseQueryOptions<JSONSchema7, HTTPError> => ({
   queryKey: ['pipeline-input', pipelineId],
   queryFn: async () => {
@@ -183,19 +190,49 @@ export const getPipelineInputSchema = (
  * Runs
  */
 
+/**
+ * How many runs are asked for at a time: a page shorter than this is what
+ * tells the list it reached the oldest run.
+ */
+export const RUNS_PAGE_SIZE = 30
+
+/** The pages of runs as react-query caches them */
+export type RunsPages = InfiniteData<PipelineRun[], number | undefined>
+
+/** The cache key of a runs list, shared by its query and its live updates */
+export const runsQueryKey = (pipelineId?: string, triggerId?: string) =>
+  ['runs', pipelineId, triggerId] as const
+
+// Defined once rather than inline: react-query only reuses the previous
+// result when the selector is the same function
+const flattenRuns = (data: RunsPages) => data.pages.flat()
+
+/**
+ * The runs of a pipeline or of one of its triggers, newest first, paginated.
+ *
+ * Pages are walked with a cursor (the id of the oldest run received so far)
+ * rather than an offset, so a run started while the user is scrolling doesn't
+ * shift the following pages.
+ */
 export const listRuns = (
   pipelineId?: string,
-  triggerId?: string
-): UseQueryOptions<PipelineRun[], HTTPError> => ({
-  queryKey: ['runs', pipelineId, triggerId],
-  queryFn: async () => {
-    const params = {
-      pipeline_id: pipelineId ?? '',
-      trigger_id: triggerId ?? '',
-    }
-
+  triggerId?: string,
+): UseInfiniteQueryOptions<
+  PipelineRun[],
+  HTTPError,
+  PipelineRun[],
+  QueryKey,
+  number | undefined
+> => ({
+  queryKey: runsQueryKey(pipelineId, triggerId),
+  queryFn: async ({ pageParam }) => {
     const runs = await get<any[]>('runs/', {
-      searchParams: params,
+      searchParams: {
+        pipeline_id: pipelineId ?? '',
+        trigger_id: triggerId ?? '',
+        limit: RUNS_PAGE_SIZE,
+        ...(pageParam ? { before_id: pageParam } : {}),
+      },
     })
 
     runs.forEach((run) => {
@@ -205,13 +242,21 @@ export const listRuns = (
 
     return runs as PipelineRun[]
   },
-  initialData: [],
+  initialPageParam: undefined,
+  getNextPageParam: (lastPage) =>
+    lastPage.length < RUNS_PAGE_SIZE
+      ? undefined
+      : lastPage[lastPage.length - 1].id,
+  select: flattenRuns,
 })
+
+/** What `useInfiniteQuery(listRuns(...))` returns */
+export type RunsQuery = UseInfiniteQueryResult<PipelineRun[], HTTPError>
 
 export const getRun = (
   pipelineId: string,
   triggerId: string,
-  runId: number
+  runId: number,
 ): UseQueryOptions<PipelineRun, HTTPError> => ({
   queryKey: ['runs', pipelineId, triggerId, runId],
   queryFn: async () => {
@@ -235,7 +280,7 @@ export const getRun = (
 })
 
 export const getLogs = (
-  runId: number
+  runId: number,
 ): UseQueryOptions<LogEntry[], HTTPError> => ({
   queryKey: ['logs', runId],
   queryFn: async () => {
@@ -268,7 +313,7 @@ export const getRunDataUrl = (runId: string, taskId: string) =>
 
 export const getRunData = (
   runId: string,
-  taskId: string
+  taskId: string,
 ): UseQueryOptions<any, HTTPError> => ({
   queryKey: ['getRunData', { runId, taskId }],
   queryFn: async () => {
@@ -278,7 +323,7 @@ export const getRunData = (
 
 export const runPipeline = (
   pipelineId: string,
-  triggerId?: string
+  triggerId?: string,
 ): UseMutationOptions<
   PipelineRun,
   PlomberyHttpError,
@@ -303,7 +348,7 @@ export const getLatestRelease = (): UseQueryOptions<{
   queryFn: async () => {
     return await ky
       .get(
-        'https://api.github.com/repos/lucafaggianelli/plombery/releases/latest'
+        'https://api.github.com/repos/lucafaggianelli/plombery/releases/latest',
       )
       .json<{ tag_name: string; prerelease: boolean }>()
   },

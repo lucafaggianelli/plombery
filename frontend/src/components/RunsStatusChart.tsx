@@ -1,14 +1,12 @@
-import { UseQueryResult } from '@tanstack/react-query'
 import { Card, Text, Flex, Tracker, Italic, Metric } from '@tremor/react'
-import { HTTPError } from 'ky'
 
-import { PipelineRun } from '../types'
+import { RunsQuery } from '../repository'
 import { STATUS_COLORS } from '../utils'
 import ErrorAlert from './queries/Error'
 import { MetricLoader, TextLoader, TrackerLoader } from './queries/Loaders'
 
 interface Props {
-  query: UseQueryResult<PipelineRun[], HTTPError>
+  query: RunsQuery
   subject: 'Trigger' | 'Pipeline'
 }
 
@@ -30,7 +28,9 @@ const Loader = ({ subject }: { subject: string }) => (
 )
 
 const RunsStatusChart: React.FC<Props> = ({ query, subject }) => {
-  if (query.isPending || query.isFetching) {
+  // Only the first load shows the loader: `isFetching` is also true while the
+  // runs list pages in older runs, which must not blank the chart
+  if (query.isPending) {
     return <Loader subject={subject} />
   }
 

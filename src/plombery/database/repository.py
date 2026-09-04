@@ -86,10 +86,18 @@ def update_pipeline_run(
 
 
 def list_pipeline_runs(
-    pipeline_id: Optional[str] = None,
-    trigger_id: Optional[str] = None,
+    pipeline_id: str | None = None,
+    trigger_id: str | None = None,
     limit: int = 30,
+    before_id: int | None = None,
 ) -> list[models.PipelineRun]:
+    """One page of runs, newest first.
+
+    `before_id` is a cursor, not an offset: only runs older than that id are
+    returned, so a page holds the same runs even when new runs are created
+    while the caller is paging through the older ones.
+    """
+
     statement = select(models.PipelineRun)
 
     if pipeline_id:
@@ -97,6 +105,9 @@ def list_pipeline_runs(
 
     if trigger_id:
         statement = statement.where(models.PipelineRun.trigger_id == trigger_id)
+
+    if before_id is not None:
+        statement = statement.where(models.PipelineRun.id < before_id)
 
     statement = statement.order_by(models.PipelineRun.id.desc()).limit(limit)
 
@@ -110,9 +121,8 @@ def get_pipeline_run(pipeline_run_id: int) -> Optional[models.PipelineRun]:
             select(models.PipelineRun)
             # Callers read `task_runs`, which is a relationship, so it has to be
             # loaded before the session closes.
-            .options(selectinload(models.PipelineRun.task_runs)).where(
-                models.PipelineRun.id == pipeline_run_id
-            )
+            .options(selectinload(models.PipelineRun.task_runs))
+            .where(models.PipelineRun.id == pipeline_run_id)
         ).scalar_one_or_none()
 
 
@@ -236,9 +246,8 @@ def get_task_run_by_id(task_run_id: str) -> Optional[models.TaskRun]:
         return db.execute(
             select(models.TaskRun)
             # The orchestrator reads `task_run.pipeline_run` to drive the DAG.
-            .options(selectinload(models.TaskRun.pipeline_run)).where(
-                models.TaskRun.id == task_run_id
-            )
+            .options(selectinload(models.TaskRun.pipeline_run))
+            .where(models.TaskRun.id == task_run_id)
         ).scalar_one_or_none()
 
 

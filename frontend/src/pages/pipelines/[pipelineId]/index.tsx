@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Card, Title, Col, Text, Flex, Grid, Badge } from '@tremor/react'
 import { useParams } from 'react-router'
 import React from 'react'
@@ -22,7 +22,7 @@ const PipelineView: React.FC = () => {
   const pipelineId = urlParams.pipelineId as string
 
   const pipelineQuery = useQuery(getPipeline(pipelineId))
-  const runsQuery = useQuery(listRuns(pipelineId))
+  const runsQuery = useInfiniteQuery(listRuns(pipelineId))
 
   if (pipelineQuery.isPending) return <div>Loading...</div>
 

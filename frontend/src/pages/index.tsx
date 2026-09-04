@@ -3,11 +3,11 @@ import { Col, Grid, Title } from '@tremor/react'
 import PageLayout from '@/components/PageLayout'
 import PipelinesList from '@/components/PipelinesList'
 import RunsList from '@/components/RunsList'
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { listRuns } from '@/repository'
 
 const HomePage: React.FC = () => {
-  const runsQuery = useQuery(listRuns())
+  const runsQuery = useInfiniteQuery(listRuns())
 
   return (
     <PageLayout

@@ -1,4 +1,4 @@
-import { UseQueryResult, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Card,
   Table,
@@ -11,28 +11,37 @@ import {
   Title,
 } from '@tremor/react'
 import { formatDistanceToNow, differenceInDays } from 'date-fns'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { HTTPError } from 'ky'
 
 import { socket } from '@/socket'
-import { PipelineRun } from '@/types'
+import { RunsPages, RunsQuery, runsQueryKey } from '@/repository'
 import { formatDateTime } from '@/utils'
 import StatusBadge from './StatusBadge'
 import Timer from './Timer'
 import ErrorAlert from './queries/Error'
-import { TableLoader } from './queries/Loaders'
+import { TableLoader, TextLoader } from './queries/Loaders'
 
 interface Props {
   pipelineId?: string
-  query: UseQueryResult<PipelineRun[], HTTPError>
+  query: RunsQuery
   triggerId?: string
 }
 
+/**
+ * How far ahead of the bottom of the list the next page starts loading, so
+ * that it's usually there by the time the user scrolls down to it.
+ */
+const LOAD_MORE_MARGIN = '200px'
+
 const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
-  const [runs, setRuns] = useState<PipelineRun[]>(query.data || [])
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+
+  const tableRef = useRef<HTMLTableElement>(null)
+  const loadMoreRef = useRef<HTMLTableRowElement>(null)
+
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = query
 
   const onWsMessage = useCallback(
     (data: any) => {
@@ -43,29 +52,70 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
         return
       }
 
-      data.run.start_time = new Date(data.run.start_time)
-      data.run.trigger_id = data.trigger
+      // The event is broadcast for every run, while this list may be showing
+      // a single pipeline or a single trigger
+      if (
+        (pipelineId && data.pipeline !== pipelineId) ||
+        (triggerId && data.trigger !== triggerId)
+      ) {
+        return
+      }
 
-      if (data.run.status === 'running') {
-        setRuns([data.run, ...runs])
-      } else {
-        let oldRuns = [...runs]
-        const i = oldRuns.findIndex((run) => run.id === data.run.id)
+      const update = {
+        ...data.run,
+        start_time: data.run.start_time
+          ? new Date(data.run.start_time)
+          : undefined,
+        pipeline_id: data.pipeline,
+        trigger_id: data.trigger,
+      }
 
-        if (i >= 0) {
-          oldRuns[i] = data.run
-        } else {
-          oldRuns = [data.run, ...oldRuns]
-        }
+      queryClient.setQueryData<RunsPages>(
+        runsQueryKey(pipelineId, triggerId),
+        (current) => {
+          if (!current) {
+            return current
+          }
 
-        setRuns(oldRuns)
+          let found = false
 
+          const pages = current.pages.map((page) => {
+            const i = page.findIndex((run) => run.id === update.id)
+
+            if (i < 0) {
+              return page
+            }
+
+            found = true
+            const merged = [...page]
+            // Merged, as the event only carries the fields that change
+            merged[i] = { ...merged[i], ...update }
+
+            return merged
+          })
+
+          if (found) {
+            return { ...current, pages }
+          }
+
+          // A run nothing has seen yet is newer than every run on the first
+          // page, which is the only place it can go
+          return {
+            ...current,
+            pages: [[update, ...(pages[0] ?? [])], ...pages.slice(1)],
+          }
+        },
+      )
+
+      if (data.run.status !== 'running') {
+        // The event carries only the fields that change, so refetch to pick
+        // up the rest of a run that just finished
         queryClient.invalidateQueries({
-          queryKey: ['runs', pipelineId, triggerId],
+          queryKey: runsQueryKey(pipelineId, triggerId),
         })
       }
     },
-    [pipelineId, queryClient, runs, triggerId],
+    [pipelineId, queryClient, triggerId],
   )
 
   useEffect(() => {
@@ -74,21 +124,41 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
     return () => {
       socket.off('run-update', onWsMessage)
     }
-  }, [pipelineId])
+  }, [onWsMessage])
 
+  // Load the next page once the bottom of the list comes into view. The
+  // scrolling element is the div Tremor wraps the table in, as that's what
+  // carries the max height and the overflow.
   useEffect(() => {
-    if (query.data?.length) {
-      setRuns(query.data)
-    }
-  }, [query.data])
+    const loadMore = loadMoreRef.current
+    const root = tableRef.current?.parentElement
 
-  const numberOfColumns = 4 + Number(!!pipelineId) + Number(!!triggerId)
+    if (!loadMore || !root) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      { root, rootMargin: LOAD_MORE_MARGIN },
+    )
+
+    observer.observe(loadMore)
+
+    return () => observer.disconnect()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  const runs = query.data ?? []
+  const numberOfColumns = 5 + Number(!pipelineId) + Number(!triggerId)
 
   return (
     <Card className="p-0 overflow-hidden">
       <Title className="p-6">Runs</Title>
 
-      <Table className="overflow-auto max-h-[50vh]">
+      <Table ref={tableRef} className="overflow-auto max-h-[50vh]">
         <TableHead className="sticky top-0 bg-tremor-background dark:bg-dark-tremor-background shadow dark:shadow-tremor-dropdown z-10">
           <TableRow>
             <TableHeaderCell className="text-right">#</TableHeaderCell>
@@ -178,8 +248,17 @@ const RunsList: React.FC<Props> = ({ pipelineId, query, triggerId }) => {
             </TableRow>
           ))}
 
-          {(query.isFetching || query.isPending) && (
-            <TableLoader columns={numberOfColumns} />
+          {query.isPending && <TableLoader columns={numberOfColumns} />}
+
+          {/* Both the trigger of the next page and its placeholder: it sits
+              right below the last run, so it scrolls into view exactly when
+              there is more to load */}
+          {hasNextPage && (
+            <TableRow ref={loadMoreRef} className="animate-pulse">
+              <TableCell colSpan={numberOfColumns}>
+                <TextLoader />
+              </TableCell>
+            </TableRow>
           )}
 
           {query.isError && (

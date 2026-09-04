@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Query, Response
 
 from plombery.api.authentication import NeedsAuth
 from plombery.database.repository import (
@@ -23,14 +23,41 @@ router = APIRouter(
 )
 
 
-@router.get("/", description="List the runs of a pipeline or of one of its triggers")
+DEFAULT_PAGE_SIZE = 30
+
+MAX_PAGE_SIZE = 100
+
+
+@router.get(
+    "/",
+    description=(
+        "List the runs of a pipeline or of one of its triggers, newest first. "
+        "Pages are walked by passing the id of the last run received as "
+        "`before_id`; a page shorter than `limit` is the last one."
+    ),
+)
 def list_runs(
     pipeline_id: str | None = None,
     trigger_id: str | None = None,
+    limit: int = Query(
+        DEFAULT_PAGE_SIZE,
+        ge=1,
+        le=MAX_PAGE_SIZE,
+        description="How many runs to return",
+    ),
+    before_id: int | None = Query(
+        None,
+        description="Return only the runs older than this run id",
+    ),
 ) -> list[PipelineRun]:
     return [
         PipelineRun.model_validate(run)
-        for run in list_pipeline_runs(pipeline_id=pipeline_id, trigger_id=trigger_id)
+        for run in list_pipeline_runs(
+            pipeline_id=pipeline_id,
+            trigger_id=trigger_id,
+            limit=limit,
+            before_id=before_id,
+        )
     ]
 
 
