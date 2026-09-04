@@ -1,17 +1,26 @@
 from logging.config import fileConfig
 
-from sqlalchemy import pool
-
 from alembic import context
-
+from alembic.autogenerate import rewriter
+from alembic.operations import ops
 from plombery.database.base import Base, get_engine
 from plombery.config import settings
+from sqlalchemy import pool
+
+writer = rewriter.Rewriter()
+
+
+@writer.rewrites(ops.MigrationScript)
+def add_imports(context, revision, op: ops.MigrationScript):
+    op.imports.add("import plombery.database.type_helpers")
+    return [op]
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option("sqlalchemy.url", settings.database_url)
+config.set_main_option("sqlalchemy.url", str(settings.database_url))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -49,6 +58,12 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        process_revision_directives=writer,
+        # SQLite supports almost no ALTER TABLE: without batch mode a migration
+        # that changes a column type or a constraint simply cannot be expressed.
+        # Batch mode makes Alembic recreate the table instead (create, copy,
+        # drop, rename), which is the standard way to migrate SQLite.
+        render_as_batch=True,
     )
 
     with context.begin_transaction():
@@ -65,7 +80,13 @@ def run_migrations_online() -> None:
     connectable = get_engine(poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            process_revision_directives=writer,
+            # See the comment in run_migrations_offline()
+            render_as_batch=True,
+        )
 
         with context.begin_transaction():
             context.run_migrations()

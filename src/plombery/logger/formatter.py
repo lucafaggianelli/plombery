@@ -25,12 +25,14 @@ class JsonFormatter(logging.Formatter):
         self,
         pipeline: str,
         task: Optional[str] = None,
+        map_index: Optional[int] = None,
         fmt_dict: Optional[dict] = None,
         time_format: str = "%Y-%m-%dT%H:%M:%S",
         msec_format: str = "%s.%03dZ",
     ):
         self.pipeline = pipeline
         self.task = task
+        self.map_index = map_index
         self.fmt_dict = fmt_dict if fmt_dict is not None else DEFAULT_LOG_ATTRIBUTES
         self.default_time_format = time_format
         self.default_msec_format = msec_format
@@ -56,6 +58,7 @@ class JsonFormatter(logging.Formatter):
         }
         msg["pipeline"] = self.pipeline
         msg["task"] = self.task
+        msg["map_index"] = self.map_index
 
         return msg
 

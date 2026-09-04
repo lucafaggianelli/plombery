@@ -145,52 +145,44 @@ Don't forget to give the project a star! Thanks again!
 
 ### Development
 
-Clone a fork of this repo and start your dev environment.
+Plombery uses [uv](https://docs.astral.sh/uv/) for Python and
+[pnpm](https://pnpm.io/) for the frontend. You'll need Python 3.10 or newer
+(uv installs one for you if you don't have it) and Node 22.12 or newer.
 
-Create a python virtual environment:
-
-```sh
-python -m venv .venv
-# on Mac/Linux
-source .venv/bin/activate
-# on Win
-.venv/Script/activate
-```
-
-and install the dependencies:
+Clone a fork of this repo, then install the Python dependencies — uv creates
+the virtual environment for you:
 
 ```sh
-pip install ".[dev]"
+uv sync
 ```
 
-for development purposes, it's useful to run the example application:
-
-```sh
-cd examples/
-
-# Create a venv for the example app
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements
-
-./run.sh
-# or ./run.ps1 on windows
-```
-
-The React frontend is in the `frontend/` folder, enter the folder
-and install the dependencies:
+The frontend is a React app in `frontend/`, and the Python package serves its
+build output, so build it once before running the app:
 
 ```sh
 cd frontend/
-# The project uses pnpm as dependency manager, if you don't have
-# it, you must install it.
-# This command will install the deps:
-pnpm
+pnpm install
+pnpm build
 ```
 
-run the development server:
+Now run the example app, which registers a handful of demo pipelines.
+`--reload` restarts Plombery whenever a file changes, and `--reload-dir`
+adds the Plombery package itself to what's watched, so editing the library
+restarts the app too:
 
 ```sh
+cd examples/
+plombery run --pipelines src --reload --reload-dir ../src
+```
+
+Open [http://localhost:8000](http://localhost:8000) and you'll find the demo
+pipelines, ready to run.
+
+To work on the frontend, leave that running and start the Vite dev server in
+another terminal — it hot-reloads the UI and talks to the API on port 8000:
+
+```sh
+cd frontend/
 pnpm dev
 ```
 
@@ -201,7 +193,7 @@ The documentation website is based on MkDocs Material, the source code is in the
 
 To run a local dev server, run:
 
-```
+```sh
 mkdocs serve
 ```
 
@@ -213,11 +205,26 @@ Tests are based on `pytest`, to run the entire suite just run:
 pytest
 ```
 
+To run a single file or a single test:
+
+```sh
+pytest tests/test_api.py
+pytest tests/test_api.py::test_api_list_pipelines
+```
+
 To run tests coverage, run:
 
 ```sh
 coverage run -m pytest
 coverage report -m
+```
+
+The suite runs on every Python version Plombery supports, 3.10 to 3.14. Lint
+and format with:
+
+```sh
+flake8
+black .
 ```
 
 <!-- LICENSE -->

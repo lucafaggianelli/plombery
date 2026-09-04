@@ -6,11 +6,17 @@ on:
       - main
     paths:
       - "src/**"
-      - "test/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/test.yaml"
   pull_request:
     paths:
       - "src/**"
-      - "test/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/test.yaml"
   workflow_dispatch:
 
 permissions:
@@ -22,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - uses: actions/checkout@v5
@@ -41,7 +47,7 @@ jobs:
         run: uv sync --locked --all-extras
 
       - name: Lint with flake8
-        run: uv run flake8 src/ --count --show-source --statistics
+        run: uv run flake8 src/ tests/ --count --show-source --statistics
 
       - name: Test with pytest
         run: uv run pytest

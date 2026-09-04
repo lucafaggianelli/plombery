@@ -1,5 +1,5 @@
 import { UseMutationOptions, UseQueryOptions } from '@tanstack/react-query'
-import ky, { HTTPError, Options } from 'ky'
+import ky, { HTTPError, isHTTPError, Options } from 'ky'
 
 import { LogEntry, Pipeline, PipelineRun, WhoamiResponse } from './types'
 import { JSONSchema7 } from 'json-schema'
@@ -39,7 +39,7 @@ const DEFAULT_BASE_URL = import.meta.env.DEV
 const BASE_URL: string = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL
 
 const client = ky.create({
-  prefixUrl: BASE_URL,
+  prefix: BASE_URL,
   credentials: 'include',
   redirect: 'follow',
 })
@@ -66,12 +66,17 @@ const post = async <ResponseType = any>(
   try {
     return await client.post(url, request).json<ResponseType>()
   } catch (e) {
-    const error = e as HTTPError
+    // A network or timeout error never carries a response to unwrap
+    if (!isHTTPError(e)) {
+      throw e
+    }
 
+    // ky reads the body to build the error, so it is only available
+    // pre-parsed on the error itself
     throw new PlomberyHttpError(
-      error.message,
-      error.response.status,
-      await error.response.json()
+      e.message,
+      e.response.status,
+      e.data as AllErrors
     )
   }
 }
@@ -94,7 +99,7 @@ export const logout = async () => {
 }
 
 export const getAuthProviders = (): UseQueryOptions<
-  { id: string; name: string; redirect_uri: string }[],
+  { id: string; name: string; redirect_url: string }[],
   HTTPError
 > => ({
   queryKey: ['auth-providers'],
@@ -127,7 +132,10 @@ export const listPipelines = (): UseQueryOptions<Pipeline[], HTTPError> => ({
           pipeline.name,
           pipeline.description,
           pipeline.tasks,
-          pipeline.triggers
+          pipeline.triggers,
+          pipeline.version,
+          pipeline.issues,
+          pipeline.runnable
         )
     )
   },
@@ -152,7 +160,10 @@ export const getPipeline = (
       pipeline.name,
       pipeline.description,
       pipeline.tasks,
-      pipeline.triggers
+      pipeline.triggers,
+      pipeline.version,
+      pipeline.issues,
+      pipeline.runnable
     )
   },
   initialData: new Pipeline('', '', '', [], []),
@@ -188,7 +199,8 @@ export const listRuns = (
     })
 
     runs.forEach((run) => {
-      run.start_time = new Date(run.start_time)
+      run.start_time = run.start_time ? new Date(run.start_time) : undefined
+      run.end_time = run.end_time ? new Date(run.end_time) : undefined
     })
 
     return runs as PipelineRun[]
@@ -205,6 +217,17 @@ export const getRun = (
   queryFn: async () => {
     const run = await get(`runs/${runId}`)
     run.start_time = new Date(run.start_time)
+    run.end_time = new Date(run.end_time)
+
+    run.task_runs.forEach((taskRun: any) => {
+      taskRun.start_time = taskRun.start_time
+        ? new Date(taskRun.start_time)
+        : undefined
+      taskRun.end_time = taskRun.end_time
+        ? new Date(taskRun.end_time)
+        : undefined
+    })
+    run.updatedAt = new Date()
 
     return run as PipelineRun
   },
@@ -228,6 +251,11 @@ export const getLogs = (
       // Add a unique id to be used as key for React
       parsed.id = i
       parsed.timestamp = new Date(parsed.timestamp)
+      parsed.task_with_index = parsed.task
+        ? parsed.task +
+          (parsed.map_index !== null ? `[${parsed.map_index}]` : '')
+        : null
+
       return parsed
     })
   },
@@ -235,11 +263,11 @@ export const getLogs = (
   initialData: [],
 })
 
-export const getRunDataUrl = (runId: number, taskId: string) =>
+export const getRunDataUrl = (runId: string, taskId: string) =>
   `runs/${runId}/data/${taskId}`
 
 export const getRunData = (
-  runId: number,
+  runId: string,
   taskId: string
 ): UseQueryOptions<any, HTTPError> => ({
   queryKey: ['getRunData', { runId, taskId }],

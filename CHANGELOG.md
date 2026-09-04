@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Support for DAGs and Fan-out / Dynamic Mapping tasks ([#529](https://github.com/lucafaggianelli/plombery/issues/529))
+- Show pipeline tasks as an interactive graph
+- Deployment documentation
+- Retention policy for runs data, with independent thresholds for log
+  files and for run history (`retention.files_days`, `retention.runs_days`)
+- Record on every run the version of the pipeline it executed, either the
+  `version` set on the pipeline or a hash of its task graph
+- Warn when a task blocks the event loop, naming it, since that freezes the
+  API and the live logs (`blocked_loop_threshold`)
+- `Pipeline(fail_fast=False)` keeps the healthy branches of a fan-out running
+  when one of them fails, for pipelines whose branches are independent of each
+  other, such as one per input file
+- `OutputOf(task)` binds a task argument to a specific upstream task's output,
+  so the argument doesn't have to be named after it. A type checker still
+  verifies the argument's declared type against what `task` actually returns.
+  It only binds data: the dependency itself still has to be declared with
+  `>>`/`<<`, and a mismatch between the two is now a validation error
+- `BaseSecrets`, a typed way to declare the secrets a pipeline needs: subclass
+  it with the fields a task requires, and it resolves them from an
+  environment variable of the same name, or from a `.env` file — no YAML, no
+  code generation, the class itself is the declaration
+- A task receives its secrets and its `Context` by declaring an argument
+  annotated with a `BaseSecrets` subclass or with `Context`, matched by type
+  (an argument named `context`/`ctx` also still works). Because secrets are
+  declared this way, Plombery checks at startup which secrets every
+  registered pipeline needs, instead of that surfacing only at run time. The
+  result is stored on each pipeline as `issues` (scoped to the task that needs
+  the secret) with a computed `runnable`, both served by the API without being
+  recomputed per request
+- A `plombery` command: `plombery run` discovers the pipelines in a
+  `pipelines/` folder and serves the web app, so a project no longer needs an
+  `app.py` with the uvicorn boilerplate
+- A pipeline built with the `Pipeline` context manager registers itself when
+  its block ends, so `register_pipeline(pipeline)` is no longer needed after
+  it. Pass `Pipeline(auto_register=False)` to opt out, or call
+  `register_pipeline(pipeline)` explicitly with an already-built `Pipeline`
+- The web UI marks a pipeline that can't run (a missing secret) with a
+  badge, lists what's wrong on the pipeline page, and disables its run button
+
+### Changed
+
+- (breaking) Task dependencies must be defined explicitly
+
 ## [0.5.2] - 2025-11-30
 
 ### Added

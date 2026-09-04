@@ -23,7 +23,16 @@ pipeline1_serialized = {
             "id": "pipe_1_task_1",
             "name": "Pipe 1 Task 1",
             "description": None,
+            "downstream_task_ids": [],
+            "upstream_task_ids": [],
+            "mapping_mode": None,
+            "map_upstream_id": None,
         }
     ],
     "triggers": [],
+    "fail_fast": True,
+    # Not set on this pipeline, so the API reports the graph hash instead
+    "version": pipeline1.get_version(),
+    "issues": [],
+    "runnable": True,
 }

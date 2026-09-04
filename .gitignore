@@ -165,3 +165,6 @@ node_modules
 
 .DS_Store
 *.db
+# Plombery runs data (logs and task output) and mkdocs build output
+.data/
+site/

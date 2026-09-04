@@ -3,7 +3,7 @@ name = "plombery"
 authors = [{ name = "Luca Faggianelli", email = "luca@velvetlab.tech" }]
 description = "Python task scheduler with a user-friendly web UI"
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.9,<3.14"
+requires-python = ">=3.10,<3.15"
 keywords = [
   "pipeline",
   "task-scheduler",
@@ -16,12 +16,12 @@ keywords = [
 license = "MIT"
 classifiers = ["Programming Language :: Python :: 3"]
 dependencies = [
-  "apscheduler==3.11",
+  "apscheduler==3.11.3",
   "alembic>=1.16.5",
   "apprise>=1.8.0",
-  "authlib==1.6.5",
+  "authlib==1.8.0",
+  "click>=8.1.0",
   "fastapi>=0.115.8",
-  "httpx>=0.25.0",
   "itsdangerous>=2.1.2",
   "jinja2>=3.1.6",
   "python-socketio>=5.14.2",
@@ -29,8 +29,13 @@ dependencies = [
   "pydantic-settings>=2.6.0",
   "SQLAlchemy>=2.0.40",
   "uvicorn>=0.32.0",
+  "uuid6>=2025.0.1",
+  "httpx2>=2.12.0",
 ]
 dynamic = ["version"]
+
+[project.scripts]
+plombery = "plombery.cli:main"
 
 [dependency-groups]
 dev = [
@@ -40,8 +45,28 @@ dev = [
   "pytest>=8.0.0",
   "pytest_asyncio>=1.0.0",
   "pytest-env>=1.1.0",
+  # Returning a DataFrame from a task is a supported pattern, so the
+  # regression test covering it has to actually run
+  "pandas>=2.0.0",
+  "watchfiles>1.0.0",
 ]
 docs = ["mkdocs-material>=9.1,<9.7"]
+# What the demo pipelines in `examples/` import, so that running them needs no
+# environment of their own. `python-dateutil` arrives with pandas anyway, but
+# `ssl_certificates.py` imports it directly and should say so
+examples = ["pandas>=2.0.0", "python-dateutil>=2.8.0"]
+
+[tool.uv]
+# So that a plain `uv sync` gives a contributor everything: the library, what
+# the tests need, and what the examples need
+default-groups = ["dev", "examples"]
+
+# Declared explicitly rather than left to the PEP 517 fallback: without a
+# build system uv treats the project as virtual, installing the dependencies
+# but not Plombery itself, so the `plombery` command never lands in the venv
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
 version = { attr = "plombery._version.__version__" }

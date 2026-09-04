@@ -1,13 +1,14 @@
-from typing import Callable
+from collections.abc import Callable
 
-from plombery.config.model import AuthSettings
 from plombery.config import settings
+from plombery.config.model import AuthSettings
 
 
 def _get_google(auth_settings: AuthSettings):
     return {
         "name": "Google",
         "metadata_url": "https://accounts.google.com/.well-known/openid-configuration",
+        "client_kwargs": {"scope": "openid email profile"},
     }
 
 
@@ -30,7 +31,7 @@ def _get_generic(auth_settings: AuthSettings):
 _AUTH_PROVIDERS: dict[str, Callable[[AuthSettings], dict]] = {
     "google": _get_google,
     "microsoft": _get_microsoft,
-    "generic": _get_generic
+    "generic": _get_generic,
 }
 
 

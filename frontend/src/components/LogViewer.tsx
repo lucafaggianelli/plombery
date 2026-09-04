@@ -64,6 +64,9 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
         const log: LogEntry = JSON.parse(message)
         log.id = oldLogs.length
         log.timestamp = new Date(log.timestamp)
+        log.task_with_index = log.task
+          ? log.task + (log.map_index !== null ? `[${log.map_index}]` : '')
+          : null
         return [...oldLogs, log]
       })
     },
@@ -136,7 +139,8 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
   const logs = query.data.filter((log) => {
     return (
       (filter.levels.length === 0 || filter.levels.includes(log.level)) &&
-      (filter.tasks.length === 0 || filter.tasks.includes(log.task))
+      (filter.tasks.length === 0 ||
+        (log.task_with_index && filter.tasks.includes(log.task_with_index)))
     )
   })
 
@@ -156,9 +160,16 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
               onFilterChange({ tasks })
             }}
           >
-            {pipeline.tasks.map((task) => (
-              <MultiSelectItem value={task.id} key={task.id}>
-                {task.name}
+            {run.task_runs.map((task) => (
+              <MultiSelectItem
+                value={
+                  task.task_id +
+                  (task.map_index !== null ? `[${task.map_index}]` : '')
+                }
+                key={task.id + (task.map_index ?? 0)}
+              >
+                {task.task_id}
+                {task.map_index !== null && `[${task.map_index}]`}
               </MultiSelectItem>
             ))}
           </MultiSelect>
@@ -248,11 +259,12 @@ const LogViewer: React.FC<Props> = ({ pipeline, run }) => {
                 <TableCell>
                   <Flex className="justify-start truncate">
                     <div
-                      className={`h-2 w-2 mr-2 rounded-full ${
-                        tasksColors[log.task]
-                      }`}
+                      className={twMerge(
+                        'h-2 w-2 mr-2 rounded-full',
+                        log.task && tasksColors[log.task]
+                      )}
                     />
-                    {log.task}
+                    {log.task_with_index}
                   </Flex>
                 </TableCell>
                 <TableCell className="w-full">

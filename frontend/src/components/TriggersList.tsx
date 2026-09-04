@@ -18,6 +18,7 @@ import {
 import { useNavigate } from 'react-router'
 
 import { Pipeline } from '@/types'
+import PipelineHttpRun from './help/PipelineHttpRun'
 
 interface Props {
   pipeline: Pipeline
@@ -28,7 +29,11 @@ const TriggersList: React.FC<Props> = ({ pipeline }) => {
 
   return (
     <Card className="p-0 overflow-hidden">
-      <Title className="p-6">Triggers</Title>
+      <header className="p-6 flex justify-between">
+        <Title>Triggers</Title>
+
+        <PipelineHttpRun pipelineId={pipeline.id} />
+      </header>
 
       <Table>
         <TableHead className="sticky top-0 bg-tremor-background dark:bg-dark-tremor-background shadow dark:shadow-tremor-dropdown z-10">

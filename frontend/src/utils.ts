@@ -1,14 +1,14 @@
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  NoSymbolIcon,
-  StopCircleIcon,
+  ClockIcon,
   XCircleIcon,
+  NoSymbolIcon,
 } from '@heroicons/react/24/outline'
 import { Color } from '@tremor/react'
-import { format, addMinutes } from 'date-fns'
+import { format, addMinutes, intervalToDuration } from 'date-fns'
 
-import { PipelineRunStatus, Task } from './types'
+import { PipelineRunStatus, Task, TaskRun } from './types'
 import { RunningIcon } from './components/RunningIcon'
 
 type ExtendedStatus = PipelineRunStatus | 'warning'
@@ -23,10 +23,10 @@ export const STATUS_COLORS: Record<ExtendedStatus, Color> = {
 }
 
 export const STATUS_ICONS: Record<ExtendedStatus, React.ElementType<any>> = {
-  pending: NoSymbolIcon,
+  pending: ClockIcon,
   completed: CheckCircleIcon,
   failed: XCircleIcon,
-  cancelled: StopCircleIcon,
+  cancelled: NoSymbolIcon,
   running: RunningIcon,
   warning: ExclamationTriangleIcon,
 }
@@ -73,3 +73,142 @@ export const formatDate = (date: Date) => format(date, 'd MMM yyyy')
 const numberFormatter = new Intl.NumberFormat()
 
 export const formatNumber = (value: number) => numberFormatter.format(value)
+
+export const formatDuration = (durationMs: number) => {
+  const parts = intervalToDuration({ start: 0, end: durationMs })
+  const ms = durationMs % 1000
+
+  return [
+    parts.hours && `${parts.hours}h`,
+    (parts.minutes || parts.hours) && `${parts.minutes || 0}m`,
+    (parts.seconds || parts.minutes || parts.hours) &&
+      `${(parts.seconds || 0).toString().padStart(2, '0')}s`,
+    ms && `${(ms || 0).toFixed().padStart(3, '0')}ms`,
+  ]
+    .filter(Boolean)
+    .join(' ')
+}
+
+/**
+ * The status of a task as a whole, from the status of its runs.
+ *
+ * A mapped task has one run per item, so it is only complete when every
+ * instance is, and a single failed instance fails the task.
+ */
+export const getTaskRunsStatus = (taskRuns: TaskRun[]): PipelineRunStatus => {
+  if (taskRuns.length === 0) {
+    return 'pending'
+  }
+
+  if (taskRuns.every((taskRun) => taskRun.status === 'completed')) {
+    return 'completed'
+  }
+
+  if (taskRuns.some((taskRun) => taskRun.status === 'failed')) {
+    return 'failed'
+  }
+
+  if (taskRuns.some((taskRun) => taskRun.status === 'cancelled')) {
+    return 'cancelled'
+  }
+
+  if (taskRuns.some((taskRun) => taskRun.status === 'running')) {
+    return 'running'
+  }
+
+  if (taskRuns.some((taskRun) => taskRun.status === 'pending')) {
+    return 'pending'
+  }
+
+  return 'running'
+}
+
+/**
+ * Whether a task run is one instance of a mapped task.
+ *
+ * The API sends `map_index: null` for a plain task, so the index — and not
+ * the number of runs — is what tells a fan out apart: a fan out over a
+ * single item still produces one indexed instance.
+ */
+export const isMappedRun = (taskRun: TaskRun): boolean =>
+  taskRun.map_index !== null && taskRun.map_index !== undefined
+
+/**
+ * Whether these runs belong to a mapped task.
+ */
+export const areMappedRuns = (taskRuns: TaskRun[]): boolean =>
+  taskRuns.some(isMappedRun)
+
+/**
+ * The first start and the last end of a set of task runs.
+ *
+ * `end` is undefined while any instance is still missing an end time, as the
+ * task as a whole hasn't finished yet.
+ */
+export const getTaskRunsTimeSpan = (
+  taskRuns: TaskRun[]
+): { start?: Date; end?: Date } => {
+  const startTimes = taskRuns
+    .map((taskRun) => taskRun.start_time?.getTime())
+    .filter((time): time is number => time !== undefined)
+
+  const endTimes = taskRuns
+    .map((taskRun) => taskRun.end_time?.getTime())
+    .filter((time): time is number => time !== undefined)
+
+  return {
+    start: startTimes.length ? new Date(Math.min(...startTimes)) : undefined,
+    end:
+      endTimes.length === taskRuns.length && taskRuns.length
+        ? new Date(Math.max(...endTimes))
+        : undefined,
+  }
+}
+
+/**
+ * How long a set of task runs took from the first start to the last end.
+ *
+ * Mapped instances run concurrently, so summing their durations overstates
+ * the time the task actually took: this measures the wall clock instead.
+ */
+export const getTaskRunsWallClock = (taskRuns: TaskRun[]): number | undefined => {
+  const { start, end } = getTaskRunsTimeSpan(taskRuns)
+
+  if (!start || !end) {
+    // Still running, or never recorded a time: no meaningful total yet
+    return undefined
+  }
+
+  return end.getTime() - start.getTime()
+}
+
+export const MAPPING_MODE_LABELS: Record<string, string> = {
+  fan_out: 'Fan out',
+  chained_fan_out: 'Chained fan out',
+}
+
+/**
+ * How a mapped task is described in the UI, e.g. `Fan out over fetch_items`,
+ * or an empty string for a plain task.
+ */
+export const getMappingLabel = (task?: Task): string => {
+  if (!task?.mapping_mode) {
+    return ''
+  }
+
+  const mode = MAPPING_MODE_LABELS[task.mapping_mode] ?? task.mapping_mode
+
+  return task.map_upstream_id ? `${mode} over ${task.map_upstream_id}` : mode
+}
+
+export const countByStatus = (
+  taskRuns: TaskRun[]
+): Partial<Record<PipelineRunStatus, number>> => {
+  const counts: Partial<Record<PipelineRunStatus, number>> = {}
+
+  for (const taskRun of taskRuns) {
+    counts[taskRun.status] = (counts[taskRun.status] ?? 0) + 1
+  }
+
+  return counts
+}

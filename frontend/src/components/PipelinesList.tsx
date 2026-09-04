@@ -6,6 +6,7 @@ import React from 'react'
 
 import { listPipelines } from '@/repository'
 import ManualRunDialog from './ManualRunDialog'
+import { PipelineRunnableBadge } from './PipelineIssues'
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 
 const PipelinesList: React.FC = () => {
@@ -26,12 +27,13 @@ const PipelinesList: React.FC = () => {
           const nextFireTime = pipeline.getNextFireTime()
 
           return (
-            <ListItem key={pipeline.id} className="gap-x-1">
-              <div className="min-w-0">
-                <Text className="truncate">
+            <ListItem key={pipeline.id} className="gap-x-4">
+              <div className="min-w-0 grow">
+                <Text className="truncate flex items-center gap-x-2">
                   <Link to={`/pipelines/${pipeline.id}`} className="font-bold">
                     {pipeline.name}
                   </Link>
+                  <PipelineRunnableBadge pipeline={pipeline} />
                 </Text>
                 {pipeline.description && (
                   <Text className="truncate text-tremor-content-subtle dark:text-dark-tremor-content-subtle">
