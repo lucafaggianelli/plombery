@@ -50,7 +50,7 @@ dev = [
   "pandas>=2.0.0",
   "watchfiles>1.0.0",
 ]
-docs = ["mkdocs-material>=9.1,<9.7"]
+docs = ["mkdocs-material>=9.1,<9.8"]
 # What the demo pipelines in `examples/` import, so that running them needs no
 # environment of their own. `python-dateutil` arrives with pandas anyway, but
 # `ssl_certificates.py` imports it directly and should say so
