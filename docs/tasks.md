@@ -131,6 +131,9 @@ with Pipeline(id="my_pipeline"):
     To free the argument from having to match the task's name, use
     [`OutputOf`](pipelines.md#naming-an-upstream-task-explicitly) instead.
 
+Pydantic model annotations validate upstream output before a task runs. Root
+models receive `0`, `False`, empty strings and empty lists as supplied.
+
 An argument that doesn't name an upstream task and declares a default value is
 treated as a plain argument of the function, and keeps its default:
 

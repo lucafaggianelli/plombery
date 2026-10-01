@@ -407,7 +407,9 @@ async def _execute_task(
         # guards against generic annotations such as `List[int]` or `Optional[str]`,
         # which are not classes and would make `issubclass` raise a TypeError.
         if isinstance(arg_annotation, type) and issubclass(arg_annotation, BaseModel):
-            input_data = arg_annotation.model_validate(input_data or {})
+            input_data = arg_annotation.model_validate(
+                {} if input_data is None else input_data
+            )
 
         kwargs[arg_name] = input_data
 
