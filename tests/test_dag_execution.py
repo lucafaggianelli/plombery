@@ -8,6 +8,7 @@ import asyncio
 from typing import List
 
 import pytest
+from pydantic import BaseModel, RootModel
 
 from plombery import Pipeline, task, _Plombery as Plombery
 from plombery.database.repository import get_task_run_output_by_id
@@ -326,6 +327,70 @@ async def test_generic_type_annotations_are_supported(app: Plombery):
 
     assert run.status == PipelineRunStatus.COMPLETED
     assert received == [[1, 2, 3]]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "value,model",
+    [
+        (0, RootModel[int]),
+        (False, RootModel[bool]),
+        ("", RootModel[str]),
+        ([], RootModel[list[int]]),
+        (7, RootModel[int]),
+        (True, RootModel[bool]),
+        ("value", RootModel[str]),
+        ([1], RootModel[list[int]]),
+    ],
+)
+async def test_model_annotations_keep_upstream_values(app: Plombery, value, model):
+    received = []
+    app.start()
+
+    with Pipeline(id="model_input") as pipeline:
+
+        @task
+        def source():
+            return value
+
+        @task
+        def consume(source: model):
+            received.append(source.root)
+
+        source >> consume
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert received == [value]
+    assert type(received[0]) is type(value)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("value", [None, {}])
+async def test_model_annotations_use_defaults_for_missing_output(app: Plombery, value):
+    class Input(BaseModel):
+        value: int = 42
+
+    received = []
+    app.start()
+
+    with Pipeline(id="model_defaults") as pipeline:
+
+        @task
+        def source():
+            return value
+
+        @task
+        def consume(source: Input):
+            received.append(source.value)
+
+        source >> consume
+
+    run = await wait_for_run((await run_pipeline_now(pipeline)).id)
+
+    assert run.status == PipelineRunStatus.COMPLETED
+    assert received == [42]
 
 
 @pytest.mark.asyncio
